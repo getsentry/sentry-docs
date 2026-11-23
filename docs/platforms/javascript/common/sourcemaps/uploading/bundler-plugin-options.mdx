@@ -1,0 +1,629 @@
+---
+title: Bundler Plugin Options
+description: "Learn about the options you can pass to the Sentry bundler plugins for Vite, webpack, Rollup, and esbuild."
+customCanonicalTag: "/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/"
+sidebar_order: 20
+keywords:
+  [
+    "bundler plugin",
+    "vite",
+    "webpack",
+    "rollup",
+    "esbuild",
+    "sourcemaps",
+    "source maps",
+    "release",
+    "options",
+  ]
+---
+
+The Sentry bundler plugins for <PlatformLink to="/sourcemaps/uploading/vite/">Vite</PlatformLink>, <PlatformLink to="/sourcemaps/uploading/webpack/">webpack</PlatformLink>, <PlatformLink to="/sourcemaps/uploading/rollup/">Rollup</PlatformLink>, and <PlatformLink to="/sourcemaps/uploading/esbuild/">esbuild</PlatformLink> all accept the options on this page.
+
+<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue"]}>
+
+Import the plugins from `@sentry/node/vite`, `@sentry/node/webpack`, `@sentry/node/rollup`, or `@sentry/node/esbuild`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nestjs"]}>
+
+Import the webpack plugin from `@sentry/nestjs/webpack`. For Vite, Rollup, or esbuild, import the plugin from `@sentry/bundler-plugins/vite`, `@sentry/bundler-plugins/rollup`, or `@sentry/bundler-plugins/esbuild`.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.aws-lambda"]}>
+
+Import the esbuild plugin from `@sentry/aws-serverless/esbuild`. For Vite, webpack, or Rollup, import the plugin from `@sentry/bundler-plugins/vite`, `@sentry/bundler-plugins/webpack`, or `@sentry/bundler-plugins/rollup`.
+
+</PlatformSection>
+
+<PlatformSection notSupported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs", "javascript.aws-lambda"]}>
+
+Import the plugins from `@sentry/bundler-plugins/vite`, `@sentry/bundler-plugins/webpack`, `@sentry/bundler-plugins/rollup`, or `@sentry/bundler-plugins/esbuild`.
+
+</PlatformSection>
+
+```javascript {filename:vite.config.js}
+sentryVitePlugin({
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: {
+    filesToDeleteAfterUpload: ["./dist/**/*.map"],
+  },
+});
+```
+
+## Available Options
+
+<TableOfContents ignoreIds={["available-options"]} />
+
+## Core Options
+
+<SdkOption name="org" type="string">
+
+The slug of the Sentry organization associated with the app.
+
+This value can also be specified via the `SENTRY_ORG` environment variable.
+
+</SdkOption>
+
+<SdkOption name="project" type="string | string[]">
+
+The slug of the Sentry project associated with the app. You can also provide an array of project slugs to upload source maps to multiple projects with the same release.
+
+This value can also be specified via the `SENTRY_PROJECT` environment variable. To specify multiple projects via the environment variable, separate them with commas: `SENTRY_PROJECT=project1,project2,project3`.
+
+```javascript
+sentryVitePlugin({
+  org: process.env.SENTRY_ORG,
+  project: ["frontend-team-a", "frontend-team-b", "frontend-team-c"],
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+});
+```
+
+</SdkOption>
+
+<SdkOption name="authToken" type="string">
+
+The authentication token to use for all communication with Sentry.
+Can be obtained from https://sentry.io/orgredirect/organizations/:orgslug/settings/auth-tokens/.
+
+This value can also be specified via the `SENTRY_AUTH_TOKEN` environment variable.
+
+Check out the docs on [organization tokens](/account/auth-tokens/#organization-tokens).
+
+</SdkOption>
+
+<SdkOption name="url" type="string" defaultValue="https://sentry.io/">
+
+The base URL of your Sentry instance. Use this if you are using a self-hosted or Sentry instance other than sentry.io.
+
+This value can also be set via the `SENTRY_URL` environment variable.
+
+The default value is correct for SaaS customers.
+
+</SdkOption>
+
+<SdkOption name="headers" type="Record<string, string>">
+
+Additional headers to send with every outgoing request to Sentry.
+
+</SdkOption>
+
+<SdkOption name="debug" type="boolean" defaultValue="false">
+
+Enable debug information logs during build-time. Enabling this will give you, for example, logs about source maps. This option also propagates the debug flag to the Sentry CLI by setting the `SENTRY_LOG_LEVEL` environment variable to `"debug"` if it's not already set. If you have explicitly set `SENTRY_LOG_LEVEL`, this option will be ignored.
+
+</SdkOption>
+
+<SdkOption name="silent" type="boolean" defaultValue="false">
+
+Suppresses all build logs (all log levels, including errors).
+
+</SdkOption>
+
+<SdkOption name="errorHandler" type="(err: Error) => void">
+
+When an error occurs during release creation or sourcemaps upload, the plugin will call this function.
+
+By default, the plugin will simply throw an error, thereby stopping the bundling process. If an `errorHandler` callback is provided, compilation will continue, unless an error is thrown in the provided callback.
+
+To allow compilation to continue but still emit a warning, set this option to the following:
+
+```javascript
+errorHandler: (err) => {
+  console.warn(err);
+};
+```
+
+</SdkOption>
+
+<SdkOption name="telemetry" type="boolean" defaultValue="true">
+
+If this flag is `true`, internal plugin errors and performance data will be sent to Sentry. It will not collect any sensitive or user-specific data.
+
+At Sentry, we like to use Sentry ourselves to deliver faster and more stable products. We're very careful of what we're sending. We won't collect anything other than error and high-level performance data. We will never collect your code or any details of the projects in which you're using this plugin.
+
+</SdkOption>
+
+<SdkOption name="disable" type="boolean" defaultValue="false">
+
+Completely disables all functionality of the plugin.
+
+</SdkOption>
+
+## Source Maps Options
+
+Options related to source maps upload and processing.
+
+<SdkOption name="sourcemaps.assets" type="string | string[]">
+
+A glob or an array of globs that specify the build artifacts and source maps that will be uploaded to Sentry.
+
+The globbing patterns must follow the implementation of the [`glob`](https://www.npmjs.com/package/glob#glob-primer) package.
+
+If this option is not specified, the plugin will try to upload all JavaScript files and source map files that are created during build.
+
+Use the `debug` option to print information about which files end up being uploaded.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.ignore" type="string | string[]" defaultValue="[]">
+
+A glob or an array of globs that specifies which build artifacts should not be uploaded to Sentry.
+
+The globbing patterns must follow the implementation of the [`glob`](https://www.npmjs.com/package/glob#glob-primer) package.
+
+Use the `debug` option to print information about which files end up being uploaded.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.rewriteSources" type="(source: string, map: any, context?: { mapDir: string }) => string">
+
+Hook to rewrite the `sources` field inside the source map before being uploaded to Sentry. Does not modify the actual source map. Effectively, this modifies how files inside the stacktrace will show up in Sentry.
+
+The `context.mapDir` parameter provides the directory path of the source map file, which is useful for resolving relative source paths (e.g. `path.resolve(context.mapDir, source)`).
+
+Defaults to making all sources relative to `process.cwd()` while building.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.resolveSourceMap" type="(artifactPath: string, sourceMappingUrl: string | undefined) => string | undefined | Promise<string | undefined>">
+
+Hook to customize source map file resolution.
+
+The hook is called with the absolute path of the build artifact and the value of the `//# sourceMappingURL=` comment, if present. The hook should then return an absolute path (or a promise that resolves to one) indicating where to find the artifact's corresponding source map file. If no path is returned or the returned path doesn't exist, the standard source map resolution process will be used.
+
+The standard process first tries to resolve based on the `//# sourceMappingURL=` value (it supports `file://` urls and absolute/relative paths). If that path doesn't exist, it then looks for a file named `${artifactName}.map` in the same directory as the artifact.
+
+Note: This is mostly helpful for complex builds with custom source map generation. For example, if you put source maps into a separate directory and rewrite the `//# sourceMappingURL=` comment to something other than a relative directory, Sentry will be unable to locate the source maps for a given build artifact. This hook allows you to implement the resolution process yourself.
+
+Use the `debug` option to print information about source map resolution.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.filesToDeleteAfterUpload" type="string | string[] | Promise<string | string[] | undefined>">
+
+A glob, an array of globs or a promise resolving a glob or array of globs that specifies the build artifacts that should be deleted after the artifact upload to Sentry has been completed.
+
+Note: If you pass in a Promise that resolves to a string or array, the plugin will await the Promise and use the resolved value globs. This is useful if you need to dynamically determine the files to delete. Some higher-level Sentry SDKs or options use this feature (e.g., SvelteKit).
+
+The globbing patterns must follow the implementation of the [`glob`](https://www.npmjs.com/package/glob#glob-primer) package.
+
+Use the `debug` option to print information about which files end up being deleted.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.disable" type='boolean | "disable-upload"' defaultValue="false">
+
+If this flag is `true`, any functionality related to source maps will be disabled.
+
+If set to `"disable-upload"`, the plugin will not upload source maps to Sentry, but will still inject debug IDs into the build artifacts: the bundles receive the runtime debug ID snippet and a `//# debugId=` comment, and the emitted source maps receive the matching `debug_id` field. This happens inside the bundler's build pipeline, so hashes computed by later build steps (for example, for subresource integrity) include the debug IDs.
+
+This is useful if you want to manually upload source maps to Sentry at a later point in time, for example with `sentry-cli sourcemaps upload`. The artifacts already carry their debug IDs, so no `inject` step is needed.
+
+</SdkOption>
+
+## Release Options
+
+Options related to managing the Sentry releases for a build. Learn more in [Releases](/product/releases/).
+
+<SdkOption name="release.name" type="string">
+
+Unique identifier for the release you want to create.
+
+This value can also be specified via the `SENTRY_RELEASE` environment variable.
+
+Defaults to automatically detecting a value for your environment. This includes values for Cordova, Heroku, AWS CodeBuild, CircleCI, Xcode, and Gradle, and otherwise uses the git `HEAD`'s commit SHA (the latter requires access to git CLI and for the root directory to be a valid repository).
+
+If no `name` is provided and the plugin can't automatically detect one, no release will be created.
+
+</SdkOption>
+
+<SdkOption name="release.inject" type="boolean" defaultValue="true">
+
+Whether the plugin should inject release information into the build for the SDK to pick it up when sending events. (recommended)
+
+</SdkOption>
+
+<SdkOption name="release.create" type="boolean" defaultValue="true">
+
+Whether the plugin should create a release on Sentry during the build.
+
+Note that a release may still appear in Sentry even if this value is `false` because any Sentry event that has a release value attached will automatically create a release (for example, via the `inject` option).
+
+</SdkOption>
+
+<SdkOption name="release.finalize" type="boolean" defaultValue="true">
+
+Whether to automatically finalize the release. The release is finalized by adding an end timestamp after the build ends.
+
+</SdkOption>
+
+<SdkOption name="release.dist" type="string">
+
+Unique distribution identifier for the release. Used to further segment the release.
+
+Usually your build number.
+
+</SdkOption>
+
+<SdkOption name="release.vcsRemote" type="string" defaultValue="origin">
+
+Version control system (VCS) remote name.
+
+This value can also be specified via the `SENTRY_VSC_REMOTE` environment variable.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits" type="SetCommitsOptions | false" defaultValue="{ auto: true }">
+
+Configuration for associating the release with its commits in Sentry.
+
+Set to `false` to disable commit association.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.previousCommit" type="string">
+
+The commit before the beginning of this release (in other words, the last commit of the previous release).
+
+Defaults to the last commit of the previous release in Sentry.
+
+If there was no previous release, the last 10 commits will be used.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.ignoreMissing" type="boolean" defaultValue="false">
+
+If the flag is set to `true` and the previous release commit was not found in the repository, the plugin creates a release with the default commits count instead of failing the command.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.ignoreEmpty" type="boolean" defaultValue="false">
+
+If this flag is set, the setCommits step will not fail and just exit silently if no new commits for a given release have been found.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.auto" type="boolean">
+
+Automatically sets `commit` and `previousCommit`. Sets `commit` to `HEAD` and `previousCommit` as described in the option's documentation.
+
+If you set this to `true`, manually specified `commit` and `previousCommit` options will be overridden. It is best to not specify them at all if you set this option to `true`.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.repo" type="string">
+
+The full repo name as defined in Sentry.
+
+Required if the `auto` option is not set to `true`.
+
+</SdkOption>
+
+<SdkOption name="release.setCommits.commit" type="string">
+
+The current (last) commit in the release.
+
+Required if the `auto` option is not set to `true`.
+
+</SdkOption>
+
+<SdkOption name="release.deploy" type="DeployOptions | false">
+
+Configuration for adding deployment information to the release in Sentry.
+
+Set to `false` to disable automatic deployment detection and creation (for example, when deploying on Vercel).
+
+</SdkOption>
+
+<SdkOption name="release.deploy.env" type="string">
+
+Environment for this release. Values that make sense here would be `production` or `staging`.
+
+</SdkOption>
+
+<SdkOption name="release.deploy.started" type="number | string">
+
+Deployment start time in Unix timestamp (in seconds) or ISO 8601 format.
+
+</SdkOption>
+
+<SdkOption name="release.deploy.finished" type="number | string">
+
+Deployment finish time in Unix timestamp (in seconds) or ISO 8601 format.
+
+</SdkOption>
+
+<SdkOption name="release.deploy.time" type="number">
+
+Deployment duration (in seconds). Can be used instead of started and finished.
+
+</SdkOption>
+
+<SdkOption name="release.deploy.name" type="string">
+
+Human readable name for the deployment.
+
+</SdkOption>
+
+<SdkOption name="release.deploy.url" type="string">
+
+URL that points to the deployment.
+
+</SdkOption>
+
+<SdkOption name="release.uploadLegacySourcemaps" type="string | IncludeEntry | Array<string | IncludeEntry>">
+
+Legacy method of uploading source maps. (not recommended unless necessary)
+One or more paths that should be scanned recursively for sources.
+
+Each path can be given as a string or an object with more specific options.
+
+The modern version of doing source maps upload is more robust and way easier to get working but has to inject a very small snippet of JavaScript into your output bundles.
+In situations where this leads to problems (e.g subresource integrity) you can use this option as a fallback.
+
+Please note that this option will not interact with any settings provided in the `sourcemaps` option. Using `uploadLegacySourcemaps` is a completely separate upload mechanism we provide for backwards-compatibility.
+
+The `IncludeEntry` type looks as follows:
+
+```typescript
+type IncludeEntry = {
+    /**
+     * One or more paths to scan for files to upload.
+     */
+    paths: string[];
+
+    /**
+     * One or more paths to ignore during upload.
+     * Overrides entries in ignoreFile file.
+     *
+     * Defaults to `['node_modules']` if neither `ignoreFile` nor `ignore` is set.
+     */
+    ignore?: string | string[];
+
+    /**
+     * Path to a file containing list of files/directories to ignore.
+     *
+     * Can point to `.gitignore` or anything with the same format.
+     */
+    ignoreFile?: string;
+
+    /**
+     * Array of file extensions of files to be collected for the file upload.
+     *
+     * By default the following file extensions are processed: js, map, jsbundle and bundle.
+     */
+    ext?: string[];
+
+    /**
+     * URL prefix to add to the beginning of all filenames.
+     * Defaults to '~/' but you might want to set this to the full URL.
+     *
+     * This is also useful if your files are stored in a sub folder. eg: url-prefix '~/static/js'.
+     */
+    urlPrefix?: string;
+
+    /**
+     * URL suffix to add to the end of all filenames.
+     * Useful for appending query parameters.
+     */
+    urlSuffix?: string;
+
+    /**
+     * When paired with the `rewrite` option, this will remove a prefix from filename references inside of
+     * sourcemaps. For instance you can use this to remove a path that is build machine specific.
+     * Note that this will NOT change the names of uploaded files.
+     */
+    stripPrefix?: string[];
+
+    /**
+     * When paired with the `rewrite` option, this will add `~` to the `stripPrefix` array.
+     *
+     * Defaults to `false`.
+     */
+    stripCommonPrefix?: boolean;
+
+    /**
+     * Determines whether sentry-cli should attempt to link minified files with their corresponding maps.
+     * By default, it will match files and maps based on name, and add a Sourcemap header to each minified file
+     * for which it finds a map. Can be disabled if all minified files contain sourceMappingURL.
+     *
+     * Defaults to true.
+     */
+    sourceMapReference?: boolean;
+
+    /**
+     * Enables rewriting of matching source maps so that indexed maps are flattened and missing sources
+     * are inlined if possible.
+     *
+     * Defaults to true
+     */
+    rewrite?: boolean;
+
+    /**
+     * When `true`, attempts source map validation before upload if rewriting is not enabled.
+     * It will spot a variety of issues with source maps and cancel the upload if any are found.
+     *
+     * Defaults to `false` as this can cause false positives.
+     */
+    validate?: boolean;
+};
+```
+
+</SdkOption>
+
+## Bundle Size Optimizations
+
+Options for bundle size optimizations by excluding certain features.
+
+<SdkOption name="bundleSizeOptimizations.excludeDebugStatements" type="boolean" defaultValue="false">
+
+Exclude debug statements from the bundle, thus disabling features like the SDK's `debug` option.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) any debugging code within the Sentry SDK during the build.
+Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeTracing" type="boolean" defaultValue="false">
+
+Exclude tracing functionality from the bundle, thus disabling features like performance monitoring.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) code within the Sentry SDK that is related to tracing and performance monitoring.
+Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+**Notice:** Do not enable this when you're using any performance monitoring-related SDK features (e.g. `Sentry.startSpan()`).
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeChannelInjection" type="boolean" defaultValue="false">
+
+Exclude the Node SDK's runtime diagnostics-channel injection from the bundle.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) code that installs the Node SDK's runtime module hooks (e.g. for Express instrumentation) at load time. Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+Only enable this when the diagnostics channels are injected at build time (via the bundler plugin) or when you otherwise do not rely on the runtime channel injection. This is equivalent to setting `enableRuntimeChannelInjection: false` in the SDK's `init` options.
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeReplayShadowDom" type="boolean" defaultValue="false">
+
+Exclude Replay Shadow DOM functionality from the bundle.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) code related to the Sentry SDK's Session Replay Shadow DOM recording functionality.
+Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+This option is safe to be used when you do not want to capture any Shadow DOM activity via Sentry Session Replay.
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeReplayIframe" type="boolean" defaultValue="false">
+
+Exclude Replay iFrame functionality from the bundle.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) code related to the Sentry SDK's Session Replay `iframe` recording functionality.
+Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+You can safely do this when you do not want to capture any `iframe` activity via Sentry Session Replay.
+
+</SdkOption>
+
+<SdkOption name="bundleSizeOptimizations.excludeReplayWorker" type="boolean" defaultValue="false">
+
+Exclude Replay worker functionality from the bundle.
+
+If set to `true`, the plugin will attempt to tree-shake (remove) code related to the Sentry SDK's Session Replay's Compression Web Worker.
+Note that the success of this depends on tree-shaking being enabled in your build tooling.
+
+**Notice:** You should only use this option if you manually host a compression worker and configure it in your Sentry Session Replay integration config via the `workerUrl` option.
+
+</SdkOption>
+
+## React Component Annotation
+
+<Alert level="warning">
+
+Use the React component annotation feature with caution. The option will pass additional properties to your React components which may lead to errors if libraries or your own code iterate through component props without checking for the additional Sentry props.
+
+</Alert>
+
+Options related to React component name annotations.
+Disabled by default, unless a value is set for this option.
+When enabled, your app's DOM will automatically be annotated during build-time with their respective component names.
+This will unlock the capability to search for Replays in Sentry by component name, as well as see component names in breadcrumbs and performance monitoring.
+
+The esbuild plugin doesn't support these options.
+
+<SdkOption name="reactComponentAnnotation.enabled" type="boolean">
+
+Whether the component name annotate plugin should be enabled or not.
+
+</SdkOption>
+
+<SdkOption name="reactComponentAnnotation.ignoredComponents" type="string[]">
+
+A list of strings representing the names of components to ignore. The plugin will not apply `data-sentry` annotations on the DOM element for these components.
+
+</SdkOption>
+
+<SdkOption name="reactComponentAnnotation._experimentalInjectIntoHtml" type="boolean">
+
+An experimental component annotation injection mode that injects annotations into HTML rather than React components.
+
+</SdkOption>
+
+## Other Options
+
+<SdkOption name="moduleMetadata" type="Record<string, any> | (args: { org?: string; project?: string; projects?: string[]; release?: string; }) => Record<string, any>">
+
+Metadata that should be associated with the built application.
+
+The metadata is serialized and can be looked up at runtime from within the SDK (for example in the `beforeSend`, event processors, or the transport), allowing for custom event filtering logic or routing of events.
+
+Metadata can either be passed directly or alternatively a callback can be provided that will be called with the following parameters:
+
+- `org`: The organization slug.
+- `project`: The project slug (when multiple projects are configured, this is the first project).
+- `projects`: An array of all project slugs (available when multiple projects are configured).
+- `release`: The release name.
+
+</SdkOption>
+
+<SdkOption name="applicationKey" type="string">
+
+A key which will be embedded in all the bundled files. The SDK will be able to use the key to apply filtering rules, for example using the <PlatformLink to="/configuration/filtering/#using-thirdpartyerrorfilterintegration">`thirdPartyErrorFilterIntegration`</PlatformLink>.
+
+</SdkOption>
+
+<SdkOption name="_experiments" type="object">
+
+Options that are considered experimental and subject to change. This option does not follow semantic versioning and may change in any release.
+
+</SdkOption>
+
+<SdkOption name="_experiments.injectBuildInformation" type="boolean" defaultValue="false">
+
+If set to true, the plugin will inject an additional `SENTRY_BUILD_INFO` variable. This contains information about the build, e.g. dependencies, node version and other useful data.
+
+</SdkOption>
+
+## Configuration File
+
+As an additional configuration method, the Sentry bundler plugins will pick up environment variables configured inside a `.env.sentry-build-plugin` file located in the current working directory when building your app.
+
+<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs", "javascript.aws-lambda"]}>
+
+## Node.js Options
+
+These options are only available in the plugins from your Sentry SDK package. `@sentry/bundler-plugins` doesn't support them.
+
+<SdkOption name="buildTimeInstrumentation" type="boolean" defaultValue="true">
+
+Automatic instrumentation of server-side dependencies at build time. Set to `false` to turn it off.
+
+</SdkOption>
+
+</PlatformSection>

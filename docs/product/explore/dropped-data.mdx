@@ -8,14 +8,16 @@ description: >-
 
 <Include name="feature-available-for-user-group-limited-avail.mdx" />
 
-When data is ingested into Sentry, it can be dropped intentionally or unintentionally for a number of reasons. Sample rate (most commonly on purpose), queue overflow, inbound filters, and invalid or malformed data are some top examples for why data might be dropped. 
+When data is ingested into Sentry, it can be dropped intentionally or unintentionally for a number of reasons. Sample rate (most commonly on purpose), queue overflow, inbound filters, and invalid or malformed data are some top examples for why data might be dropped.
 
 ## Troubleshooting Dropped Data
 Traces, Logs, and Application Metrics charts in [Explore](/product/explore/) can show data that Sentry did not store. Hover over the dropped data line at the bottom of the chart to see the summary. Click on the line to see the details and troubleshoot.
 
+**Note: The dropped data you see on your chart, and in the details list, is only filtered by time and project.**
+
 The dropped data line leaves out data you chose to drop: everything in [Client Sampled](#category-client-sampled) and [Inbound Filters](#category-inbound-filters), plus [Disallowed Origin](#disallowed-origin), [Missing Signature](#missing-signature), and [DSN Rate Limit](#dsn-rate-limit). These reasons still appear in the details list.
 
-Below are all the possible reasons why data might be dropped. They correspond with the title you will see when exploring dropped data in Sentry. 
+Below are all the possible reasons why data might be dropped. They correspond with the title you will see when exploring dropped data in Sentry.
 
 Each reason includes what happened, why it happens, and what to change so less data is dropped. Reasons marked **Legacy** are no longer reported by current Sentry ingestion, so you'll only see them in older data.
 
@@ -156,7 +158,7 @@ The request failed without a response. Ad blockers and browser extensions are a 
   - **Browser:** A CORS misconfiguration, the user being offline, or the page unloading before the request completes.
   - **Server:** No outbound network access from the host or container, an egress firewall, a DNS failure, TLS errors from an intercepting proxy, or proxy settings the SDK is not using.
 - **Actions:**
-  - For ad blockers, route events through your own domain with the [`tunnel` option](/platforms/javascript/troubleshooting/#using-the-tunnel-option).
+  - For ad blockers, route events through your own domain with the [`tunnel` option](/platforms/javascript/configuration/tunneling/).
   - For browsers, confirm in devtools that requests to your ingest domain are not blocked, and check your CORS configuration.
   - For servers, verify outbound connectivity to your ingest domain from the host or container.
 
@@ -1493,19 +1495,6 @@ Sentry rejected an event because its view hierarchy attachment, which mobile SDK
   - The view hierarchy attachment itself is unusually large.
 - **Actions:**
   - Send fewer or smaller attachments with each event.
-
-#### Switch Dying Message Too Large
-
-Reason code: `too_large:attachment:nnswitch_dying_message`.
-
-Sentry rejected an envelope because a Nintendo Switch dying message attachment was over the attachment size or count limits. The dying message has no count of its own, so the drop is recorded against the error event and other attachments.
-
-- **Short:** Switch dying message hit attachment limit.
-- **Causes:**
-  - The dying message attachment itself is too large.
-  - Other attachments sent with it pushed the envelope over the shared limits.
-- **Actions:**
-  - Send fewer or smaller attachments.
 
 ### Category: Rate Limited
 

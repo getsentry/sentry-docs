@@ -1,6 +1,6 @@
 ---
 title: "Webpack Setup"
-sidebar_order: 3
+sidebar_order: 5
 description: "Additional configuration for Next.js applications using Webpack instead of Turbopack."
 ---
 
@@ -218,28 +218,15 @@ export default withSentryConfig(nextConfig, {
 
 Tunneling works identically for both Webpack and Turbopack. Sentry automatically filters tunnel requests from middleware spans to prevent noise in your monitoring data.
 
-### Configure Tunnel Route
+### Configure the Tunnel
 
-Enable tunneling to bypass ad-blockers. Use a fixed route so you can exclude it from middleware if needed.
+Set `tunnel: true` in your browser `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
 
-<Expandable title="Using random tunnel routes">
+<PlatformContent includePath="configuration/tunnel-browser-init" />
 
-You can use `tunnelRoute: true` to auto-generate a random route. However, random routes cannot be excluded from middleware matchers since the route changes on each build. This may cause issues if you have middleware that intercepts all requests.
+<PlatformContent includePath="configuration/tunnel-server-init" />
 
-```typescript
-tunnelRoute: true, // Auto-generated random route
-```
-
-</Expandable>
-
-```typescript {filename:next.config.ts}
-import { withSentryConfig } from "@sentry/nextjs/config";
-
-export default withSentryConfig(nextConfig, {
-  // Use a fixed route (recommended)
-  tunnelRoute: "/sentry-tunnel",
-});
-```
+Learn more in [Tunneling](/platforms/javascript/guides/nextjs/configuration/tunneling/).
 
 ## Migrating from Webpack to Turbopack
 
@@ -255,13 +242,11 @@ export default withSentryConfig(nextConfig, {
   webpack: {
     excludeServerRoutes: ["/api/health"],
   },
-  tunnelRoute: "/sentry-tunnel",
 });
 
 // After (Turbopack)
 export default withSentryConfig(nextConfig, {
   // webpack.excludeServerRoutes is not supported with Turbopack
-  tunnelRoute: "/sentry-tunnel",
 });
 ```
 

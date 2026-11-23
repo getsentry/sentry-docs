@@ -10,7 +10,7 @@ description: "Learn what instrumentation automatically captures transactions."
 Many integrations for popular frameworks automatically capture transactions. If you have any of the following frameworks set up for Sentry error reporting and use the relevant Sentry gem, you'll start to see traces immediately:
 
 - Ruby on Rails (`sentry-rails`)
-- Active Job (`sentry-rails`)
+- Active Job (`sentry-rails`), including GoodJob and Solid Queue jobs
 - Sidekiq (`sentry-sidekiq`)
 - Delayed Job (`sentry-delayed_job`)
 - Resque (`sentry-resque`)
@@ -21,9 +21,9 @@ Spans are instrumented for the following operations within a transaction:
   - includes common database systems such as Postgres and MySQL
 - Outgoing HTTP requests made with `Net::HTTP`
 - Redis operations
-- Active Job enqueueing (`queue.publish`)
+- Active Job and Sidekiq enqueueing (`queue.publish`)
 
-Active Job execution creates a `queue.process` transaction and continues the trace from the enqueue operation. Learn more in the [Active Job integration guide](/platforms/ruby/guides/rails/integrations/active-job/).
+Active Job and Sidekiq job execution creates a `queue.process` transaction and continues the trace from the enqueue operation. Active Job jobs that run on Sidekiq, Resque, or Delayed Job are reported by that backend's gem by default. Learn more in the [Active Job integration guide](/platforms/ruby/guides/rails/integrations/active-job/#backend-specific-integrations).
 
 The SDK also captures **queue time** as transaction data (not a child span) when a `X-Request-Start` header is present from your reverse proxy (Nginx, HAProxy, or Heroku). See <PlatformLink to="/tracing/instrumentation/performance-metrics/#automatic-queue-time-capture">Automatic Queue Time Capture</PlatformLink> for setup instructions.
 

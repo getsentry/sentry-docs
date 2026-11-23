@@ -39,7 +39,7 @@ export function PageGrid({additionalPages = [], header, exclude}: Props) {
   }
 
   return (
-    <nav>
+    <nav aria-label={header ?? 'Pages in this section'}>
       {header && <h2>{header}</h2>}
       <ul>
         {sortPages(

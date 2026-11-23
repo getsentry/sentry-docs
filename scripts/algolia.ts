@@ -10,7 +10,7 @@ import {createHash} from 'crypto';
 import fs from 'fs';
 import pLimit from 'p-limit';
 import {join} from 'path';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 
 import {getDevDocsFrontMatter, getDocsFrontMatter} from '../src/mdx';
 import {FrontMatter} from '../src/types';

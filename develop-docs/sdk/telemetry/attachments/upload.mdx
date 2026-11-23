@@ -39,7 +39,7 @@ This allows the client to upload attachments that are much larger than what the 
     1. `Upload-Chunk-Granularity`  (bytes) - Every `PATCH` request made to location below must be a multiple of this number (except for the final request).
     1. `Upload-Min-Chunk-Size` (bytes) - Every `PATCH` request made to location below must be at least this large (except for the final request).
     1. `Upload-Max-Chunk-Size`  (bytes) - No `PATCH` request made to location below may be larger than this. If the file is larger than the maximum chunk size, split it into multiple requests (see `Upload-Offset` below).
-    1. `Location` (URL) - The target of subsequent `PATCH` requests.
+    1. `Location` (absolute URL or relative path) - The target of subsequent `PATCH` requests. If the location is relative (e.g. `/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/`), make subsequent `PATCH` requests to the same host as the `POST` request.
 
     Example response:
 
@@ -50,7 +50,7 @@ This allows the client to upload attachments that are much larger than what the 
     Upload-Chunk-Granularity: 256
     Upload-Min-Chunk-Size: 1048576
     Upload-Max-Chunk-Size: 1073741824
-    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
+    Location: /api/0/upload/24e533e02ec3bc40c387f1a0e460e216/
     ```
 
     If the server replies with a [501 Not Implemented](https://www.rfc-editor.org/info/rfc9110/#status.501) response, the SDK **SHOULD** either fall back to submitting the attachment in an envelope (if it is [small enough](/sdk/foundations/envelopes/#size-limits)), or drop the attachment.
@@ -108,7 +108,7 @@ This allows the client to upload attachments that are much larger than what the 
     HTTP/1.1 204 No Content
     Tus-Resumable: 1.0.0
     Upload-Offset: 1076087080
-    Location: https://o0.ingest.sentry.io/api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=1076087080&upload_signature=..."
+    Location: /api/0/upload/24e533e02ec3bc40c387f1a0e460e216/?upload_length=1076087080&upload_signature=..."
     ```
 
     SDKs **MUST** use this location to attach a [placeholder item](/sdk/telemetry/attachments/#attachment-placeholders) to the event envelope. SDKs **MUST NOT** use the `Location` header from the initial `POST` request, or any intermediate request, because it may not contain all the fields needed to create a valid placeholder.

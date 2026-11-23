@@ -7,7 +7,7 @@ description: >-
 og_image: /og-images/organization-integrations-source-code-mgmt-gitlab.png
 ---
 
-The GitLab integration connects your repositories to Sentry to bring [commit tracking](#commit-tracking), [suspect commits](#suspect-commits), [stack trace linking](#stack-trace-linking), and [issue management](#issue-management) into the contexts that help Sentry debug issues and power [Seer AI features](#seer) like Autofix and Code Review. It also supports [resolving issues via commit or merge request (MR)](#resolve-via-commit-or-pull-request) and [Code Owners](#code-owners) for automatic issue routing.
+The GitLab integration connects your repositories to Sentry to bring [commit tracking](#commit-tracking), [suspect commits](#suspect-commits), [stack trace linking](#stack-trace-linking), and [issue management](#issue-management) into the contexts that help Sentry debug issues and power [Seer AI features](#seer) like Autofix. It also supports [resolving issues via commit or merge request (MR)](#resolve-via-commit-or-pull-request) and [Code Owners](#code-owners) for automatic issue routing.
 
 ## Install
 
@@ -43,7 +43,6 @@ Sentry owner, manager, or admin permissions and GitLab owner or maintainer permi
    ![Configuration modal and Sentry app within GitLab =600x](./img/configuration-modal.png)
 
 1. Fill out the resulting GitLab Configuration form with the following information:
-
    1. The GitLab URL is the base URL for your GitLab instance. If using gitlab.com, enter https://gitlab.com/.
 
    2. Find the GitLab Group Path in your group’s GitLab page. Groups might contain subgroups and projects. You should not specify the URL to any specific project, just to a group or subgroup.
@@ -87,7 +86,6 @@ Issue tracking allows you to create GitLab issues from within Sentry and link Se
    ![GitLab logo with Link GitLab Issue text =600x](./../img/global-link-issue.png)
 
 1. You have two options to complete the issue link:
-
    1. In the pop-up, you can fill out the appropriate details in the _Create_ tab, and then click "Create Issue".
 
       ![pop-up modal to create issue =600x](./img/gitlab-create-issue.png)
@@ -162,6 +160,12 @@ With the GitLab integration connected, you can use Seer's AI features, including
 
 **Autofix** analyzes Sentry issues using your GitLab repo code as context and can open a merge request with the proposed fix directly in GitLab.
 
+<Alert level="warning" title="Code Review Ends December 8">
+  Seer Code Review is deprecated and will be removed on December 8, 2026.
+  Automatic reviews and `@sentry review` stop on that date. Autofix will still
+  come with Seer.
+</Alert>
+
 **Code Review** reviews your merge requests for potential errors. Trigger it by commenting `@sentry review` on any MR. Automatic reviews also run when a merge request is opened or updated.
 
 <Alert>
@@ -173,42 +177,33 @@ To set up Seer with GitLab, go to [Seer settings](https://sentry.io/orgredirect/
 ## Troubleshooting
 
 - Does Seer support GitLab?
-
-  - Yes. Autofix and Code Review both work with GitLab.com repositories. Self-hosted GitLab is not currently supported for Seer features.
+  - Autofix works with GitLab.com repositories. Code Review is deprecated and will be removed on December 8, 2026. Self-hosted GitLab is not currently supported for Seer features.
 
 - I'm using GitLab on-premises. Do I need to allow Sentry's IP addresses?
-
   - Yes. You can find our IP ranges [ here ](/security-legal-pii/security/ip-ranges/).
   - Verify the provided installation URL is a fully qualified domain name (FQDN), which is resolvable on the internet.
   - Make sure that Sentry's access to your installation URL is not path restricted.
   - To add the GitLab repo, navigate to ** GitLab > Admin area > Settings > Network > Outbound requests > Allow requests to the local network from hooks and services ** and enable the option.
 
 - I'm using both GitLab on-premises and self-hosted Sentry, and I get an error `Error Communicating with GitLab (HTTP 422): unknown error` when I try to use the integration. How can I fix this?
-
   - By default, GitLab does not allow Hooks to communicate with the local private network, which prevents the integration with Sentry from working. To enable local network communication in GitLab, enable "Allow requests to the local network from hooks and services" on the **Admin > Settings > Network** page.
 
 - Do you support subgroups?
-
   - Currently, we only support subgroups for users using GitLab 11.6 or higher.
 
 - My repositories are hosted under my user account, not a group account. Can I still use this integration?
-
   - Unfortunately, not. The GitLab integration only works for repositories that are hosted under group accounts.
 
 - Are there pricing restrictions?
-
   - This integration is available for organizations on the [Team, Business, or Enterprise plan](https://sentry.io/pricing/).
 
 - Who has permission to install this?
-
   - You must have both owner/manager/admin permissions in Sentry and owner permissions in GitLab to successfully install this integration.
 
 - Why am I getting a `500` response during installation or configuration?
-
   - First, make sure you’ve allowed our IPs, which can be found [here](/security-legal-pii/security/ip-ranges/). The 500 response is coming from GitLab, so you may need to try again or double-check that your settings and permissions are correct in GitLab. You must have both owner/manager/admin permissions in Sentry as well as owner permissions in GitLab to successfully install this integration.
 
 - Why am I seeing an "Invalid Repository Names" error?
-
   - GitLab takes into account the whitespace before and after the `/` . On the Repositories page ([Organization Settings > Repositories](https://sentry.io/orgredirect/organizations/:orgslug/settings/repos/)), you’ll notice a space (for example, "Owner / Repo" as opposed to "Owner/Repo"), which will need to be included in any command you’re running. If you are using GitLab’s [environment variables](https://docs.gitlab.com/ee/ci/variables/#debug-tracing) to pass the repository as `CI_PROJECT_PATH` in a cURL request for example, it may not include the spaces and you’ll need to hardcode the name in order for it to work.
 
 - Why am I always the reporter?

@@ -1,0 +1,43 @@
+---
+id: logging-frameworks-no-longer-close-sentry
+title: "Logging Frameworks No Longer Close Sentry"
+phase: verify
+category: behavior
+severity: behavior-change
+frameworks: all
+platformCategory: all
+order: 50
+---
+
+`Log.CloseAndFlush()` in Serilog, `LogManager.Shutdown()` in NLog and shutting down the log4net repository no longer close Sentry. In 6.x, they closed Sentry when the logging integration had initialized it. Now the code that calls `SentrySdk.Init` or `UseSentry` owns the SDK.
+
+The SDK still flushes when the process exits. In a short-lived app, dispose the object that `SentrySdk.Init` returns, or call `SentrySdk.Flush()`, before the app exits:
+
+```csharp {filename:Program.cs}
+using Serilog;
+
+using var sentry = SentrySdk.Init(options => options.Dsn = "___PUBLIC_DSN___");
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Sentry()
+    .CreateLogger();
+
+try
+{
+    Log.Information("Running the job");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+```
+
+The NLog target flushes Sentry when NLog flushes. It now waits up to `SentryOptions.FlushTimeout`, which defaults to 2 seconds, instead of the 15 seconds it used to wait. To keep 15 seconds, set the timeout where you initialize Sentry:
+
+```csharp {filename:Program.cs}
+using var sentry = SentrySdk.Init(options =>
+{
+    options.Dsn = "___PUBLIC_DSN___";
+    options.FlushTimeout = TimeSpan.FromSeconds(15);
+});
+```

@@ -6,7 +6,7 @@ import {useEffect, useState} from 'react';
 import {DevelopDocsHeader} from 'sentry-docs/components/developDocsHeader';
 import {Header} from 'sentry-docs/components/header';
 import {Search} from 'sentry-docs/components/search';
-import {isDeveloperDocs} from 'sentry-docs/isDeveloperDocs';
+import {isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {DocMetrics} from 'sentry-docs/metrics';
 
 export default function NotFound() {
