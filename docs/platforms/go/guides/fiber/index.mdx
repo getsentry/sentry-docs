@@ -5,7 +5,7 @@ description: "Learn how to add Sentry instrumentation to programs using the Fibe
 
 For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/fiber) at the Go SDK source code repository.
 
-[Go Dev-style API documentation](https://godoc.org/github.com/getsentry/sentry-go/fiber) is also available.
+[Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/fiber) is also available.
 
 ## Install
 
@@ -27,8 +27,9 @@ go get github.com/getsentry/sentry-go/fiber
 `sentryfiber` accepts a struct of `Options` that allows you to configure how the handler will behave.
 
 ```go
-// Repanic configures whether Sentry should repanic after recovery, in most cases it should be set to true,
-// as fiber includes its own Recover middleware that handles http responses.
+// Repanic configures whether Sentry should repanic after recovery. Fiber's Recover
+// middleware is not enabled by default; set it to true only when you add it, so that
+// it handles the http response.
 Repanic bool
 // WaitForDelivery configures whether you want to block the request before moving forward with the response.
 // Because Fiber's `Recover` handler doesn't restart the application,
@@ -42,13 +43,16 @@ Timeout time.Duration
 
 ```go
 sentryHandler := sentryfiber.New(sentryfiber.Options{
-    // you can modify these options
-    Repanic:         true,
-    WaitForDelivery: false,
-    Timeout:         5 * time.Second,
+	// you can modify these options
+	Repanic:         true,
+	WaitForDelivery: false,
+	Timeout:         5 * time.Second,
 })
 
 app := fiber.New()
+// Fiber's Recover middleware (github.com/gofiber/fiber/v2/middleware/recover)
+// handles the repanic.
+app.Use(recover.New())
 app.Use(sentryHandler)
 ```
 
@@ -58,13 +62,13 @@ app.Use(sentryHandler)
 app := fiber.New()
 
 app.Use(sentryfiber.New(sentryfiber.Options{
-// specify options here...
+	// specify options here...
 }))
 
 app.All("/", func(ctx *fiber.Ctx) error {
 	// capturing an error intentionally to simulate usage
-	sentry.CaptureMessage("It works!")
-	
+	sentry.CaptureMessage(sentryfiber.GetContext(ctx), "It works!")
+
 	return ctx.SendStatus(fiber.StatusOK)
 })
 
@@ -75,50 +79,34 @@ if err := app.Listen(":3000"); err != nil {
 
 ## Usage
 
-`sentryfiber` attaches an instance of `*sentry.Hub` (https://godoc.org/github.com/getsentry/sentry-go#Hub) to the request's context, which makes it available throughout the rest of the request's lifetime.
-You can access it by using the `sentryfiber.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
-This method should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException`, or any other calls, as it maintains the separation of data between the requests.
+`sentryfiber` forks a scope for each request. Use `sentryfiber.GetContext(ctx)` to get the request's Go context.
 
-<PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
-
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryfiber`!**
+<Include name="go/request-scope-usage" />
 
 ```go
-func enhanceSentryEvent := func(ctx *fiber.Ctx) error {
-	if hub := sentryfiber.GetHubFromContext(ctx); hub != nil {
-		hub.Scope().SetTag("someRandomTag", "maybeYouNeedIt")
+app := fiber.New()
+app.Use(recover.New())
+app.Use(sentryfiber.New(sentryfiber.Options{Repanic: true}))
+app.Use(func(ctx *fiber.Ctx) error {
+	if scope := sentry.ScopeFromContext(sentryfiber.GetContext(ctx)); scope != nil {
+		scope.SetTag("someRandomTag", "maybeYouNeedIt")
 	}
 	return ctx.Next()
-}
-
-// Later in the code
-sentryHandler := sentryfiber.New(sentryfiber.Options{
-	Repanic:         true,
-	WaitForDelivery: true,
 })
 
-defaultHandler := func(ctx *fiber.Ctx) error {
-	if hub := sentryfiber.GetHubFromContext(ctx); hub != nil {
-		hub.WithScope(func(scope *sentry.Scope) {
-			scope.SetAttributes(attribute.String("unwantedQuery", "someQueryDataMaybe"))
-			hub.CaptureMessage("User provided unwanted query string, but we recovered just fine")
-		})
-	}
+app.All("/", func(ctx *fiber.Ctx) error {
+	captureCtx, scope := sentry.WithScope(sentryfiber.GetContext(ctx))
+	scope.SetContext("query", sentry.Context{"unwanted": "someQueryDataMaybe"})
+	sentry.CaptureMessage(captureCtx, "Handled an unexpected query")
 	return ctx.SendStatus(fiber.StatusOK)
-}
-
-fooHandler := enhanceSentryEvent(func(ctx *fiber.Ctx) {
-	panic("y tho")
 })
-
-app.All("/foo", fooHandler)
-app.All("/", defaultHandler)
+app.All("/foo", func(ctx *fiber.Ctx) error {
+	panic("example panic")
+})
 
 if err := app.Listen(":3000"); err != nil {
 	panic(err)
 }
-
-fmt.Println("Listening and serving HTTP on :3000")
 ```
 
 ### Accessing Context in `BeforeSend` callback
@@ -137,6 +125,8 @@ sentry.Init(sentry.ClientOptions{
 	},
 })
 ```
+
+<Include name="go/framework-background-work" />
 
 ## Next Steps
 
