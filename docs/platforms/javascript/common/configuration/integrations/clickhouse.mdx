@@ -76,20 +76,7 @@ The integration only creates spans inside an active span, such as a request hand
 
 ## Spans
 
-Each span is named after the operation and the table it targets, for example `SELECT events` or `INSERT events`. Span attributes follow Sentry's `db.*` conventions, with `db.system.name` set to `clickhouse`. The spans also record the database, the user, and the server address and port of the client.
-
-Before the integration sends query text to Sentry, it:
-
-- Replaces string and number literals with `?`. For example, `SELECT name FROM events WHERE name = 'signup'` becomes `SELECT name FROM events WHERE name = ?`.
-- Removes comments.
-- Removes inline data sent with a statement, such as the rows after `INSERT INTO events FORMAT CSV`.
-- Keeps ClickHouse query parameters, such as `{id:UInt32}`, as written, but doesn't record their values from `query_params`.
-
-`insert()` spans record the target table, but not the inserted values or a query text.
-
-## Errors
-
-When a call fails, the span gets an error status. The integration doesn't capture the error, because the client still rejects to your code, which can handle it. Sentry captures errors you don't handle like any other unhandled error.
+The integration names each span after the operation and its table, for example `SELECT events`. In the query text, it replaces string and number literals with `?` and removes comments and inline data. It doesn't record `query_params` values or inserted rows.
 
 ## Supported Versions
 
