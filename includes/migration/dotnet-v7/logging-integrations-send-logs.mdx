@@ -32,7 +32,9 @@ SentrySdk.Init(options =>
 });
 ```
 
-To drop every log and keep sending errors and breadcrumbs, return `null`:
+To drop every log and keep sending errors and breadcrumbs, return `null` from `SetBeforeSendLog`, or turn off the `Sentry` logging provider. The callback works for every integration and for `SentrySdk.Logger`. The provider setting works only for `Logging.AddSentry()`, but you can set it in configuration, and the SDK creates no logs for the entries it filters.
+
+With the callback, return `null`:
 
 ```csharp {filename:Program.cs}
 SentrySdk.Init(options =>
@@ -42,7 +44,7 @@ SentrySdk.Init(options =>
 });
 ```
 
-In apps that call `UseSentry`, set the same callback on its options. The callback applies to every log, including logs from `SentrySdk.Logger` and from the `ILogger` integration.
+In apps that call `UseSentry`, set the same callback on its options:
 
 ```csharp {filename:Program.cs}
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +52,31 @@ builder.UseSentry(options =>
 {
     options.Dsn = "___PUBLIC_DSN___";
     options.SetBeforeSendLog(_ => null);
+});
+```
+
+To turn off the `Sentry` logging provider, set its level to `None`. If your app reads the `Logging` section from configuration, as `WebApplication.CreateBuilder` and `Host.CreateApplicationBuilder` do, set it in `appsettings.json`:
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "LogLevel": {
+        "Default": "None"
+      }
+    }
+  }
+}
+```
+
+Otherwise, add the same rule when you add the integration:
+
+```csharp {filename:Program.cs}
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddSentry();
+    builder.Services.Configure<LoggerFilterOptions>(options =>
+        options.Rules.Add(new LoggerFilterRule("Sentry", null, LogLevel.None, null)));
 });
 ```
 
