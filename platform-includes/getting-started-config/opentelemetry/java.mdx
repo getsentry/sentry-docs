@@ -1,32 +1,41 @@
-<OnboardingOption optionId="opentelemetry">
+Sentry's OpenTelemetry agent attaches when the JVM starts and is configured through a `sentry.properties` file.
 
-The SDK can be configured using a `sentry.properties` file:
+Download the latest version of the `sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar` from [MavenCentral](https://search.maven.org/artifact/io.sentry/sentry-opentelemetry-agent):
+
+```bash
+curl https://repo1.maven.org/maven2/io/sentry/sentry-opentelemetry-agent/{{@inject packages.version('sentry.java.opentelemetry-agent') }}/sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar -o sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar
+```
+
+The SDK can be configured using a `sentry.properties` file.
+
+The snippet also turns on:
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`traces-sample-rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profile-session-sample-rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profileLifecycle">`profile-lifecycle`</PlatformLink>
+- Data Collection: via <PlatformLink to="/data-management/data-collected/">`data-collection`</PlatformLink>
+- Logs: via <PlatformLink to="/logs/">`logs.enabled`</PlatformLink>
 
 ```properties {filename:sentry.properties}
 dsn=___PUBLIC_DSN___
 # Use Data Collection defaults but don't collect automatic user information.
-# https://docs.sentry.io/platforms/java/data-management/data-collected/
 data-collection.user-info=false
 # Configure other data categories here.
-# ___PRODUCT_OPTION_START___ performance
+
+# Enable tracing
 traces-sample-rate=1.0
-# ___PRODUCT_OPTION_END___ performance
-// ___PRODUCT_OPTION_START___ logs
+
+# Enable logs
 logs.enabled=true
-// ___PRODUCT_OPTION_END___ logs
-// ___PRODUCT_OPTION_START___ profiling
 
 # Enable profiling
 profile-session-sample-rate=1.0
 profile-lifecycle=TRACE
-// ___PRODUCT_OPTION_END___ profiling
 ```
 
-<OnboardingOption optionId="logs">
-<Alert>
+Then run your application with:
+```bash {tabTitle: Environment variable}
+SENTRY_PROPERTIES_FILE=sentry.properties JAVA_TOOL_OPTIONS="-javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar" java -jar your-application.jar
+```
 
-Learn more about setting up logging in our <PlatformLink to="/logs/">Logs documentation</PlatformLink>.
-
-</Alert>
-</OnboardingOption>
-</OnboardingOption>
+```bash {tabTitle: Java CLI argument}
+SENTRY_PROPERTIES_FILE=sentry.properties java -javaagent:sentry-opentelemetry-agent-{{@inject packages.version('sentry.java.opentelemetry-agent') }}.jar -jar your-application.jar
+```

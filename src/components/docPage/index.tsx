@@ -12,7 +12,7 @@ import {getSdkPageHeading} from 'sentry-docs/sdkPageHeading';
 import {serverContext} from 'sentry-docs/serverContext';
 import {FrontMatter} from 'sentry-docs/types';
 import {PaginationNavNode} from 'sentry-docs/types/paginationNavNode';
-import {isNotNil} from 'sentry-docs/utils';
+import {isNew, isNotNil} from 'sentry-docs/utils';
 import {getUnversionedPath} from 'sentry-docs/versioning';
 
 import {Banner} from '../banner';
@@ -116,7 +116,7 @@ export async function DocPage({
                   ) : (
                     heading
                   )}
-                  {frontMatter.new && <FeatureBadge type="new" />}
+                  {isNew(frontMatter.new_until) && <FeatureBadge type="new" />}
                   {frontMatter.beta && <FeatureBadge type="beta" />}
                   {frontMatter.early_access && <FeatureBadge type="early_access" />}
                 </h1>

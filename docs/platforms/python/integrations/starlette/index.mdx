@@ -70,7 +70,7 @@ sentry_sdk.init(
     # Enables Profiling.
     # Set to 1.0 to profile 100% of sessions.
     profile_session_sample_rate=1.0,
-    # Profiles are collected while a transaction is active.
+    # Profiles are collected while there is an active span.
     profile_lifecycle="trace",
 )
 ```
@@ -83,7 +83,7 @@ Sentry automatically captures errors and reports issues for you.
 You can also expect the following for your Starlette project:
 
 - By default, all exceptions leading to an Internal Server Error are reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
-- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
+- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads. Form data and JSON payloads are only attached if your handler already read them with `await request.form()` or `await request.json()` before the event was captured.
 - Personally identifiable information (such as user IDs, usernames, cookies, and IP addresses) is also attached, with sensitive values like authorization headers scrubbed. Use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to configure which categories to collect. In SDK versions prior to `3.0`, Sentry excludes this information unless you use `data_collection` or set `send_default_pii` to `True`.
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
@@ -216,7 +216,7 @@ The default is `False`.
 
 <SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+A tuple containing all the HTTP methods (as uppercase strings) that should create a service span in Sentry.
 The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
 Note that `OPTIONS` and `HEAD` are excluded by default.
@@ -228,7 +228,7 @@ Note that `OPTIONS` and `HEAD` are excluded by default.
 At this point, you should have integrated Sentry into your Starlette application. Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
 - Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">

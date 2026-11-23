@@ -14,6 +14,8 @@ This guide is for TanStack Start deployed to **Cloudflare Workers** using the `@
 
 </Alert>
 
+<PlatformContent includePath="getting-started-prerequisites" />
+
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
@@ -145,29 +147,50 @@ export const getRouter = () => {
 
 ### Capture Server-Side Errors
 
-To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file.
+To capture server-side errors from HTTP requests and server function calls, add Sentry's global middlewares to `createStart()` in your `src/start.ts` file. Since version 11.15.0, `sentryGlobalFunctionMiddleware` also creates a span for every server function call, including calls from other server functions or from loaders on the server. Without this middleware, Sentry doesn't create server function spans.
 
 The Sentry middleware should be the first middleware in the arrays to ensure all errors are captured.
 
-<Alert level="info">
-  SSR rendering exceptions are not captured by the middleware. Use
-  `captureException` to manually capture those errors.
-</Alert>
+A custom `src/start.ts` turns off the CSRF protection that TanStack Start adds to server functions by default, so the snippet adds it back with `createCsrfMiddleware`.
 
 ```tsx {filename:src/start.ts}
 import {
   sentryGlobalFunctionMiddleware,
   sentryGlobalRequestMiddleware,
 } from "@sentry/tanstackstart-react";
-import { createStart } from "@tanstack/react-start";
+import { createCsrfMiddleware, createStart } from "@tanstack/react-start";
+
+// Assign the middleware to a variable. Sentry's Vite plugin
+// doesn't instrument a middleware array that contains a function call.
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+});
 
 export const startInstance = createStart(() => {
   return {
-    requestMiddleware: [sentryGlobalRequestMiddleware],
+    requestMiddleware: [sentryGlobalRequestMiddleware, csrfMiddleware],
     functionMiddleware: [sentryGlobalFunctionMiddleware],
   };
 });
 ```
+
+### Capture Errors in Route Loaders
+
+If a `loader` or `beforeLoad` throws while a page renders on the server, the router catches the error and shows the route's error component. Sentry doesn't report these errors automatically. To report them, set `onError` on the route:
+
+```tsx {filename:src/routes/posts.tsx}
+import * as Sentry from "@sentry/tanstackstart-react";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/posts")({
+  loader: () => fetchPosts(),
+  onError: (error) => {
+    Sentry.captureException(error);
+  },
+});
+```
+
+TanStack Router has no router-wide `onError`, so set it on each route.
 
 ### Add Readable Stack Traces With Source Maps
 
@@ -226,7 +249,7 @@ Now, head over to your project on [Sentry.io](https://sentry.io/) to view the co
 You've successfully integrated Sentry into your TanStack Start React application! Here's what to explore next:
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to monitor your AI systems
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
 - Make use of [Cloudflare-specific features](/platforms/javascript/guides/cloudflare/features/)
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">

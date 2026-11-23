@@ -5,9 +5,9 @@ sidebar_order: 90
 description: "Learn how to manually instrument your agents to capture spans, token usage, and tool execution."
 ---
 
-If your AI library does not have automatic instrumentation, create spans manually with well-defined names and data attributes. This gives Sentry a complete trace of how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
+This page describes manual instrumentation for version `3.x` of the Python SDK. For `2.x`, switch to `2.x` in the version selector.
 
-The [@sentry_sdk.trace()](/platforms/python/tracing/instrumentation/custom-instrumentation/#span-templates) decorator can also create these spans via templates.
+If your AI library does not have automatic instrumentation, create spans manually with well-defined names and data attributes. This gives Sentry a complete trace of how long the agent and each model or tool call took, where failures happened, and how the agent produced its final response.
 
 This page describes the minimum span structure and attributes Sentry needs, then covers richer data such as messages, streaming metrics, and custom costs.
 
@@ -38,7 +38,7 @@ Set these attributes **when the span starts**, before the model or tool call, so
 - `gen_ai.request.model` — requested model (pass the **raw** provider string)
 - `gen_ai.agent.name` / `gen_ai.tool.name` — when applicable
 
-Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `ERROR` and set `error.type` to a low-cardinality error code or exception class.
+Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {requested model}`, and `execute_tool {tool name}`. Record accurate start and end times. If an operation fails, set the span status to `error` and set `error.type` to a low-cardinality error code or exception class.
 
 Run the agent span in the caller's active trace context. For calls between services, follow the <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> guide so the agent run stays connected to the rest of the trace.
 
@@ -46,7 +46,7 @@ To group turns into a [Conversation](/product/agents/conversations/), call `set_
 
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
-Prompt, response, and tool content can contain PII. The SDK doesn't filter attributes you set manually, so the `data_collection` option (and `send_default_pii` in SDK versions prior to `3.0`) doesn't affect them. Decide what to record before you set these attributes. To learn how automatic integrations handle this data, see <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
+Prompt, response, and tool content can contain PII. The SDK doesn't filter attributes you set manually, so the `data_collection` option doesn't affect them. Decide what to record before you set these attributes. To learn how automatic integrations handle this data, see <PlatformLink to="/agent-tracing/#privacy-controls">Privacy Controls</PlatformLink>.
 
 ## AI Request Span
 
@@ -60,9 +60,9 @@ messages = [{"role": "user", "parts": [{"type": "text", "content": "Tell me a jo
 tools = [{"name": "get_weather", "description": "Get weather for a city"}]
 
 with sentry_sdk.start_span(
-    op="gen_ai.chat",
     name="chat o3-mini",
     attributes={
+        "sentry.op": "gen_ai.chat",
         "gen_ai.operation.name": "chat",
         "gen_ai.request.model": "o3-mini",
         "gen_ai.provider.name": "openai",
@@ -74,17 +74,17 @@ with sentry_sdk.start_span(
 ) as span:
     result = client.chat.completions.create(model="o3-mini", messages=messages)
 
-    span.set_data("gen_ai.response.model", result.model)
-    span.set_data("gen_ai.response.id", result.id)
-    span.set_data("gen_ai.output.messages", json.dumps([
+    span.set_attribute("gen_ai.response.model", result.model)
+    span.set_attribute("gen_ai.response.id", result.id)
+    span.set_attribute("gen_ai.output.messages", json.dumps([
         {"role": "assistant", "parts": [{"type": "text", "content": result.choices[0].message.content}]}
     ]))
-    span.set_data("gen_ai.response.finish_reasons", json.dumps([result.choices[0].finish_reason]))
-    span.set_data("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
-    span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
+    span.set_attribute("gen_ai.response.finish_reasons", json.dumps([result.choices[0].finish_reason]))
+    span.set_attribute("gen_ai.usage.input_tokens", result.usage.prompt_tokens)
+    span.set_attribute("gen_ai.usage.output_tokens", result.usage.completion_tokens)
     # If the provider reports cached tokens, record them as a subset of input tokens
     if getattr(result.usage, "prompt_tokens_details", None):
-        span.set_data(
+        span.set_attribute(
             "gen_ai.usage.cache_read.input_tokens",
             result.usage.prompt_tokens_details.cached_tokens,
         )
@@ -113,7 +113,7 @@ Unknown part types aren't shown prominently in the conversation detail. They rem
 Models with extended thinking (such as Anthropic's `thinking` blocks, Gemini's `thought`, or DeepSeek's `reasoning_content`) produce internal reasoning that isn't part of the user-visible reply. Represent this as a `reasoning` part alongside the user-facing `text` part — don't fold thinking into `text`.
 
 ```python
-span.set_data("gen_ai.output.messages", json.dumps([
+span.set_attribute("gen_ai.output.messages", json.dumps([
     {
         "role": "assistant",
         "parts": [
@@ -122,9 +122,9 @@ span.set_data("gen_ai.output.messages", json.dumps([
         ],
     }
 ]))
-span.set_data("gen_ai.usage.output_tokens", result.usage.completion_tokens)
+span.set_attribute("gen_ai.usage.output_tokens", result.usage.completion_tokens)
 # Reasoning tokens are a subset of output tokens
-span.set_data(
+span.set_attribute(
     "gen_ai.usage.reasoning.output_tokens",
     result.usage.completion_tokens_details.reasoning_tokens,
 )
@@ -138,7 +138,7 @@ Link a tool request to its result with the same `id`:
 
 ```python
 # Model asked to call a tool
-span.set_data("gen_ai.output.messages", json.dumps([
+span.set_attribute("gen_ai.output.messages", json.dumps([
     {
         "role": "assistant",
         "parts": [
@@ -202,9 +202,9 @@ input_messages = [
 ]
 
 with sentry_sdk.start_span(
-    op="gen_ai.invoke_agent",
     name="invoke_agent Weather Agent",
     attributes={
+        "sentry.op": "gen_ai.invoke_agent",
         "gen_ai.operation.name": "invoke_agent",
         "gen_ai.agent.name": "Weather Agent",
         "gen_ai.input.messages": json.dumps(input_messages),
@@ -213,7 +213,7 @@ with sentry_sdk.start_span(
     # Model and tool spans created here become children of the agent span.
     result = my_agent.run()
 
-    span.set_data("gen_ai.output.messages", json.dumps([
+    span.set_attribute("gen_ai.output.messages", json.dumps([
         {
             "role": "assistant",
             "parts": [{"type": "text", "content": str(result.output)}],
@@ -236,9 +236,9 @@ import json
 import sentry_sdk
 
 with sentry_sdk.start_span(
-    op="gen_ai.execute_tool",
     name="execute_tool get_weather",
     attributes={
+        "sentry.op": "gen_ai.execute_tool",
         "gen_ai.operation.name": "execute_tool",
         "gen_ai.agent.name": "Weather Agent",
         "gen_ai.tool.name": "get_weather",
@@ -248,10 +248,11 @@ with sentry_sdk.start_span(
 ) as span:
     try:
         result = get_weather(location="Paris")
-        span.set_data("gen_ai.tool.call.result", json.dumps(result))
+        span.set_attribute("gen_ai.tool.call.result", json.dumps(result))
     except Exception as exc:
-        span.set_status("internal_error")
-        span.set_data("error.type", type(exc).__name__)
+        span.status = "error"
+        span.set_attribute("sentry.status.message", repr(exc))
+        span.set_attribute("error.type", type(exc).__name__)
         raise
 ```
 
@@ -303,9 +304,9 @@ evaluation_input = [
 ]
 
 with sentry_sdk.start_span(
-    op="gen_ai.decide",
     name="decide typesafe/jev-1.13",
     attributes={
+        "sentry.op": "gen_ai.decide",
         "gen_ai.operation.name": "decide",
         "gen_ai.request.model": "typesafe/jev-1.13",
         "gen_ai.provider.name": "typesafe",
@@ -315,8 +316,8 @@ with sentry_sdk.start_span(
 ) as span:
     result = your_evaluator.evaluate(state=evaluation_input[0]["state"], questions=questions)
 
-    span.set_data("gen_ai.response.model", result.model)  # e.g. "typesafe/jev-1.13-20260917"
-    span.set_data("gen_ai.output.messages", json.dumps([
+    span.set_attribute("gen_ai.response.model", result.model)  # e.g. "typesafe/jev-1.13-20260917"
+    span.set_attribute("gen_ai.output.messages", json.dumps([
         {
             "type": "evaluation",
             "answers": {
@@ -331,8 +332,8 @@ with sentry_sdk.start_span(
             },
         }
     ]))
-    span.set_data("gen_ai.usage.input_tokens", result.usage.input_tokens)
-    span.set_data("gen_ai.usage.output_tokens", result.usage.output_tokens)
+    span.set_attribute("gen_ai.usage.input_tokens", result.usage.input_tokens)
+    span.set_attribute("gen_ai.usage.output_tokens", result.usage.output_tokens)
 ```
 
 The input is a single `{"type": "evaluation", "state": ..., "questions": ...}` object. `state` is the text being evaluated, and each entry in `questions` describes one question. The output is a single `{"type": "evaluation", "answers": ...}` object keyed by those same question names. Answers come in a few types (`boolean`, `noul`, `score`, and `choice`), each with its own fields. See the attributes below for the full shape.
@@ -381,9 +382,9 @@ extraction_request = {
 }
 
 with sentry_sdk.start_span(
-    op="gen_ai.extract",
     name="extract @cf/cloudflare/clairic",
     attributes={
+        "sentry.op": "gen_ai.extract",
         "gen_ai.operation.name": "extract",
         "gen_ai.request.model": "@cf/cloudflare/clairic",
         "gen_ai.provider.name": "cloudflare.workers_ai",
@@ -396,12 +397,12 @@ with sentry_sdk.start_span(
     result = your_extractor.extract(model="@cf/cloudflare/clairic", **extraction_request)
     response = {k: v for k, v in result.items() if k not in ("model", "usage")}
 
-    span.set_data("gen_ai.response.model", result["model"])  # e.g. "clairic"
+    span.set_attribute("gen_ai.response.model", result["model"])  # e.g. "clairic"
     # The response body as the provider returned it, without "model" and "usage":
     # {"answers": {"total": {"type": "number", "value": 1080, "confidence": 0.9999}, ...}, "truncated": False}
-    span.set_data("gen_ai.output.messages", json.dumps([response]))
-    span.set_data("gen_ai.usage.input_tokens", result["usage"]["input_tokens"])
-    span.set_data("gen_ai.usage.output_tokens", result["usage"]["output_tokens"])
+    span.set_attribute("gen_ai.output.messages", json.dumps([response]))
+    span.set_attribute("gen_ai.usage.input_tokens", result["usage"]["input_tokens"])
+    span.set_attribute("gen_ai.usage.output_tokens", result["usage"]["output_tokens"])
 ```
 
 The input is a single object holding the request body: `state` is the text the model reads, and each entry in `fields` describes one field to extract. The output is a single object holding the response body, with `answers` keyed by those same field names. Record both as you sent and received them, without changing the values. If the request includes images, replace each one with the string `"[Blob substitute]"` instead of recording the image data. See the attributes below for the full shape.
@@ -427,9 +428,9 @@ import sentry_sdk
 query = "user dietary preferences"
 
 with sentry_sdk.start_span(
-    op="gen_ai.memory.client",
     name="search_memory",
     attributes={
+        "sentry.op": "gen_ai.memory.client",
         "gen_ai.operation.name": "search_memory",
         "gen_ai.memory.store.id": "user-preferences-store",
         "gen_ai.agent.name": "Support Agent",  # when the operation runs under an agent
@@ -438,9 +439,9 @@ with sentry_sdk.start_span(
 ) as span:
     records = memory_store.search(query)
 
-    span.set_data("gen_ai.memory.record.count", len(records))
+    span.set_attribute("gen_ai.memory.record.count", len(records))
     # opt-in; may contain sensitive data
-    span.set_data("gen_ai.memory.records", json.dumps([
+    span.set_attribute("gen_ai.memory.records", json.dumps([
         {"id": record.id, "content": record.content, "score": record.score}
         for record in records
     ]))
