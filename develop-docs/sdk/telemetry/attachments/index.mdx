@@ -214,7 +214,7 @@ Consumers **MUST** process the payload according to its `version`. Within versio
 
 ##### Flame Graph Frames
 
-Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Native frames captured from machine stacks **MUST** retain `instruction_addr`, even when already symbolicated. Frames that a runtime reports without a native address, such as Hermes built-in and host function frames, **MAY** omit `instruction_addr` and contain only `function`.
+Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Frames with a native platform (`cocoa`, `objc`, `native`, or `c`), taken from the frame's `platform` or, when absent, the payload's `platform`, **MUST** retain `instruction_addr`, even when already symbolicated. Frames that a runtime reports without a native address, such as Hermes built-in and host function frames, **MAY** omit `instruction_addr`. Such frames **MUST NOT** use a native platform.
 
 Producers **SHOULD** deduplicate frames using their complete frame data, including addressing mode and binary association. The same frame index **MAY** occur at multiple tree positions, including recursive calls. The frame table has no stack ordering.
 
