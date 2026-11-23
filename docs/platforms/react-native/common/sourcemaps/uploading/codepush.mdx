@@ -81,7 +81,7 @@ If you are using Hermes make sure `jq` is installed on your system. If it's not,
 
 ## Upload Source Maps
 
-Upload source maps for your CodePush release by setting up your environment variables and running the `sourcemaps upload` command.
+Upload the bundle and its source map for your CodePush release by setting up your environment variables and running the `sourcemaps upload` command.
 
 Before running the upload command, make sure to set up your environment variables.
 
@@ -91,13 +91,21 @@ export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
 ```
 
-To upload source maps for your CodePush release, use the `sourcemaps upload` command.
+For Debug ID uploads, upload the CodePush bundle and its matching source map together using the `sourcemaps upload` command. Uploading only the source map can leave bundle frames unsymbolicated.
+
+Set the paths to the bundle and matching source map generated for this release. Adjust both paths if you use a custom bundle name or source map output path.
 
 ```bash {tabTitle:Sentry CLI}
+# iOS: main.jsbundle, Android: index.android.bundle
+BUNDLE_NAME=main.jsbundle
+# CodePush Standalone: ./build, AppCenter: ./build/CodePush
+BUNDLE_DIR=./build
+
 npx @sentry/cli sourcemaps upload \
   --debug-id-reference \
   --strip-prefix /path/to/project/root \
-  ./sourcemaps
+  --bundle "${BUNDLE_DIR}/${BUNDLE_NAME}" \
+  --bundle-sourcemap "./sourcemaps/${BUNDLE_NAME}.map"
 ```
 
 ## Notes
