@@ -55,12 +55,14 @@ describe('getRuntimeLinks', () => {
 });
 
 describe('getQuickStartTitle', () => {
-  it('names the runtime of the guide page if the guide has quick starts for more runtimes', () => {
+  it('names the runtime of the guide page', () => {
     expect(getQuickStartTitle(piDurable)).toBe('Quick Start (Node.js)');
+    expect(getQuickStartTitle(page(`${G}/vinext`, 'cloudflare'))).toBe(
+      'Quick Start (Cloudflare)'
+    );
   });
 
-  it('returns "Quick Start" for a guide with quick starts for fewer than two runtimes', () => {
-    expect(getQuickStartTitle(page(`${G}/node`, 'node'))).toBe('Quick Start');
+  it('returns "Quick Start" if the guide page sets no runtime', () => {
     expect(getQuickStartTitle(page(`${G}/eve`))).toBe('Quick Start');
     expect(getQuickStartTitle(undefined)).toBe('Quick Start');
   });

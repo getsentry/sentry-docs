@@ -1,0 +1,122 @@
+---
+title: vinext on Cloudflare
+sidebar_title: Cloudflare
+sidebar_order: 1
+description: "Learn how to manually set up Sentry in your vinext application on Cloudflare Workers."
+runtime: cloudflare
+---
+
+<AvailableSince version="11.6.0" />
+
+<PlatformContent includePath="sentry-init/manual-setup-callout" />
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- A vinext application that runs on Cloudflare Workers with the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/)
+
+<StepConnector selector="h2" showNumbers={true}>
+
+## Install
+
+Install `@sentry/nextjs` and `@sentry/cloudflare`. Your Vite config imports the Sentry Vite plugin from `@sentry/cloudflare`:
+
+```bash {tabTitle:npm}
+npm install @sentry/nextjs @sentry/cloudflare --save
+```
+
+```bash {tabTitle:yarn}
+yarn add @sentry/nextjs @sentry/cloudflare
+```
+
+```bash {tabTitle:pnpm}
+pnpm add @sentry/nextjs @sentry/cloudflare
+```
+
+## Configure
+
+### Add the Vite Plugin
+
+Add the Sentry plugin to your `vite.config.ts`, after `vinext()` and `cloudflare()`. At build time, the plugin wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare`, so you don't need to change the entry yourself.
+
+```typescript {filename:vite.config.ts} {diff}
+ import { cloudflare } from "@cloudflare/vite-plugin";
++import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+ import vinext from "vinext";
+ import { defineConfig } from "vite";
+
+ export default defineConfig({
+   plugins: [
+     vinext(),
+     cloudflare({ viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] } }),
++    sentryCloudflareVitePlugin(),
+   ],
+ });
+```
+
+Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children. To see the options of the plugin, see [Vite Plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/).
+
+### Configure Wrangler
+
+<PlatformContent
+  includePath="getting-started-config"
+  platform="javascript.cloudflare"
+/>
+
+### Add Your Sentry Options
+
+Create an `instrument.server.ts` file next to your Worker entry, the file that `main` points at in your Wrangler configuration. If `main` is `worker/index.ts`, the file belongs at `worker/instrument.server.ts`, not at the project root.
+
+The name is fixed. The plugin passes the default export of this file to `withSentry`. Use `defineCloudflareOptions` to get the options type-checked.
+
+```typescript {filename:worker/instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/nextjs/cloudflare";
+
+export default defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+}));
+```
+
+You don't need `sentry.server.config.ts` or `sentry.edge.config.ts`. If your app has these files, `Sentry.init()` in them creates no client in the Worker, and the options of `instrument.server.ts` apply.
+
+### Capture Server Errors
+
+vinext handles errors from Server Components and route handlers itself, so they don't reach the Worker entry. Export `onRequestError` from the [instrumentation file](https://nextjs.org/docs/app/guides/instrumentation) in your project's root directory (or `src` folder) to send them to Sentry:
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export const onRequestError = Sentry.captureRequestError;
+```
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
+
+## Verify Your Setup
+
+<PlatformContent includePath="getting-started-verify" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into the server side of your vinext application on Cloudflare Workers. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> to trace requests across services
+- [Vite Plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/) to see what the Sentry plugin instruments and how to configure it
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
+</StepConnector>

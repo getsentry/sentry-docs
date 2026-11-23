@@ -144,6 +144,7 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Remix', 'remix/manual-setup/cloudflare'),
       guide('SvelteKit', 'sveltekit/manual-setup/cloudflare'),
       guide('TanStack Start', 'tanstackstart-react/manual-setup/cloudflare'),
+      guide('vinext', 'vinext/manual-setup/cloudflare', 'javascript-nextjs'),
     ],
     agentGuides: [
       guide('Flue', 'flue/manual-setup/cloudflare'),
