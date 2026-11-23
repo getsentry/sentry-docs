@@ -65,6 +65,24 @@ We recommend installing NGINX since that's what we are using on [sentry.io](http
 ```nginx
 error_log /var/log/nginx/error.log warn;
 
+# Fallback CORS headers for the ingest endpoints. Each one is only set when
+# Sentry's response doesn't already have that header.
+map $upstream_http_access_control_allow_origin $cors_allow_origin {
+    "" "*";
+}
+map $upstream_http_access_control_allow_credentials $cors_allow_credentials {
+    "" "false";
+}
+map $upstream_http_access_control_allow_methods $cors_allow_methods {
+    "" "GET,POST,PUT";
+}
+map $upstream_http_access_control_allow_headers $cors_allow_headers {
+    "" "sentry-trace,baggage";
+}
+map $upstream_http_access_control_expose_headers $cors_expose_headers {
+    "" "sentry-trace,headers";
+}
+
 # generated 2024-04-29, Mozilla Guideline v5.7, nginx 1.24.0, OpenSSL 3.0.13, modern configuration, no HSTS, no OCSP
 # https://ssl-config.mozilla.org/#server=nginx&version=1.24.0&config=modern&openssl=3.0.13&hsts=false&ocsp=false&guideline=5.7
 server {
@@ -93,11 +111,16 @@ server {
     #
     # It is recommended to put a rate limiter on the ingest endpoints.
     location ~ ^/api/[0-9]+/(envelope|minidump|security|store|unreal)/ {
-        add_header Access-Control-Allow-Origin * always;
-        add_header Access-Control-Allow-Credentials false always;
-        add_header Access-Control-Allow-Methods GET,POST,PUT always;
-        add_header Access-Control-Allow-Headers sentry-trace,baggage always;
-        add_header Access-Control-Expose-Headers sentry-trace,headers always;
+        # Sentry already sends these headers on its responses. The `$cors_*`
+        # variables (see the `map` blocks below) are only set when Sentry's
+        # response doesn't have the header, for example when NGINX itself
+        # returns a 502 error. Otherwise, the browser would get the header twice
+        # and block the request.
+        add_header Access-Control-Allow-Origin $cors_allow_origin always;
+        add_header Access-Control-Allow-Credentials $cors_allow_credentials always;
+        add_header Access-Control-Allow-Methods $cors_allow_methods always;
+        add_header Access-Control-Allow-Headers $cors_allow_headers always;
+        add_header Access-Control-Expose-Headers $cors_expose_headers always;
         include proxy_params;
         proxy_pass http://your-sentry-ip:9000;
     }
