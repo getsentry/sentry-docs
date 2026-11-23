@@ -385,6 +385,16 @@ This function is called with a log object, and can return a modified log event o
 
 </SdkOption>
 
+<SdkOption name="metric_flush_threshold" type='int|null' defaultValue='null'>
+
+Set this to a positive integer to flush buffered metrics automatically after that many metrics have been added. When set to `null`, the SDK does not auto flush buffered metrics.
+
+This is useful for long-running requests or jobs that record many metrics, where waiting until the very end to flush isn’t practical.
+
+Each automatic flush sends a request to Sentry, so lower thresholds can increase network overhead. Available in `sentry/sentry` `4.25.0` and later.
+
+</SdkOption>
+
 <SdkOption name="before_send_metric" type='function (\Sentry\Metrics\Types\Metric $metric): ?\Sentry\Metrics\Types\Metric'>
 
 This function is called with a metric object, and can return a modified metric object, or `null` to skip the metric.
@@ -462,5 +472,13 @@ Leave this enabled if you want to reduce connection setup overhead for frequent 
 <SdkOption name="profiles_sample_rate" type="float" defaultValue="null">
 
 A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Setting this to a non null value will enable profiling.
+
+</SdkOption>
+
+<SdkOption name="profiles_sampler" type='function (\Sentry\Tracing\SamplingContext $context): float' defaultValue='null'>
+
+A function responsible for determining the percentage chance a sampled transaction will be profiled. It's passed the same sampling context as `traces_sampler` and must return a number between `0` (0% chance of being profiled) and `1` (100% chance of being profiled). Use it to profile only some transactions, for example by returning `0` for health checks.
+
+When set, it takes precedence over `profiles_sample_rate`. If the function throws, the SDK falls back to `profiles_sample_rate`. Available in `sentry/sentry` `4.27.0` and later.
 
 </SdkOption>
