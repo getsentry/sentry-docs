@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -12,14 +13,15 @@ func main() {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn: "___PUBLIC_DSN___",
 		// Adds request headers and IP for users,
-        // visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
-        SendDefaultPII: true,
+		// visit: https://docs.sentry.io/platforms/go/data-management/data-collected/ for more info
+		SendDefaultPII: true,
 	})
 	if err != nil {
 		log.Fatalf("sentry.Init: %s", err)
 	}
 	defer sentry.Flush(2 * time.Second)
 
-	sentry.CaptureMessage("It works!")
+	ctx, _ := sentry.WithScope(context.Background())
+	sentry.CaptureMessage(ctx, "It works!")
 }
 ```

@@ -1,3 +1,5 @@
+<Include name="go/capture-context-note" />
+
 To avoid unintentionally dropping events when the program terminates, arrange
 for `sentry.Flush` to be called, typically using `defer`.
 
@@ -5,14 +7,14 @@ If you use multiple clients, arrange for each of them to be flushed as
 appropriate.
 
 `Flush` waits until any buffered events are sent to the Sentry server, blocking
-for at most the given timeout. It returns `false` if the timeout was reached. In
+for at most the given timeout. It returns `false` if the client is disabled or the timeout was reached. In
 that case, some events may not have been sent.
 
 ```go
 // err := sentry.Init(...)
 defer sentry.Flush(2 * time.Second)
 
-sentry.CaptureMessage("my message")
+sentry.CaptureMessage(ctx, "my message")
 ```
 
 `FlushWithContext` is an alternative to Flush that uses a context.Context to manage the timeout or cancellation of the flush operation. This approach is particularly useful in applications where you are already using contexts for managing deadlines and cancellations.
@@ -20,9 +22,11 @@ sentry.CaptureMessage("my message")
 
 ```go
 // err := sentry.Init(...)
-ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-defer cancel()
+sentry.CaptureMessage(ctx, "my message")
 
-sentry.CaptureMessage("my message")
-sentry.FlushWithContext(ctx)
+flushCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+defer cancel()
+sentry.FlushWithContext(flushCtx)
 ```
+
+Flush through the SDK or client so pending log and metric batches are included. Flush before closing the client or transport.
