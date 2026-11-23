@@ -17,6 +17,11 @@ type Props = {
  * `integration_grid` frontmatter nested under it. The nested items match the
  * `IntegrationGrid` on the linked page, so they update when that page changes.
  *
+ * Nested items that link outside the platform or guide they sit under are
+ * skipped. Those point to another guide, such as Mastra or Workers AI, so list
+ * that guide as its own top-level entry or under its own platform instead of
+ * repeating it under every platform.
+ *
  * Usage in MDX:
  *   <PlatformIntegrationList
  *     platforms={[{title: "Python", to: "/platforms/python/agent-tracing/"}]}
@@ -29,11 +34,12 @@ export function PlatformIntegrationList({platforms}: Props) {
     <ul>
       {platforms.map(({title, to}) => {
         const pathSegments = to.split('/').filter(Boolean);
+        const platformOrGuide = getCurrentPlatformOrGuide(rootNode, pathSegments);
         const integrations = resolveIntegrations(
           rootNode,
-          getCurrentPlatformOrGuide(rootNode, pathSegments),
+          platformOrGuide,
           nodeForPath(rootNode, pathSegments)?.frontmatter.integration_grid ?? []
-        );
+        ).filter(({url}) => !platformOrGuide || url.startsWith(platformOrGuide.url));
 
         return (
           <li key={to}>
