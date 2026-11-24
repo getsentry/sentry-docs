@@ -152,7 +152,13 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
             Set up with your coding agent
           </Text>
           {orgSlugs.length > 1 && (
-            <Select.Root size="1" value={activeOrgSlug} onValueChange={setOrgSlug}>
+            <Select.Root
+              size="1"
+              value={activeOrgSlug}
+              onValueChange={setOrgSlug}
+              // Changing org mid-mint would copy a code for the previous org.
+              disabled={isPending}
+            >
               <Select.Trigger aria-label="Organization" />
               <Select.Content position="popper">
                 {orgSlugs.map(slug => (
