@@ -32,7 +32,12 @@ SentrySdk.Init(options =>
 });
 ```
 
-To drop every log and keep sending errors and breadcrumbs, return `null` from `SetBeforeSendLog`, or turn off the `Sentry` logging provider. The callback works for every integration and for `SentrySdk.Logger`. The provider setting works only for `Logging.AddSentry()`, but you can set it in configuration, and the SDK creates no logs for the entries it filters.
+To drop every log and keep sending errors and breadcrumbs, return `null` from `SetBeforeSendLog`. The callback works for every integration and for `SentrySdk.Logger`. Some integrations also have their own switch, which you can set in configuration and which stops the SDK from creating those logs at all:
+
+- For `ILogger`, turn off the `Sentry` logging provider, as shown below.
+- For NLog, set [`minimumLogLevel`](/platforms/dotnet/guides/nlog/logs/#minimumloglevel) to `Off` on the target.
+
+The Serilog sink and the log4net appender have no such switch, so use the callback for those.
 
 With the callback, return `null`:
 
@@ -80,4 +85,4 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 ```
 
-See [Logs](/platforms/dotnet/logs/) for more about filtering logs.
+See [Logs](/platforms/dotnet/logs/) for more about filtering logs, and [Configure Microsoft.Extensions.Logging Filters](/platforms/dotnet/guides/extensions-logging/logs/#configure-microsoftextensionslogging-filters) for more about the `Sentry` provider.
