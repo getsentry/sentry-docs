@@ -213,15 +213,14 @@ When the SDK does not send the fatal ANR event, the ANR shows only as a non-fata
 
 ### Filtering Non-Fatal ANRs
 
-To drop or change non-fatal ANR events, use `beforeSend`. This example drops non-fatal ANRs that are shorter than 2 seconds:
+To drop or change non-fatal ANR events, use `beforeSend`. This example drops non-fatal ANRs from debug builds:
 
 ```kotlin
 SentryAndroid.init(context) { options ->
     options.nonFatalAnrSampleRate = 1.0
     options.setBeforeSend { event, _ ->
         val isNonFatalAnr = event.exceptions?.any { it.mechanism?.type == "NonFatalANR" } == true
-        val durationMs = (event.contexts["non_fatal_anr"] as? Map<*, *>)?.get("duration_ms") as? Number
-        if (isNonFatalAnr && durationMs != null && durationMs.toLong() < 2_000) {
+        if (isNonFatalAnr && BuildConfig.DEBUG) {
             null
         } else {
             event
@@ -234,26 +233,21 @@ SentryAndroid.init(context) { options ->
 SentryAndroid.init(context, options -> {
     options.setNonFatalAnrSampleRate(1.0);
     options.setBeforeSend((event, hint) -> {
-        boolean isNonFatalAnr = false;
         final List<SentryException> exceptions = event.getExceptions();
-        if (exceptions != null) {
+        if (BuildConfig.DEBUG && exceptions != null) {
             for (final SentryException exception : exceptions) {
                 final Mechanism mechanism = exception.getMechanism();
                 if (mechanism != null && "NonFatalANR".equals(mechanism.getType())) {
-                    isNonFatalAnr = true;
-                    break;
+                    return null;
                 }
             }
-        }
-        final Object context = event.getContexts().get("non_fatal_anr");
-        final Object durationMs = context instanceof Map ? ((Map<?, ?>) context).get("duration_ms") : null;
-        if (isNonFatalAnr && durationMs instanceof Number && ((Number) durationMs).longValue() < 2_000) {
-            return null;
         }
         return event;
     });
 });
 ```
+
+To report only longer hangs, use the [threshold](#threshold) instead of `beforeSend`.
 
 If you drop a non-fatal ANR event, the SDK still reports a fatal ANR for the same hang. See [Fatal and Non-Fatal ANRs](#fatal-and-non-fatal-anrs).
 
