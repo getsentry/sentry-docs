@@ -1,73 +1,174 @@
 ---
 title: Hono
-description: "Learn how to set up Sentry in your Hono app using the Sentry CLI, capture your first errors, logs, and traces, and view them in Sentry."
-sdk: sentry.javascript.hono
+description: "Learn how to set up Sentry in your Hono app on Node.js, Bun, Deno, or Cloudflare Workers."
+sdk: sentry.javascript.node
 fallbackGuide: javascript.node
+inheritCommonContent: false
 categories:
   - server
   - server-only
 ---
 
-The `@sentry/hono` SDK supports Hono 4+ across multiple runtimes: Cloudflare Workers, Node.js, Bun, and Deno. It works as Hono middleware, so you can drop it into your existing app with minimal setup.
+<Alert title="Using @sentry/hono?">
 
-<PlatformContent includePath="getting-started-prerequisites" />
+Starting with version `11.2.0`, the Sentry SDK for your runtime instruments Hono, so you don't need `@sentry/hono` anymore. **Update to `11.2.0` or above** and [migrate to the SDK for your runtime](#migrate-from-sentryhono).
 
-<StepComponent>
+</Alert>
 
-## Install
+[Hono](https://hono.dev/) doesn't need its own Sentry SDK. Set up Sentry for the runtime your app runs on, and `honoIntegration` instruments Hono automatically:
 
-<PlatformContent includePath="sentry-init/experimental-warning" />
+- Names each request after its route, for example `GET /users/:id`
+- Captures errors from your routes and middleware
+- Creates spans for incoming requests and each middleware when tracing is enabled
 
-<PlatformContent includePath="sentry-init/install-command" />
+This needs Sentry JavaScript SDK version `11.2.0` or above, and Hono `4.4.9` or above.
 
-<Include name="quick-start-features-expandable" />
+## Set Up Sentry for Your Runtime
 
-<PlatformContent includePath="sentry-init/how-it-works" />
+- <LinkWithPlatformIcon
+    platform="javascript.node"
+    label="Node.js"
+    url="/platforms/javascript/guides/node/?framework=hono"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.bun"
+    label="Bun"
+    url="/platforms/javascript/guides/bun/?framework=hono"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.deno"
+    label="Deno"
+    url="/platforms/javascript/guides/deno/?framework=hono"
+  />
+- <LinkWithPlatformIcon
+    platform="javascript.cloudflare"
+    label="Cloudflare Workers"
+    url="/platforms/javascript/guides/cloudflare/?framework=hono"
+  />
 
-## Control the Data You Send to Sentry
+## Customize Error Capturing
 
-<PlatformContent includePath="getting-started-data-collection" />
+By default, the SDK skips errors with a 3xx or 4xx status code, since they're usually expected redirects or client errors. To change this, pass a `shouldHandleError` callback to `honoIntegration()`. It receives the thrown error. Return `true` to capture it or `false` to skip it:
 
-## Send Logs
+```javascript {tabTitle:Node.js} {filename:instrument.mjs}
+import * as Sentry from "@sentry/node";
 
-<PlatformContent includePath="getting-started-logs" />
-
-## Send Application Metrics <FeatureBadge type="new" />
-
-<PlatformContent includePath="getting-started-metrics" />
-
-## Verify Your Setup
-
-The `sentry init` command checks the integration files it creates or modifies before it finishes. To confirm runtime events are reaching Sentry, add a test route to your Hono app that throws an error, then request `/debug-sentry` to trigger it:
-
-```typescript
-app.get("/debug-sentry", () => {
-  throw new Error("Sentry Test Error");
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.honoIntegration({
+      shouldHandleError(error) {
+        const status = error?.status;
+        // Capture 401/403 in addition to the default 5xx errors
+        return (
+          status === 401 ||
+          status === 403 ||
+          typeof status !== "number" ||
+          status >= 500
+        );
+      },
+    }),
+  ],
 });
 ```
 
+```javascript {tabTitle:Bun} {filename:instrument.js}
+import * as Sentry from "@sentry/bun";
 
-### View Captured Data in Sentry
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.honoIntegration({
+      shouldHandleError(error) {
+        const status = error?.status;
+        // Capture 401/403 in addition to the default 5xx errors
+        return (
+          status === 401 ||
+          status === 403 ||
+          typeof status !== "number" ||
+          status >= 500
+        );
+      },
+    }),
+  ],
+});
+```
 
-Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+```typescript {tabTitle:Deno} {filename:main.ts}
+import * as Sentry from "@sentry/deno";
 
-<Include name="quick-start-locate-data-expandable" />
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.honoIntegration({
+      shouldHandleError(error) {
+        const status = (error as { status?: number })?.status;
+        // Capture 401/403 in addition to the default 5xx errors
+        return (
+          status === 401 ||
+          status === 403 ||
+          typeof status !== "number" ||
+          status >= 500
+        );
+      },
+    }),
+  ],
+});
+```
 
-## Next Steps
+```typescript {tabTitle:Cloudflare Workers} {filename:src/instrument.server.ts}
+import * as Sentry from "@sentry/cloudflare";
 
-At this point, you should have integrated Sentry into your Hono application. Here's what to explore next:
+export default Sentry.defineCloudflareOptions((env) => ({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.honoIntegration({
+      shouldHandleError(error) {
+        const status = (error as { status?: number })?.status;
+        // Capture 401/403 in addition to the default 5xx errors
+        return (
+          status === 401 ||
+          status === 403 ||
+          typeof status !== "number" ||
+          status >= 500
+        );
+      },
+    }),
+  ],
+}));
+```
 
-- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
-- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
-- Explore <PlatformLink to="/features/">Hono-specific features</PlatformLink> like custom error filtering
-- Read the <PlatformLink to="/manual-setup/">Manual Setup</PlatformLink> guide to learn what each file does and how to configure Sentry yourself
+## Instrument Hono Manually
 
-<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+The SDK instruments Hono's code when Hono loads, so Sentry must load before your app. The runtime guides set this up for you. If your setup can't do this, for example a Cloudflare Worker that you deploy with Wrangler and without the Vite plugin, add `honoMiddleware()` as the first middleware of your app:
 
-- If you encountered issues with `sentry init`, try <PlatformLink to="/manual-setup/">setting up Sentry manually</PlatformLink>
-- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
-- [Get support](https://www.sentry.help/en/)
+```typescript {filename:src/index.ts}
+import { Hono } from "hono";
+import * as Sentry from "@sentry/cloudflare";
 
-</Expandable>
+const app = new Hono();
 
-</StepComponent>
+app.use(Sentry.honoMiddleware(app));
+
+// Your routes here
+
+export default Sentry.withSentry(
+  (env) => ({
+    dsn: "___PUBLIC_DSN___",
+    tracesSampleRate: 1.0,
+  }),
+  app
+);
+```
+
+`honoMiddleware()` accepts the same `shouldHandleError` option as `honoIntegration()`. You can keep it when you add the Vite plugin later, because the SDK handles each request only once.
+
+## Migrate From `@sentry/hono`
+
+If your app uses the `@sentry/hono` package or the `@hono/sentry` community middleware, move to the SDK for your runtime:
+
+1. Remove `@sentry/hono` (or `@hono/sentry` and `toucan-js`) from your dependencies.
+2. Remove the `sentry()` middleware from your app.
+3. Set up Sentry with the guide for your runtime.
+4. Move your `sentry()` options to `Sentry.init()`, or to `instrument.server.ts` on Cloudflare Workers.
+5. Move `shouldHandleError` to `honoIntegration()`.

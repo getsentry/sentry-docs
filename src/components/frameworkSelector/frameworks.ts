@@ -8,6 +8,7 @@ const EXPRESS: Framework = {key: 'express', title: 'Express'};
 const FASTIFY: Framework = {key: 'fastify', title: 'Fastify'};
 const KOA: Framework = {key: 'koa', title: 'Koa'};
 const HAPI: Framework = {key: 'hapi', title: 'Hapi'};
+const HONO: Framework = {key: 'hono', title: 'Hono'};
 
 /** A framework with its own Sentry SDK. The selector opens its guide instead of swapping snippets. */
 export type FrameworkGuide = {
@@ -78,10 +79,9 @@ export const RUNTIMES: Record<string, Runtime> = {
   },
   node: {
     title: 'Node.js',
-    frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
+    frameworks: [EXPRESS, FASTIFY, KOA, HAPI, HONO],
     frameworkGuides: [
       guide('Astro', 'astro'),
-      guide('Hono', 'hono'),
       guide('NestJS', 'nestjs'),
       guide('Next.js', 'nextjs'),
       guide('Nitro', 'nitro'),
@@ -110,10 +110,9 @@ export const RUNTIMES: Record<string, Runtime> = {
   },
   bun: {
     title: 'Bun',
-    frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
+    frameworks: [EXPRESS, FASTIFY, KOA, HAPI, HONO],
     frameworkGuides: [
       guide('Elysia', 'elysia'),
-      guide('Hono', 'hono'),
       guide('Next.js', 'nextjs/manual-setup/bun'),
       guide('React Router', 'react-router/manual-setup/bun'),
     ],
@@ -122,9 +121,8 @@ export const RUNTIMES: Record<string, Runtime> = {
   },
   deno: {
     title: 'Deno',
-    frameworks: [EXPRESS, FASTIFY, KOA, HAPI],
+    frameworks: [EXPRESS, FASTIFY, KOA, HAPI, HONO],
     frameworkGuides: [
-      guide('Hono', 'hono'),
       guide('Next.js', 'nextjs/manual-setup/deno'),
       guide('React Router', 'react-router/manual-setup/deno'),
     ],
@@ -133,10 +131,9 @@ export const RUNTIMES: Record<string, Runtime> = {
   },
   cloudflare: {
     title: 'Cloudflare Workers',
-    frameworks: [EXPRESS],
+    frameworks: [EXPRESS, HONO],
     frameworkGuides: [
       guide('Astro', 'astro/manual-setup/cloudflare'),
-      guide('Hono', 'hono/manual-setup/cloudflare'),
       guide('Hydrogen', 'react-router/hydrogen', 'javascript-hydrogen'),
       guide('Next.js', 'nextjs/manual-setup/cloudflare'),
       guide('Nuxt', 'nuxt/manual-setup/cloudflare'),

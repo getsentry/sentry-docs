@@ -166,7 +166,7 @@ SentrySDK.start { options in
 
 **Expand** — the code is too different for an LLM to infer:
 - Different languages: Swift / Objective-C, cross-language guides (JS/Python/PHP/Ruby/...)
-- Different setup flows: Hono guide init (Cloudflare vs Node.js `--import` vs Bun)
+- Different setup flows: runtime init (Node.js `--import` vs Bun `--preload` vs the Cloudflare Vite plugin)
 - Different APIs or wrappers: GCP Cloud Functions (`wrapHttpFunction` vs `wrapCloudEventFunction`), serverless async/sync handlers
 - Different framework versions with distinct imports: Spring 5/6/7, Spring Boot 2/3/4, Svelte v5+ / v3
 - Client / Server splits: Next.js, Remix, React Router (Replay + browser tracing vs Node integrations)
@@ -179,7 +179,7 @@ SentrySDK.start { options in
 - Module format: ESM / CommonJS (same API, different import syntax)
 - Config file formats: JSON / TOML, properties / yml
 - Java / Kotlin on the same platform (same APIs, syntactic sugar differences)
-- Runtime tabs where only the import path changes (e.g. `@sentry/hono/cloudflare` vs `@sentry/hono/node` in `platform-includes/` snippets)
+- Runtime tabs where only the import path changes (e.g. `@sentry/node` vs `@sentry/bun` in `platform-includes/` snippets)
 - Build tools when only dependency declaration syntax differs: Gradle / Maven / SBT
 
 ## Review Checklist
