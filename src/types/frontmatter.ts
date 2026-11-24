@@ -2,6 +2,26 @@ import {PaginationNavNode} from './paginationNavNode';
 import {PlatformCategory} from './platform';
 
 /**
+ * One card in an `IntegrationGrid`.
+ */
+export type IntegrationGridItem = {
+  /** Platform icon key, e.g. "anthropic", "openai", "langchain". */
+  icon: string;
+  /** Display name of the integration. */
+  title: string;
+  /** Platform-relative path, e.g. "/integrations/anthropic/". */
+  to: string;
+  /** Optional one-line description shown under the title. */
+  description?: string;
+  /** Absolute path for links that target a different platform or guide. */
+  href?: string;
+  /** Platform/guide keys that hide this card, like `PlatformSection`. */
+  notSupported?: string[];
+  /** Platform/guide keys that show this card, like `PlatformSection`. */
+  supported?: string[];
+};
+
+/**
  ** a YAML-formatted blob defined at the top of every markdown or mdx file
  */
 export interface FrontMatter {
@@ -21,11 +41,15 @@ export interface FrontMatter {
    */
   beta?: boolean;
   /**
-   * A description to use in the <meta> header, as well as in auto generated page grids.
+   * Override the page canonical URL. A site-relative path (for example
+   * `/platforms/react/options/`) is resolved against the docs origin. An
+   * absolute http(s) URL is used as written. Omit it to use the page URL.
    */
   customCanonicalTag?: string;
 
-  /**  Add this if you want to add a canonical tag (without this it will default to the page url). Should be a relative path without the domain (e.g. `/platforms/react/options/`) */
+  /**
+   * A description to use in the <meta> header, as well as in auto generated page grids.
+   */
   description?: string;
 
   /**
@@ -37,6 +61,12 @@ export interface FrontMatter {
    * Set this to true to take all the available width for the page content.
    */
   fullWidth?: boolean;
+
+  /**
+   * Integrations that `<IntegrationGrid />` renders on this page. Keeping them
+   * in frontmatter lets other pages, such as the Agents setup page, list them too.
+   */
+  integration_grid?: IntegrationGridItem[];
 
   /**
    * A list of keywords for indexing with search.

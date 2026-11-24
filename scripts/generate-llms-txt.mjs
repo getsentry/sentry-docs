@@ -119,6 +119,14 @@ function linkEntry(node) {
   return `- [${title}](${url})`;
 }
 
+/** Every visible page, nested like the sidebar, one link entry per line. */
+function buildSitemapLines(node, depth = 0) {
+  return getVisibleChildren(node).flatMap(child => [
+    `${'  '.repeat(depth)}${linkEntry(child)}`,
+    ...buildSitemapLines(child, depth + 1),
+  ]);
+}
+
 function resolvePaths(docTree, nodePaths) {
   const nodes = [];
   for (const nodePath of nodePaths) {
@@ -207,7 +215,7 @@ Key Sentry capabilities include:
 - Application metrics take counters, gauges, and distributions from application code to track application health and drill down into related traces, logs, and errors, without cardinality blowing up your bill.
 - Seer is Sentry's AI debugging tool that detects and diagnoses errors using Sentry data.
 
-The full list of Sentry features, as well as information on SDKs and pricing, can be found in the Sentry docs (${DOCS_ORIGIN}/index.md). All documentation pages are available as clean Markdown, for example ${DOCS_ORIGIN}/platforms/javascript.md. Use these Markdown URLs for full content.`;
+The full list of Sentry features, as well as information on SDKs and pricing, can be found in the Sentry docs (${DOCS_ORIGIN}/index.md). All documentation pages are available as clean Markdown, for example ${DOCS_ORIGIN}/platforms/javascript.md. Use these Markdown URLs for full content. ${DOCS_ORIGIN}/sitemap.md lists every page with a one-line summary.`;
 
 const INSTRUCTIONS = `\
 ## For AI Agents
@@ -285,6 +293,24 @@ async function main() {
   const indexMdPath = path.join(mdExportsDir, 'index.md');
   await writeFile(indexMdPath, indexMd, 'utf8');
   console.log(`Generated ${indexMdPath} (${indexMd.length} bytes)`);
+
+  const sitemapMd = [
+    '---',
+    `title: ${JSON.stringify('Sitemap')}`,
+    `description: ${JSON.stringify('Every documentation page, with a one-line summary and its Markdown URL.')}`,
+    `url: ${DOCS_ORIGIN}/sitemap.md`,
+    '---',
+    '',
+    '# Sitemap',
+    '',
+    `Every documentation page, nested like the sidebar. Each link points to the page's Markdown version. See ${DOCS_ORIGIN}/llms.txt for an overview and guidance for agents.`,
+    '',
+    ...buildSitemapLines(docTree),
+    '',
+  ].join('\n');
+  const sitemapMdPath = path.join(mdExportsDir, 'sitemap.md');
+  await writeFile(sitemapMdPath, sitemapMd, 'utf8');
+  console.log(`Generated ${sitemapMdPath} (${sitemapMd.length} bytes)`);
 }
 
 main().catch(err => {

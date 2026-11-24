@@ -1,0 +1,24 @@
+Your Express app runs on Workers with `httpServerHandler` from `cloudflare:node`, as in [Cloudflare's Express guide](https://developers.cloudflare.com/workers/tutorials/deploy-an-express-app/). You don't need to change your Worker entry: the plugin wraps its `httpServerHandler` export and instruments Express. Each request is named after its route, for example `GET /users/:id`, and errors from your routes and middleware are captured.
+
+```typescript {filename:src/index.ts}
+import { httpServerHandler } from "cloudflare:node";
+import express from "express";
+
+const app = express();
+
+app.get("/users/:id", (req, res) => {
+  res.json({ id: req.params.id });
+});
+
+app.listen(3000);
+
+export default httpServerHandler({ port: 3000 });
+```
+
+This needs `@sentry/cloudflare` version `11.15.0` or above. `httpServerHandler` needs a `compatibility_date` of `2025-09-01` or later in your Wrangler configuration.
+
+<Alert level="warning" title="Known issue">
+
+When the mount path of a router has parameters, such as `app.use("/orgs/:orgId", router)`, a request to a route of that router is named after its method only, for example `GET`. This affects Express 4, and Express 5 with `router` older than 2.3.0.
+
+</Alert>

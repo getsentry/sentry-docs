@@ -32,7 +32,14 @@ SentrySdk.Init(options =>
 });
 ```
 
-To drop every log and keep sending errors and breadcrumbs, return `null`:
+To drop every log and keep sending errors and breadcrumbs, return `null` from `SetBeforeSendLog`. The callback works for every integration and for `SentrySdk.Logger`. Some integrations also have their own switch, which you can set in configuration and which stops the SDK from creating those logs at all:
+
+- For `ILogger`, turn off the `Sentry` logging provider, as shown below.
+- For NLog, set [`minimumLogLevel`](/platforms/dotnet/guides/nlog/logs/#minimumloglevel) to `Off` on the target.
+
+The Serilog sink and the log4net appender have no such switch, so use the callback for those.
+
+With the callback, return `null`:
 
 ```csharp {filename:Program.cs}
 SentrySdk.Init(options =>
@@ -42,7 +49,7 @@ SentrySdk.Init(options =>
 });
 ```
 
-In apps that call `UseSentry`, set the same callback on its options. The callback applies to every log, including logs from `SentrySdk.Logger` and from the `ILogger` integration.
+In apps that call `UseSentry`, set the same callback on its options:
 
 ```csharp {filename:Program.cs}
 var builder = WebApplication.CreateBuilder(args);
@@ -53,4 +60,29 @@ builder.UseSentry(options =>
 });
 ```
 
-See [Logs](/platforms/dotnet/logs/) for more about filtering logs.
+To turn off the `Sentry` logging provider, set its level to `None`. If your app reads the `Logging` section from configuration, as `WebApplication.CreateBuilder` and `Host.CreateApplicationBuilder` do, set it in `appsettings.json`:
+
+```json {filename:appsettings.json}
+{
+  "Logging": {
+    "Sentry": {
+      "LogLevel": {
+        "Default": "None"
+      }
+    }
+  }
+}
+```
+
+Otherwise, add the same rule when you add the integration:
+
+```csharp {filename:Program.cs}
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddSentry();
+    builder.Services.Configure<LoggerFilterOptions>(options =>
+        options.Rules.Add(new LoggerFilterRule("Sentry", null, LogLevel.None, null)));
+});
+```
+
+See [Logs](/platforms/dotnet/logs/) for more about filtering logs, and [Configure Microsoft.Extensions.Logging Filters](/platforms/dotnet/guides/extensions-logging/logs/#configure-microsoftextensionslogging-filters) for more about the `Sentry` provider.
