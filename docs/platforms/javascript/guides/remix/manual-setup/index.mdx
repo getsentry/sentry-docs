@@ -1,7 +1,7 @@
 ---
-title: Manual Setup
+title: Remix on Node.js
 sidebar_order: 1
-description: "Learn how to manually set up Sentry in your Remix app and capture your first events."
+description: "Learn how to manually set up Sentry in your Remix app on Node.js and capture your first events."
 runtime: node
 ---
 
@@ -34,6 +34,339 @@ yarn add @sentry/remix @sentry/profiling-node
 pnpm add @sentry/remix @sentry/profiling-node
 ```
 
-<PlatformContent includePath="getting-started-complete" />
+## Configure
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+<Include name="quick-start-features-expandable-cloudflare-frameworks" />
+
+### Configure Client-Side Sentry
+
+Create a client file `entry.client.tsx` in the `app` folder of your project if you don't have one already. In this file, import and initialize the Sentry SDK.
+
+The snippet also turns on:
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> and `browserTracingIntegration()`
+- Session Replay: via `replayIntegration()`, sampled with [`replaysSessionSampleRate`](/platforms/javascript/guides/remix/configuration/options/#replaysSessionSampleRate) and [`replaysOnErrorSampleRate`](/platforms/javascript/guides/remix/configuration/options/#replaysOnErrorSampleRate)
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+```typescript {tabTitle:Client} {filename: entry.client.tsx}
+import { useLocation, useMatches } from "@remix-run/react";
+import * as Sentry from "@sentry/remix";
+import { useEffect } from "react";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  integrations: [
+    // Registers the Browser Tracing integration
+    Sentry.browserTracingIntegration({
+      useEffect,
+      useLocation,
+      useMatches,
+    }),
+    // Registers the Replay integration
+    Sentry.replayIntegration(),
+    // Enables User Feedback
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      colorScheme: "system",
+    }),
+  ],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Set `tracePropagationTargets` to control for which URLs distributed tracing should be enabled
+  tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+```
+
+#### Remix ErrorBoundary
+
+To capture errors from your [ErrorBoundary](https://remix.run/docs/en/main/route/error-boundary), define it in `root.tsx` to act as a fallback for all routes or create route-specific error boundaries in your route components.
+
+In your `ErrorBoundary` component, use `Sentry.captureRemixErrorBoundaryError` to send the captured error to Sentry:
+
+```tsx {filename: root.tsx}
+import { captureRemixErrorBoundaryError } from "@sentry/remix";
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+
+  captureRemixErrorBoundaryError(error);
+
+  return <div> ... </div>;
+};
+```
+
+#### Tracing
+
+Wrap your Remix root component with `withSentry` to trace client-side navigations:
+
+```tsx {filename: root.tsx}
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+
+import { withSentry } from "@sentry/remix";
+
+function App() {
+  return (
+    <html>
+      <head>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
+  );
+}
+
+export default withSentry(App);
+```
+
+### Configure Server-Side Sentry
+
+Create an instrumentation file `instrument.server.mjs` in your project's root folder and initialize the Sentry SDK within it.
+
+The snippet also turns on:
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profileSessionSampleRate">`profileSessionSampleRate`</PlatformLink> and `nodeProfilingIntegration()`
+
+Don't need a feature? Remove its integration and options from the snippet.
+
+```typescript {tabTitle:Server} {filename: instrument.server.mjs}
+import * as Sentry from "@sentry/remix";
+import { nodeProfilingIntegration } from "@sentry/profiling-node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Add our Profiling integration
+  integrations: [nodeProfilingIntegration()],
+
+  // Enables Tracing.
+  // Set to 1.0 to capture 100% of spans for tracing.
+  // We recommend reducing this value in production.
+  tracesSampleRate: 1.0,
+
+  // Enables Profiling for every session.
+  profileSessionSampleRate: 1.0,
+
+  // Optionally limit which action formData fields are captured.
+  // Without this option, all fields are captured.
+  captureActionFormDataKeys: {
+    key_x: true,
+    key_y: true,
+  },
+});
+```
+
+Then run your Remix server using the `--import` command line option and point it to this file to make sure the Sentry module loads before any other application code runs:
+
+```bash
+NODE_OPTIONS='--import=./instrument.server.mjs' remix-serve build
+```
+
+<Expandable title="Are you using Express?">
+
+If you use the Express server instead of the built-in Remix server, you can import your instrumentation file directly at the top of your server implementation.
+
+```typescript {filename: server.mjs}
+// import the Sentry instrumentation file before anything else.
+import "./instrument.server.mjs";
+
+// ...
+
+const app = express();
+
+// ...
+```
+
+</Expandable>
+
+### Capture Server-Side Errors
+
+To automatically capture server-side errors, export a [`handleError`](https://remix.run/docs/en/main/file-conventions/entry.server#handleerror) function from your server entry point (`entry.server.tsx`). Choose one of the two options:
+
+- Wrap your custom error handler with `wrapHandleErrorWithSentry`.
+- Use `sentryHandleError` directly if you don't have a custom error handler.
+
+<Alert level="success" title="Tip">
+
+Sentry's Remix SDK automatically records your [`action`](https://remix.run/docs/en/main/route/action) and [`loader`](https://remix.run/docs/en/main/route/loader) transactions for performance monitoring. You can also initialize Sentry's database integrations, such as [Prisma](/platforms/javascript/guides/node/configuration/integrations/prisma/), to get spans for your database calls.
+
+</Alert>
+
+```typescript {tabTitle:Custom Error Handler} {filename: entry.server.tsx}
+import * as Sentry from "@sentry/remix";
+
+export const handleError = Sentry.wrapHandleErrorWithSentry(
+  (error, { request }) => {
+    // Custom handleError implementation
+  }
+);
+```
+
+```typescript {tabTitle:Default Error Handler} {filename: entry.server.tsx}
+import * as Sentry from "@sentry/remix";
+
+export const handleError = Sentry.sentryHandleError;
+```
+
+### Configure Vite
+
+Add `sentryRemixVitePlugin` from `@sentry/remix/vite` to your `vite.config.ts`. The plugin:
+
+- Parameterizes client-side transaction names with your route patterns, for example `/users/:id`.
+- Instruments supported server-side dependencies, such as database clients, at build time.
+
+<Alert title="Not using Vite?">
+
+You can skip this step. Client-side transaction names then use the URL instead of the route pattern.
+
+</Alert>
+
+```typescript {filename:vite.config.ts} {2, 10}
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryRemixVitePlugin(),
+  ],
+});
+```
+
+### Add Readable Stack Traces With Source Maps
+
+To upload source maps for clear error stack traces, pass your Sentry organization, project, and auth token to `sentryRemixVitePlugin` from the previous step. It injects debug IDs, uploads the source maps during your production build, and deletes them from your build output afterwards.
+
+The plugin also turns on hidden source maps for you, unless you set `build.sourcemap` yourself.
+
+<Alert title="Not using Vite?">
+
+Check our [Source Maps documentation](/platforms/javascript/guides/remix/sourcemaps/) for
+alternative setup options.
+
+</Alert>
+
+```javascript {filename:vite.config.ts} {10-16}
+import { vitePlugin as remix } from "@remix-run/dev";
+import { sentryRemixVitePlugin } from "@sentry/remix/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    remix({
+      // ... your Remix plugin options
+    }),
+    sentryRemixVitePlugin({
+      // If you use environment variables,
+      // you don't need to specify these options
+      org: "___ORG_SLUG___",
+      project: "___PROJECT_SLUG___",
+      // store your auth token in an environment variable
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+    // ... other plugins
+  ],
+});
+```
+
+To keep your auth token secure, always store it in an environment variable instead of directly in your files:
+
+<OrgAuthTokenNote />
+
+```bash {filename:.env}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+<Include name="vite-loadenv-hint-splitlayout.mdx" />
+
+### Control the Data You Send to Sentry
+<PlatformContent includePath="getting-started-data-collection" />
+
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+If you already use `console`, capture those calls as Sentry Logs with <PlatformLink to="/logs/#console-integration">`consoleLoggingIntegration`</PlatformLink>.
+We also provide integrations for:
+- <PlatformLink to="/logs/#console-integration">Consola</PlatformLink>
+- <PlatformLink to="/configuration/integrations/pino/">Pino</PlatformLink>
+
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+On Node.js, <PlatformLink to="/configuration/integrations/noderuntimemetrics/">`nodeRuntimeMetricsIntegration`</PlatformLink> also collects runtime health metrics automatically.
+
+## Verify Your Setup
+
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+Add a test button to one of your pages that throws an error when clicked:
+
+```javascript
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Example Frontend Error");
+  }}
+>
+  <span>Throw Sample Error</span>
+</button>
+```
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
+
+## Next Steps
+
+At this point, you should have integrated Sentry into your Remix application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- If you encountered issues with the manual setup, try <PlatformLink to="/">our installation wizard</PlatformLink>
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
+
 
 </StepConnector>
