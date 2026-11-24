@@ -59,15 +59,25 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
   const guideUrl = getAgentHandoffGuideUrl();
 
   // Codes are single-use. Once a copied prompt could have been pasted somewhere, which
-  // means the page was hidden after the copy, the next copy mints a fresh code.
+  // means the page was hidden or the window lost focus after the copy, the next copy
+  // mints a fresh code. Blur covers an agent running side by side with a visible tab.
   useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.hidden && handoff.current?.copied) {
+    const retireCopiedCode = () => {
+      if (handoff.current?.copied) {
         handoff.current = null;
       }
     };
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        retireCopiedCode();
+      }
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('blur', retireCopiedCode);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', retireCopiedCode);
+    };
   }, []);
 
   const getPrompt = useCallback(async () => {
@@ -111,7 +121,10 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
         }),
       ]);
       if (handoff.current) {
-        handoff.current = document.hidden ? null : {...handoff.current, copied: true};
+        handoff.current =
+          document.hidden || !document.hasFocus()
+            ? null
+            : {...handoff.current, copied: true};
       }
       setCopied(true);
       DocMetrics.copyAIPrompt(window.location.pathname, skill, true, 'callout');
