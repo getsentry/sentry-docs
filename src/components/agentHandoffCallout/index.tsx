@@ -1,7 +1,9 @@
 'use client';
 
+import {ChevronDownIcon} from '@radix-ui/react-icons';
+import * as RadixSelect from '@radix-ui/react-select';
 import * as Sentry from '@sentry/nextjs';
-import {useCallback, useContext, useEffect, useId, useRef, useState} from 'react';
+import {useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {Check, Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
@@ -46,7 +48,6 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const handoff = useRef<CachedHandoff | null>(null);
-  const orgSelectId = useId();
 
   const projects = codeContext?.codeKeywords.PROJECT ?? [];
   const orgSlugs = [...new Set(projects.map(project => project.ORG_SLUG))];
@@ -149,20 +150,26 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
       <div className={styles.header}>
         <span className={styles.title}>Set up with your coding agent</span>
         {orgSlugs.length > 1 && (
-          <label className={styles.orgPicker} htmlFor={orgSelectId}>
-            <span>Organization</span>
-            <select
-              id={orgSelectId}
-              value={activeOrgSlug}
-              onChange={event => setOrgSlug(event.target.value)}
+          <RadixSelect.Root value={activeOrgSlug} onValueChange={setOrgSlug}>
+            <RadixSelect.Trigger aria-label="Organization" className={styles.orgSelect}>
+              <RadixSelect.Value />
+              <RadixSelect.Icon>
+                <ChevronDownIcon />
+              </RadixSelect.Icon>
+            </RadixSelect.Trigger>
+            <RadixSelect.Content
+              aria-label="Organizations"
+              position="popper"
+              sideOffset={4}
+              className={styles.orgPopover}
             >
               {orgSlugs.map(slug => (
-                <option key={slug} value={slug}>
-                  {slug}
-                </option>
+                <RadixSelect.Item key={slug} value={slug} className={styles.orgItem}>
+                  <RadixSelect.ItemText>{slug}</RadixSelect.ItemText>
+                </RadixSelect.Item>
               ))}
-            </select>
-          </label>
+            </RadixSelect.Content>
+          </RadixSelect.Root>
         )}
       </div>
       <p className={styles.description}>
