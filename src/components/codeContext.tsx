@@ -342,16 +342,14 @@ export function getAgentHandoffGuideUrl(): string {
  */
 export async function createAgentHandoff({
   orgSlug,
-  disableIpPinning,
 }: {
-  disableIpPinning: boolean;
   orgSlug: string;
 }): Promise<AgentHandoff> {
   const url = `${getHost()}/api/0/organizations/${orgSlug}/agent-handoff/prompts/`;
 
   const resp = await fetch(url, {
     method: 'POST',
-    body: JSON.stringify({flow: 'guided_next_steps', disableIpPinning}),
+    body: JSON.stringify({flow: 'guided_next_steps'}),
     credentials: 'include',
     headers: {
       Accept: 'application/json; charset=utf-8',

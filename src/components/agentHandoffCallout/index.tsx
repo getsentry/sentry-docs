@@ -23,7 +23,6 @@ type Props = {
 };
 
 type CachedHandoff = AgentHandoff & {
-  disableIpPinning: boolean;
   orgSlug: string;
   copied?: boolean;
 };
@@ -43,12 +42,10 @@ function formatPrompt(guideUrl: string, code: string, platformName?: string) {
 export function AgentHandoffCallout({platformName, skill}: Props) {
   const codeContext = useContext(CodeContext);
   const {emit} = usePlausibleEvent();
-  const [useIpPinning, setUseIpPinning] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const handoff = useRef<CachedHandoff | null>(null);
-  const ipPinningId = useId();
   const orgSelectId = useId();
 
   const projects = codeContext?.codeKeywords.PROJECT ?? [];
@@ -84,22 +81,20 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
     if (!activeOrgSlug) {
       throw new Error('No organization available');
     }
-    const disableIpPinning = !useIpPinning;
     const cached = handoff.current;
     const isFresh =
       cached &&
       cached.orgSlug === activeOrgSlug &&
-      cached.disableIpPinning === disableIpPinning &&
       Date.parse(cached.expiresAt) > Date.now() + EXPIRATION_BUFFER_MS;
 
     if (isFresh) {
       return formatPrompt(cached.guideUrl, cached.code, platformName);
     }
 
-    const minted = await createAgentHandoff({orgSlug: activeOrgSlug, disableIpPinning});
-    handoff.current = {...minted, orgSlug: activeOrgSlug, disableIpPinning};
+    const minted = await createAgentHandoff({orgSlug: activeOrgSlug});
+    handoff.current = {...minted, orgSlug: activeOrgSlug};
     return formatPrompt(minted.guideUrl, minted.code, platformName);
-  }, [activeOrgSlug, platformName, useIpPinning]);
+  }, [activeOrgSlug, platformName]);
 
   const copyPrompt = useCallback(async () => {
     if (isPending) {
@@ -192,28 +187,6 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
         </code>
       </div>
 
-      <div className={styles.ipPinning}>
-        <input
-          id={ipPinningId}
-          type="checkbox"
-          checked={useIpPinning}
-          onChange={() => setUseIpPinning(value => !value)}
-        />
-        <label htmlFor={ipPinningId}>
-          <span className={styles.ipPinningLabel}>Only allow this network</span>
-          <span className={styles.ipPinningHelp}>
-            Uncheck if your agent runs in the cloud, or you use iCloud Private Relay.
-          </span>
-        </label>
-      </div>
-
-      {!useIpPinning && (
-        <div className={styles.warning} role="alert">
-          Without IP pinning, anyone with this prompt can use its handoff code from any IP
-          address to authorize an agent on your behalf. Avoid pasting your prompt when
-          streaming or screen sharing.
-        </div>
-      )}
       {error && (
         <div className={styles.error} role="alert">
           {error}
