@@ -9,7 +9,10 @@ export function register() {
       traceLifecycle: 'stream',
       debug: false,
       environment: process.env.NODE_ENV === 'development' ? 'development' : undefined,
-      integrations: [Sentry.consoleLoggingIntegration()],
+      integrations: [
+        Sentry.consoleLoggingIntegration(),
+        Sentry.experimentalReportSdkConfigIntegration(),
+      ],
 
       // Filter sensitive metric attributes (no PII in metrics)
       beforeSendMetric: metric => {
