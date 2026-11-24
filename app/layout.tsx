@@ -9,7 +9,7 @@ import {SkipToContent} from 'sentry-docs/components/skipToContent';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-rubik',

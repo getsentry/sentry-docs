@@ -1,0 +1,29 @@
+name: Bump @sentry/api
+on:
+  # The API reference is built from the pinned @sentry/api version. getsentry/sentry
+  # releases it whenever the API spec changes, and dispatches this workflow once
+  # npm serves the new version. The hourly run is a fallback. See:
+  #
+  #   https://develop.sentry.dev/api/public/#build-process
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+# A dispatch and the hourly run must not both push the same bump branch.
+concurrency:
+  group: bump-sentry-api
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  bump:
+    name: 'Bump @sentry/api'
+    # Pins the package.json dependency, then opens and merges a PR for it.
+    uses: getsentry/sentry/.github/workflows/bump-sentry-api-consumer.yml@master
+    with:
+      pin: dependency
+      mode: merge
+      app-client-id: ${{ vars.SENTRY_API_SCHEMA_UPDATER_APP_CLIENT_ID }}
+      commit-author-name: 'sentry-api-schema-updater[bot]'
+      commit-author-email: '271575301+sentry-api-schema-updater[bot]@users.noreply.github.com'
+    secrets:
+      app-private-key: ${{ secrets.SENTRY_API_SCHEMA_UPDATER_PRIVATE_KEY }}

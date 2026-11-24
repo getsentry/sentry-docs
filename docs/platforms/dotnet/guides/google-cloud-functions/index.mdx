@@ -30,7 +30,7 @@ This package extends `Sentry.AspNetCore`, which in turn extends `Sentry`'s main 
 
 <Alert level="warning">
 
-Messages logged from assemblies with the name starting with `Sentry` will not generate events.
+The logging integration excludes the Sentry SDK's own logger categories to avoid capturing its diagnostic messages as events.
 
 </Alert>
 
@@ -104,10 +104,12 @@ using Microsoft.AspNetCore.Http;
 
 public class Function : IHttpFunction
 {
+    public Task HandleAsync(HttpContext context) =>
+        context.Response.WriteAsync("Hello from Google Cloud Functions");
 }
 ```
 
-Some of the settings require actual code. For those, like the `BeforeSend` callback, you will need to create a new class implementing the abstract class `FunctionsStartup` to set it up:
+Some settings, such as the `BeforeSend` callback, require code. Keep the `SentryStartup` assembly registration above and add another `FunctionsStartup` registration for your custom configuration:
 
 ```csharp
 using Google.Cloud.Functions.Hosting;
@@ -144,13 +146,13 @@ Much of the behavior of the Google cloud functions integration with Sentry can b
 
 When opting in to `SendDefaultPii`, the SDK will automatically read the user from the request by inspecting `HttpContext.User`. Default claim values like `NameIdentifier` for the _Id_ will be used.
 
-If you wish to change the behavior of how to read the user from the request, you can register a new `IUserFactory` into the container:
+To customize how Sentry reads the user from the request, implement `ISentryUserFactory` and register it in the container. Keep the `SentryStartup` registration when adding this startup class:
 
 ```csharp
 using Google.Cloud.Functions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Sentry.AspNetCore;
+using Sentry;
 
 [assembly: FunctionsStartup(typeof(UserFactoryStartup))]
 
@@ -159,7 +161,7 @@ public class UserFactoryStartup : FunctionsStartup
     public override void ConfigureServices(WebHostBuilderContext context, IServiceCollection services)
     {
         base.ConfigureServices(context, services);
-        services.AddSingleton<IUserFactory, MyUserFactory>();
+        services.AddSingleton<ISentryUserFactory, MyUserFactory>();
     }
 }
 ```
@@ -191,7 +193,7 @@ Let's test your setup and confirm that data reaches your Sentry project.
 
 ### View Captured Data in Sentry
 
-Open your Sentry project to view the captured event.
+<PlatformContent includePath="getting-started-verify-data" />
 
 ## Next Steps
 

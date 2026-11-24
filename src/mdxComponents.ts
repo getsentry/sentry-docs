@@ -12,6 +12,7 @@ import {CommunitySupportedPlatforms} from './components/communitySupportedPlatfo
 import {ConfigKey} from './components/configKey';
 import {ConfigValue} from './components/configValue';
 import {ContentSeparator} from './components/contentSeparator';
+import {ConventionAttributes} from './components/conventionAttributes';
 import {CopyableCard} from './components/copyableCard';
 import {CreateGitHubAppForm} from './components/createGitHubAppForm';
 import {DefinitionList} from './components/definitionList';
@@ -19,6 +20,7 @@ import {DevDocsCardGrid} from './components/devDocsCardGrid';
 import DocImage from './components/docImage';
 import {Expandable} from './components/expandable';
 import {FeatureBadge} from './components/featureBadge';
+import {FrameworkSelector} from './components/frameworkSelector';
 import {GitHubCodePreview} from './components/githubCodePreview';
 import {GitHubDomainChecker} from './components/githubDomainChecker';
 import {GradleFeatureConfig} from './components/gradleFeatureConfig';
@@ -45,6 +47,7 @@ import {PlatformCategorySection} from './components/platformCategorySection';
 import {PlatformFilter} from './components/platformFilter';
 import {PlatformGrid} from './components/platformGrid';
 import {PlatformIdentifier} from './components/platformIdentifier';
+import {PlatformIntegrationList} from './components/platformIntegrationList';
 import {PlatformLink} from './components/platformLink';
 import {PlatformLinkWithLogo} from './components/platformLinkWithLogo';
 import {PlatformOrGuideName} from './components/platformOrGuideName';
@@ -82,6 +85,7 @@ export function mdxComponents(
     CliChecksumTable,
     CommunitySupportedPlatforms,
     ContentSeparator,
+    ConventionAttributes,
     DevDocsCardGrid,
     PlatformFilter,
     CodeBlock,
@@ -99,6 +103,7 @@ export function mdxComponents(
     DefinitionList,
     Expandable,
     FeatureBadge,
+    FrameworkSelector,
     GuideGrid,
     IntegrationGrid,
     IntegrationListItem,
@@ -114,6 +119,7 @@ export function mdxComponents(
     PiiFields,
     PlatformGrid,
     PlatformIdentifier,
+    PlatformIntegrationList,
     PlatformLink,
     PlatformLinkWithLogo,
     PlatformSection,

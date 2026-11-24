@@ -1046,7 +1046,50 @@ const userDocsRedirects = [
   {
     // The Nuxt SDK links to this path in its Cloudflare build warning
     source: '/platforms/javascript/guides/nuxt/install/cloudflare-workers/',
-    destination: '/platforms/javascript/guides/cloudflare/frameworks/nuxt/',
+    destination: '/platforms/javascript/guides/nuxt/manual-setup/cloudflare/',
+  },
+  // The Cloudflare quick starts of these frameworks moved from the Cloudflare guide into the framework guides.
+  {
+    source:
+      '/platforms/javascript/guides/cloudflare/frameworks/:framework(astro|hono|nextjs|nuxt|remix|sveltekit)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/tanstack-start/',
+    destination:
+      '/platforms/javascript/guides/tanstackstart-react/manual-setup/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/remix/frameworks/',
+    destination: '/platforms/javascript/guides/remix/manual-setup/cloudflare/',
+  },
+  // The quick starts for other runtimes became manual setups.
+  {
+    source:
+      '/platforms/javascript/guides/:framework(astro|flue|hono|mastra|nextjs|nuxt|pi-durable|react-router|remix|sveltekit|tanstackstart-react)/cloudflare/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/cloudflare/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:framework(pi-durable|react-router)/:runtime(bun|deno)/',
+    destination: '/platforms/javascript/guides/:framework/manual-setup/:runtime/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
+  },
+  {
+    source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-remix/',
+    destination: '/platforms/javascript/guides/remix/hydrogen/',
+  },
+  {
+    // The Cloudflare quick start links to every framework page.
+    source: '/platforms/javascript/guides/cloudflare/frameworks/',
+    destination: '/platforms/javascript/guides/cloudflare/',
+  },
+  {
+    source: '/platforms/javascript/guides/nextjs/best-practices/deploying-on-cloudflare/',
+    destination: '/platforms/javascript/guides/nextjs/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/connect/',
@@ -1064,17 +1107,17 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/express/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/express/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/fastify/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/fastify/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hapi/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hapi/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
@@ -1084,7 +1127,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/koa/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source:
@@ -1095,6 +1138,20 @@ const userDocsRedirects = [
     source:
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
+  },
+  // Express, Fastify, Hapi and Koa are single landing pages, their subpages moved to Node.js.
+  {
+    source: '/platforms/javascript/guides/fastify/features/:path*',
+    destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
+  },
+  {
+    source:
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+    destination: '/platforms/javascript/guides/node/',
+  },
+  {
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
     source: '/platforms/javascript/guides/nestjs/install/esm-without-import/',
@@ -2107,13 +2164,11 @@ const userDocsRedirects = [
   },
   {
     source: '/platforms/javascript/guides/remix/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/frameworks/hydrogen/',
-    destination:
-      '/platforms/javascript/guides/cloudflare/frameworks/hydrogen-react-router/',
+    destination: '/platforms/javascript/guides/react-router/hydrogen/',
   },
   // Removed /product/onboarding/ section (content was orphaned and duplicated elsewhere)
   {
@@ -2549,11 +2604,11 @@ const userDocsRedirects = [
   // Cloudflare page is listed first so its readers keep landing on it.
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/agent-tracing/flue.md',
@@ -2576,19 +2631,19 @@ const userDocsRedirects = [
   // paths, which the rules above redirect again — a 2-hop chain.
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-monitoring/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue.md',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/guides/cloudflare/ai-agent-tracing/flue/:path*',
-    destination: '/platforms/javascript/guides/flue/cloudflare/',
+    destination: '/platforms/javascript/guides/flue/manual-setup/cloudflare/',
   },
   {
     source: '/platforms/javascript/ai-agent-monitoring/flue.md',
@@ -3158,10 +3213,6 @@ const userDocsRedirects = [
     destination: '/product/dashboards/sentry-dashboards/transaction-summary/',
   },
   // End of Insights redirects.
-  {
-    source: '/platforms/javascript/guides/astro/manual-setup/',
-    destination: '/platforms/javascript/guides/astro/',
-  },
   {
     source: '/product/error-monitoring/dashboards/',
     destination: '/product/dashboards/',

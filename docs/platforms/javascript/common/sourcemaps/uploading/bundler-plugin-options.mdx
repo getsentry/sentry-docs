@@ -245,6 +245,38 @@ If no `name` is provided and the plugin can't automatically detect one, no relea
 
 Whether the plugin should inject release information into the build for the SDK to pick it up when sending events. (recommended)
 
+<Alert level="warning" title="Injection changes file names on every release">
+
+The plugin injects the release into the chunks that load at startup. The release name usually changes on every commit, so these chunks get new content hashes, and new file names, on every release, even when their code didn't change. The chunks that import them get new file names too, so returning visitors download all of them again instead of using their browser cache.
+
+To keep these file names stable, turn off injection and pass the release to `Sentry.init` at runtime, from a value that isn't part of your bundled code, for example from your HTML page:
+
+```javascript {filename:vite.config.js}
+sentryVitePlugin({
+  release: {
+    name: process.env.SENTRY_RELEASE,
+    inject: false,
+  },
+});
+```
+
+```html {filename:index.html}
+<meta name="sentry-release" content="my-project@2.3.12" />
+```
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  release: document
+    .querySelector('meta[name="sentry-release"]')
+    ?.getAttribute("content"),
+});
+```
+
+Use the same release name in the plugin and in the page, so that events go to the release the plugin creates. Don't write the release into your bundled code, for example with `define` or `import.meta.env`: that changes the content hashes in the same way.
+
+</Alert>
+
 </SdkOption>
 
 <SdkOption name="release.create" type="boolean" defaultValue="true">

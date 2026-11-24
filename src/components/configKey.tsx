@@ -29,7 +29,7 @@ export function ConfigKey({
       notSupported={notSupported}
       platform={platform}
     >
-      <h3 id={name} aria-label={name}>
+      <h3 id={name}>
         <a href={`#${name}`}>
           <svg
             className="anchorlink before"

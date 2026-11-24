@@ -1,0 +1,55 @@
+## Send Logs
+
+<PlatformContent includePath="getting-started-logs" />
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+To confirm that Sentry captures errors on the server, add a route whose loader throws an error:
+
+```tsx {filename: app/routes/sentry-example.tsx}
+export function loader() {
+  throw new Error("Sentry Example Server Error");
+}
+
+export default function SentryExample() {
+  return <div>This page throws an error on the server.</div>;
+}
+```
+
+Add the route to your `app/routes.ts`:
+
+```typescript {filename: app/routes.ts} {diff}
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
+
+export default [
+  index("routes/home.tsx"),
++ route("sentry-example", "routes/sentry-example.tsx"),
+] satisfies RouteConfig;
+```
+
+Build and start your app, then open `/sentry-example` in your browser. Sentry receives the error and a trace of the request. Sentry names both after the route, for example `GET /sentry-example`.
+
+To test the client side too, add a button to one of your pages and click it:
+
+```tsx
+<button
+  type="button"
+  onClick={() => {
+    throw new Error("Sentry Test Error");
+  }}
+>
+  Test Sentry Error
+</button>
+```
+
+<PlatformContent includePath="getting-started-browser-sandbox-warning" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable-cloudflare-frameworks" />
