@@ -13,6 +13,61 @@ We recommend using this guide starting from the version closes to your current v
 
 ### Breaking changes
 
+#### Crash Backend Selection
+
+The `UseNativeBackend` option is replaced by the `CrashBackend` option (**Project Settings > Plugins > Sentry > Crash Handling > Crash backend**), and the native backend is now the default on Windows, Linux, and Xbox. `CrashBackend` accepts the following values:
+
+| Platform       | `Auto` (default) | `Native` | `Legacy`                      |
+| -------------- | ---------------- | -------- | ----------------------------- |
+| Windows, Linux | Native           | Native   | Crashpad                      |
+| Xbox           | Native           | Native   | Breakpad                      |
+| macOS          | sentry-cocoa     | Native   | sentry-cocoa (same as `Auto`) |
+
+The SDK no longer reads `UseNativeBackend`. If your project configuration file sets it, replace it with `CrashBackend`:
+
+```ini
+; Enabling the native backend before v2.0.0
+
+[/Script/Sentry.SentrySettings]
+UseNativeBackend=True
+
+; Enabling the native backend in v2.0.0 (also on macOS)
+
+[/Script/Sentry.SentrySettings]
+CrashBackend=Native
+```
+
+If you want to keep using Crashpad on Windows and Linux or Breakpad on Xbox, set `CrashBackend=Legacy`.
+
+The backend is selected at build time, so rebuild your project after changing this option.
+
+#### Assert Handling
+
+`FSentryOutputDevice` and `FSentryErrorOutputDevice` are no longer part of the public API. If you subscribed to the `OnAssert` delegate of `FSentryErrorOutputDevice`, use the static `FSentryDelegates::OnAssert` delegate instead:
+
+```cpp
+// Handling failed assertions before v2.0.0
+
+#include "SentryErrorOutputDevice.h"
+
+FSentryErrorOutputDevice* SentryErrorDevice = static_cast<FSentryErrorOutputDevice*>(GError);
+SentryErrorDevice->OnAssert.AddLambda([](const FString& Message)
+{
+    // Handle the assertion
+});
+
+// Handling failed assertions in v2.0.0
+
+#include "SentryDelegates.h"
+
+FSentryDelegates::OnAssert.AddLambda([](const FString& Message)
+{
+    // Handle the assertion
+});
+```
+
+The delegate is called on the thread that hit the assertion, before the crash is reported. Your handler must be thread-safe and must not access UObjects.
+
 #### Structured Logs Level
 
 Structured logs now use the new `ESentryLogLevel` enum instead of `ESentryLevel`. It adds the `Trace` level, which the logs protocol supports but events, breadcrumbs, and scopes don't. Events, breadcrumbs, and scopes still use `ESentryLevel`.
@@ -44,34 +99,6 @@ If you use Blueprints, recreate the **Set Level** and **Get Level** nodes of `Se
 The `VeryVerbose` option is disabled by default. If your project forwards `Verbose` messages and you also want to forward `VeryVerbose` messages, enable `bOnTraceLog`.
 
 Breadcrumbs for `VeryVerbose` messages still use the `Debug` level.
-
-#### Crash Backend Selection
-
-The `UseNativeBackend` option is replaced by the `CrashBackend` option (**Project Settings > Plugins > Sentry > Crash Handling > Crash backend**), and the native backend is now the default on Windows, Linux, and Xbox. `CrashBackend` accepts the following values:
-
-| Platform       | `Auto` (default) | `Native` | `Legacy`                      |
-| -------------- | ---------------- | -------- | ----------------------------- |
-| Windows, Linux | Native           | Native   | Crashpad                      |
-| Xbox           | Native           | Native   | Breakpad                      |
-| macOS          | sentry-cocoa     | Native   | sentry-cocoa (same as `Auto`) |
-
-The SDK no longer reads `UseNativeBackend`. If your project configuration file sets it, replace it with `CrashBackend`:
-
-```ini
-; Enabling the native backend before v2.0.0
-
-[/Script/Sentry.SentrySettings]
-UseNativeBackend=True
-
-; Enabling the native backend in v2.0.0 (also on macOS)
-
-[/Script/Sentry.SentrySettings]
-CrashBackend=Native
-```
-
-If you want to keep using Crashpad on Windows and Linux or Breakpad on Xbox, set `CrashBackend=Legacy`.
-
-The backend is selected at build time, so rebuild your project after changing this option.
 
 ## Migrating to 1.0.0
 
