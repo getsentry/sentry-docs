@@ -1,0 +1,40 @@
+name: Docs Preview Links
+
+on:
+  deployment_status:
+
+jobs:
+  docs-preview-links:
+    name: Post changed docs preview links
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment != 'production' &&
+      github.event.deployment.environment != 'Production' &&
+      (github.event.deployment_status.environment_url != '' || github.event.deployment_status.target_url != '')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74 # v4
+
+      - name: Set up Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v4
+        with:
+          node-version-file: 'package.json'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Post changed docs preview links
+        run: pnpm exec tsx scripts/docs-preview-links.ts
+        env:
+          DEPLOYMENT_SHA: ${{ github.event.deployment.sha }}
+          DEPLOYMENT_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
