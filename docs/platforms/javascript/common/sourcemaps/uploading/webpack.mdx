@@ -22,7 +22,7 @@ If you'd rather configure source map uploading with webpack manually, follow the
 
 ## Manual Setup
 
-<PlatformSection notSupported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs"]}>
+<PlatformSection notSupported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs", "javascript.gatsby"]}>
 
 Install the Sentry webpack plugin:
 
@@ -40,7 +40,7 @@ pnpm add @sentry/bundler-plugins --save-dev
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs"]}>
+<PlatformSection supported={["javascript.node", "javascript.express", "javascript.fastify", "javascript.hapi", "javascript.koa", "javascript.azure-functions", "javascript.firebase", "javascript.eve", "javascript.mastra", "javascript.flue", "javascript.nestjs", "javascript.gatsby"]}>
 
 The Sentry webpack plugin is part of your Sentry SDK package. You don't need to install another package.
 
@@ -75,18 +75,11 @@ const { sentryWebpackPlugin } = require("@sentry/bundler-plugins/webpack");
 module.exports = {
   // ... other config above ...
 
-  devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
   plugins: [
     sentryWebpackPlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
-      sourcemaps: {
-        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-        // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-      }
     }),
   ],
 };
@@ -102,18 +95,11 @@ const { sentryWebpackPlugin } = require("___SDK_PACKAGE___/webpack");
 module.exports = {
   // ... other config above ...
 
-  devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
   plugins: [
     sentryWebpackPlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
-      sourcemaps: {
-        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-        // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-      }
     }),
   ],
 };
@@ -125,39 +111,32 @@ module.exports = {
 
 <PlatformSection supported={["javascript.gatsby"]}>
 
-Add the following to your `gatsby-node.js` file:
+`@sentry/gatsby` adds the Sentry webpack plugin to production builds, so you don't need to add it yourself. The SDK passes no organization, project, or auth token to the plugin. Set them with the `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` environment variables, or in the `.env.sentry-build-plugin` file.
 
-```javascript {filename:gatsby-node.js}
-const { sentryWebpackPlugin } = require("@sentry/bundler-plugins/webpack");
+Gatsby sets `devtool: "source-map"` for production builds, so the SDK uploads these source maps but keeps them in the build output by default. To remove the browser source maps after the upload, set `sourcemaps.delete` in the plugin options:
 
-exports.onCreateWebpackConfig = ({ actions }) => {
-  actions.setWebpackConfig({
-    plugins: [
-      sentryWebpackPlugin({
-        org: "___ORG_SLUG___",
-        project: "___PROJECT_SLUG___",
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-
+```javascript {filename:gatsby-config.js}
+module.exports = {
+  plugins: [
+    {
+      resolve: "@sentry/gatsby",
+      options: {
         sourcemaps: {
-          // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-          // Set the appropriate glob pattern for your output folder - some glob examples below:
-          filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-        }
-      }),
-    ],
-  });
+          delete: true,
+        },
+      },
+    },
+  ],
 };
 ```
 
 </PlatformSection>
 
-<Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">Sentry Webpack Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`</PlatformLink>
-  option to delete source maps after they've been uploaded to Sentry.
-</Alert>
+<PlatformSection notSupported={["javascript.gatsby"]}>
+
+<Include name="bundler-plugin-source-maps/webpack.mdx" />
+
+</PlatformSection>
 
 <Alert>
 

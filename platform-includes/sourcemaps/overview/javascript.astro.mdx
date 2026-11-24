@@ -29,9 +29,28 @@ export default defineConfig({
 });
 ```
 
+When you don't set `vite.build.sourcemap` in your Astro config, the SDK turns on hidden source maps for the client and server builds, uploads them, and removes them from the build output. When you turn on source maps yourself, the SDK uploads them and they stay. With an older Cloudflare adapter that writes the Worker to a `_worker.js` folder, the source maps in that folder stay, so that Wrangler can read them.
+
+To change this, use the [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete) option.
+
 ### Disable Source Maps Upload
 
-You can disable automatic source maps upload in your Astro configuration with `disable: true` under `sourcemaps` in the `sentry` integration options.
+To turn off the source maps upload, set `upload: false` under `sourcemaps` in the `sentry` integration options. The SDK still injects debug IDs. To keep the source maps for a manual upload later, also set `delete: false`:
+
+```javascript {filename:astro.config.mjs}
+export default defineConfig({
+  integrations: [
+    sentry({
+      sourcemaps: {
+        upload: false,
+        delete: false,
+      },
+    }),
+  ],
+});
+```
+
+To also turn off the debug ID injection, set `injectDebugIds: false`. See the [bundler plugin options](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.upload) for details.
 
 ### Setting the Source Maps Assets Directory
 

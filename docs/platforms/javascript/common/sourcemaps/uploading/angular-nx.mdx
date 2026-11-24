@@ -90,30 +90,20 @@ const { sentryWebpackPlugin } = require("@sentry/bundler-plugins/webpack");
 module.exports = {
   // ... other config above ...
 
-  devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
   plugins: [
     sentryWebpackPlugin({
       org: "___ORG_SLUG___",
       project: "___PROJECT_SLUG___",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-
       sourcemaps: {
-        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-        // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: ["./**/*.map", ".*/**/public/**/*.map", "./dist/**/client/**/*.map"]
-      }
+        delete: true,
+      },
     }),
   ],
 };
 ```
 
-<Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">Sentry Webpack Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`</PlatformLink>
-  option to delete source maps after they've been uploaded to Sentry.
-</Alert>
+Angular turns on the source maps, so the plugin keeps them in the build output by default. `sourcemaps.delete: true` removes them after the upload, so your users can't download them. With a version before `11.15.0`, remove them with <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">`sourcemaps.filesToDeleteAfterUpload`</PlatformLink>.
 
 Learn more about configuring the plugin in our <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/">Sentry webpack plugin documentation</PlatformLink>.
 
@@ -147,7 +137,10 @@ Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/execu
             "options": {
               "org": "___ORG_SLUG___",
               "project": "___PROJECT_SLUG___",
-              "authToken": "___SENTRY_AUTH_TOKEN___"
+              "authToken": "___SENTRY_AUTH_TOKEN___",
+              "sourcemaps": {
+                "delete": true
+              }
             }
           }
         ]
@@ -157,13 +150,7 @@ Then, follow the [official Nx documentation](https://nx.dev/nx-api/angular/execu
 }
 ```
 
-<Alert level="warning">
-  Generating source maps **may expose them to the public**, potentially causing your
-  source code to be leaked. You can prevent this by configuring your server to
-  deny access to `.js.map` files, or by using <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">Sentry Esbuild Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`</PlatformLink>
-  option to delete source maps after they've been uploaded to Sentry.
-</Alert>
+Angular turns on the source maps, so the plugin keeps them in the build output by default. `sourcemaps.delete: true` removes them after the upload, so your users can't download them. With a version before `11.15.0`, remove them with <PlatformLink to="/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload">`sourcemaps.filesToDeleteAfterUpload`</PlatformLink>.
 
 ## 3. Upload
 

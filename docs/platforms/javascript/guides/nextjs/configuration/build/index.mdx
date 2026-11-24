@@ -94,7 +94,62 @@ withSentryConfig(nextConfig, {
 
 ## Source Maps Options
 
-<SdkOption name="sourcemaps.disable" type="boolean">
+You don't need to turn source maps on. When you run `next build`, the SDK turns on source maps if you haven't set them, uploads them, and removes the client-side source maps from the build output. Server-side source maps stay.
+
+- Webpack: when `devtool` isn't set, the SDK uses `hidden-source-map` for the client build and `source-map` for the server builds. It removes all client-side source maps, also the ones you turned on yourself.
+- Turbopack: when `productionBrowserSourceMaps` isn't set, the SDK sets it to `true` and removes the client-side source maps after the upload. When you set `productionBrowserSourceMaps` yourself, the client-side source maps stay.
+
+To change this, use [`sourcemaps.upload`](#sourcemaps.upload), [`sourcemaps.injectDebugIds`](#sourcemaps.injectDebugIds), and [`sourcemaps.delete`](#sourcemaps.delete).
+
+<SdkOption name="sourcemaps.upload" type="boolean" defaultValue="true" availableSince="11.18.0">
+
+Whether the SDK uploads source maps to Sentry.
+
+With `false`, the SDK uploads nothing, but it still injects debug IDs into the bundles and their source maps. Use this to upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`. The files already have their debug IDs, so you don't need an `inject` step.
+
+With `false`, the SDK turns on source maps only when `sourcemaps.delete` is `false`.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.injectDebugIds" type="boolean" defaultValue="true" availableSince="11.18.0">
+
+Whether the SDK injects debug IDs into the bundles and their source maps.
+
+With `false`, the SDK adds no debug IDs, uploads no source maps, and turns on no source maps, because the upload matches files by debug ID. Use this when another tool injects the debug IDs and uploads the source maps, for example the Sentry CLI.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.delete" type="boolean" availableSince="11.18.0">
+
+Whether the SDK removes the **client-side** source maps (in `.next/static/`) from the build output. The SDK never removes the **server-side** source maps (in `.next/server/`), because:
+
+- They are required for server-side error reporting at runtime.
+- They are not a security concern since they are not publicly accessible to users.
+
+The values:
+
+- Not set: with Webpack, the SDK removes all client-side source maps. With Turbopack, it removes them only when it turned them on itself, that is, when `productionBrowserSourceMaps` isn't set. When you turn off the upload, the SDK removes nothing.
+- `true`: the SDK removes all client-side source maps, also the ones you turned on (for example with `productionBrowserSourceMaps`) and the ones that weren't uploaded.
+- `false`: the SDK removes no source maps. When you haven't set the source map setting, the SDK still turns source maps on, and they stay in the build output. With Turbopack, these files have `sourceMappingURL` comments, so browsers can find them.
+
+`true` and `false` don't depend on an upload. They also apply when you turn off the upload, and when the upload fails.
+
+To keep the source maps for a manual upload later, set `upload: false` and `delete: false`:
+
+```javascript
+withSentryConfig(nextConfig, {
+  sourcemaps: {
+    upload: false,
+    delete: false,
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.disable" type='boolean | "disable-upload"' defaultValue="false">
+
+Use [`sourcemaps.upload`](#sourcemaps.upload) and [`sourcemaps.injectDebugIds`](#sourcemaps.injectDebugIds) instead. `"disable-upload"` is the same as `upload: false`, and `true` is the same as `injectDebugIds: false`. When you set `upload` or `injectDebugIds`, the SDK ignores `disable`.
 
 Disable any functionality related to source maps.
 
@@ -114,30 +169,21 @@ A glob or an array of globs that specifies which build artifacts should not be u
 
 </SdkOption>
 
-<SdkOption name="sourcemaps.deleteSourcemapsAfterUpload" type="boolean" defaultValue="true">
+<SdkOption name="sourcemaps.deleteSourcemapsAfterUpload" type="boolean">
 
-Toggle whether generated **client-side** source maps within your Next.js build folder will be automatically deleted after being uploaded to Sentry. When enabled, source maps in `.next/static/` are deleted but **server-side source maps** (in `.next/server/`) are intentionally kept because:
+Use [`sourcemaps.delete`](#sourcemaps.delete) instead. When you set both, the SDK ignores `deleteSourcemapsAfterUpload`.
 
-- They are required for server-side error reporting at runtime.
-- They are not a security concern since they are not publicly accessible to users.
-
-To customize which files are deleted after upload (for example, to include additional paths), use the `sourcemaps.filesToDeleteAfterUpload` option instead.
+Toggle whether generated **client-side** source maps within your Next.js build folder will be automatically deleted after being uploaded to Sentry. Server-side source maps stay. When not set, the SDK deletes the same source maps as when `sourcemaps.delete` isn't set.
 
 </SdkOption>
 
 <SdkOption name="sourcemaps.filesToDeleteAfterUpload" type="string | string[]">
 
-An array of glob patterns that specifies which source map files will be deleted after being uploaded to Sentry. When set, this overrides the default deletion behavior of `deleteSourcemapsAfterUpload`.
+To remove source maps, use [`sourcemaps.delete`](#sourcemaps.delete) instead. Globs can miss source maps or match files that you want to keep. The SDK deletes the files that the globs match also when `sourcemaps.delete` is `false`.
 
-Use this option when you need fine-grained control over which source maps are deleted. Make sure to also enable [hidden source maps](https://webpack.js.org/configuration/devtool/) for any files you plan to delete, otherwise your build output will contain broken `sourceMappingURL` references.
+An array of glob patterns that specifies which source map files will be deleted after being uploaded to Sentry. When set, this replaces the default deletion of client-side source maps. With `sourcemaps.delete: true`, the SDK deletes both.
 
-```javascript
-withSentryConfig(nextConfig, {
-  sourcemaps: {
-    filesToDeleteAfterUpload: [".next/static/**/*.map"],
-  },
-});
-```
+Make sure to also enable [hidden source maps](https://webpack.js.org/configuration/devtool/) for any files you plan to delete, otherwise your build output will contain broken `sourceMappingURL` references.
 
 </SdkOption>
 
@@ -193,10 +239,12 @@ Include Next.js-internal code and code from dependencies when uploading source m
   If you find that there are some frames in your client-side stack traces that
   aren't getting source-mapped even when most others are, the issue might be
   that those frames are from files in `static/chunks/` rather than
-  `static/chunks/pages/`. By default, such files aren't uploaded because the
-  majority of the files in `static/chunks/` only contain Next.js or third-party
-  code. To upload all of the files and source maps, including ones from
-  third-party packages, set the `widenClientFileUpload` option to `true`.
+  `static/chunks/pages/`. With Webpack, such files aren't uploaded by default
+  because the majority of the files in `static/chunks/` only contain Next.js or
+  third-party code. To upload all of the files and source maps, including ones
+  from third-party packages, set the `widenClientFileUpload` option to `true`.
+  With Turbopack, the SDK uploads `static/chunks/` by default, and this option
+  adds only the `main-*` chunks.
 </Expandable>
 
 Note: Enabling this option can lead to longer build times.

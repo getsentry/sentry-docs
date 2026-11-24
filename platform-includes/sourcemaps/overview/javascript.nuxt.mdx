@@ -53,7 +53,9 @@ When you open your browser's developer tools, the browser tries to fetch source 
 
 #### 3. Source Map Options
 
-Configure source map behavior in your Nuxt config:
+Nuxt turns on server-side source maps and turns off client-side source maps by default. The Sentry Nuxt Module keeps these settings. It uploads the source maps that Nuxt generates and keeps them in the build output.
+
+Source maps in the client build output can be public. To remove all source maps of the client and server build, also the ones you turned on, set [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete) to `true`:
 
 ```javascript {filename:nuxt.config.ts}
 export default defineNuxtConfig({
@@ -64,20 +66,20 @@ export default defineNuxtConfig({
       authToken: process.env.SENTRY_AUTH_TOKEN,
 
       sourcemaps: {
-        // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-        // Set the appropriate glob pattern for your output folder - some glob examples below:
-        filesToDeleteAfterUpload: [".*/**/public/**/*.map", ".output/**/public/**/*.map"]
+        delete: true,
       }
   },
 });
 ```
 
+To upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`, set `sourcemaps: { upload: false, delete: false }`. Sentry then uploads nothing, but it still injects debug IDs and keeps the source maps in the build output.
+
 <Alert level="warning">
   Generating source maps **may expose them to the public**, potentially causing your
   source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
-  using [Sentry Vite Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload)
-  option to delete source maps after they've been uploaded to Sentry.
+  using the
+  [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete)
+  option to delete source maps after the build.
 </Alert>
 
 ### Troubleshooting

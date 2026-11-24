@@ -2,16 +2,16 @@
 
 When you wrap your config with `withSentryConfig`, the SDK:
 
-1. Enables source map generation if you haven't set the `sourcemap` option yourself
+1. Turns on hidden source maps if you haven't set the `sourcemap` option yourself
 2. Injects debug IDs into your build output
 3. Uploads source maps to Sentry after each production build
-4. Deletes `.map` files from the build output to avoid exposing them publicly
+4. Deletes the `.map` files it turned on from the build output, so that they aren't public
 
 Source maps are only uploaded during **production builds**. Development builds (`nitro dev`) skip the upload.
 
 If you already set `sourcemap` in your Nitro config, the SDK respects your setting:
 
-- `true`: the SDK uploads the generated maps
+- `true` or `"hidden"`: the SDK uploads the generated maps and keeps them in the build output
 - `false`: the SDK warns that errors won't be unminified and skips the upload
 
 ### Source Map Options
@@ -36,33 +36,36 @@ export default withSentryConfig(config, {
     assets: [".output/server/**"],
     // Glob pattern for files to exclude from upload
     ignore: ["node_modules/**"],
-    // Delete source maps after upload to avoid exposing them publicly
-    filesToDeleteAfterUpload: [".output/server/**/*.map"],
   },
 });
 ```
+
+To delete all source maps from the build output, also the ones you turned on, set [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete) to `true`. With `false`, the SDK deletes no source maps.
 
 ### Disabling Source Map Uploads
 
-To disable source map uploads entirely, set `sourcemaps.disable` to `true`:
+To turn off the upload, set [`sourcemaps.upload`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.upload) to `false`. The SDK still injects debug IDs, so you can upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`. To keep the source maps in the build output for this upload, also set `sourcemaps.delete` to `false`:
 
 ```typescript {filename:nitro.config.ts}
 export default withSentryConfig(config, {
   sourcemaps: {
-    disable: true,
+    upload: false,
+    delete: false,
   },
 });
 ```
 
-To generate and inject debug IDs without uploading (useful if you upload maps separately), set `sourcemaps.disable` to `"disable-upload"`:
+To also turn off debug ID injection, set [`sourcemaps.injectDebugIds`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.injectDebugIds) to `false`. The SDK then injects no debug IDs and uploads no source maps. Use this when another tool injects the debug IDs and uploads the source maps, for example the Sentry CLI:
 
 ```typescript {filename:nitro.config.ts}
 export default withSentryConfig(config, {
   sourcemaps: {
-    disable: "disable-upload",
+    injectDebugIds: false,
   },
 });
 ```
+
+With SDK versions before 11.18.0, use `sourcemaps.disable: "disable-upload"` instead of `upload: false`, and `sourcemaps.disable: true` instead of `injectDebugIds: false`.
 
 ### Troubleshooting
 
