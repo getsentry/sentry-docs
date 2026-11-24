@@ -133,7 +133,7 @@ export const RUNTIMES: Record<string, Runtime> = {
   },
   cloudflare: {
     title: 'Cloudflare Workers',
-    frameworks: [],
+    frameworks: [EXPRESS],
     frameworkGuides: [
       guide('Astro', 'astro/manual-setup/cloudflare'),
       guide('Hono', 'hono/manual-setup/cloudflare'),
@@ -150,7 +150,10 @@ export const RUNTIMES: Record<string, Runtime> = {
       guide('Mastra', 'mastra/manual-setup/cloudflare'),
       guide('Pi Durable', 'pi-durable/manual-setup/cloudflare'),
     ],
-    includePaths: [],
+    includePaths: [
+      'getting-started-verify-issues-tracing',
+      'getting-started-worker-entry',
+    ],
   },
 };
 
