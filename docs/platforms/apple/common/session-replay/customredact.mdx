@@ -16,13 +16,27 @@ notSupported:
 </PlatformSection>
 
 <PlatformSection notSupported={["apple", "apple.macos", "apple.tvos", "apple.watchos", "apple.visionos"]}>
-<Alert level="warning">
+<Include name="session-replay-mobile-masking-warning.mdx" />
 
-Before enabling Session Replay in production, verify your masking configuration to ensure no sensitive data is captured. Our default settings aggressively mask potentially sensitive data, but if you modify these settings or update UI frameworks or system SDKs, you must thoroughly test your application. If you find any masking issues or sensitive data that should be masked but isn't, please [create a GitHub issue](https://github.com/getsentry/sentry-cocoa/issues/new/choose) and avoid deploying to production with Session Replay enabled until the issue is resolved.
-
-</Alert>
+Report masking issues with supported views in [getsentry/sentry-cocoa](https://github.com/getsentry/sentry-cocoa/issues/new/choose).
 
 By default, our Session Replay SDK masks all text content, images, and user input. This helps ensure that no sensitive data will be exposed. You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
+
+## Supported Components
+
+With the default settings, the SDK masks these views and their subclasses:
+
+| View | Masked when |
+| --- | --- |
+| `UILabel`, `UITextView`, `UITextField` | `maskAllText` is `true` (default) |
+| SwiftUI `Text` | `maskAllText` is `true` (default). Best effort, see [SwiftUI](#swiftui) |
+| `UIImageView` | `maskAllImages` is `true` (default). Images from bundled assets aren't masked |
+| SwiftUI `Image`, including SF Symbols | `maskAllImages` is `true` (default). Best effort, see [SwiftUI](#swiftui) |
+| `WKWebView`, `UIWebView`, `PDFView`, `SFSafariViewController`, `AVPlayerViewController` | Always, unless you unmask them |
+
+`UISlider` and `UISwitch` aren't masked by default.
+
+The SDK doesn't automatically mask any other view. This includes views from third-party libraries, such as maps, charts, video players, rich text editors, or image loaders that don't subclass `UIImageView`. Mask them with [`maskedViewClasses`](#mask-by-view-class) or [`sentryReplayMask()`](#mask-by-view-instance), and check the result with the [masking preview](#debugging-session-replay-masking).
 
 ## Mask by View Class
 
