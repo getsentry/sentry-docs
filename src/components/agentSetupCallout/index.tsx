@@ -1,12 +1,14 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import {Fragment, useCallback, useState} from 'react';
+import {Fragment, useCallback, useContext, useState} from 'react';
 import {Copy} from 'react-feather';
 import {usePlausibleEvent} from 'sentry-docs/hooks/usePlausibleEvent';
 import {DocMetrics} from 'sentry-docs/metrics';
 
+import {AgentHandoffCallout} from '../agentHandoffCallout';
 import {CliInstallCommand} from '../cliInstallCommand';
+import {CodeContext} from '../codeContext';
 import {ExternalLink} from '../externalLink';
 import {CliSetupMarkdown, InstructionMarkdown} from './markdown';
 import {SENTRY_CLI_URL} from './shared';
@@ -26,25 +28,40 @@ type Props = {
 };
 
 export function AgentSetupCallout({skill, platformName, instructions}: Props) {
+  const codeContext = useContext(CodeContext);
+  const isSignedIn = Boolean(
+    codeContext?.codeKeywords.USER && codeContext.codeKeywords.PROJECT.length
+  );
+
   if (instructions) {
     return <InstructionPrompt instructions={instructions} />;
   }
 
   return (
     <Fragment>
-      <div className={styles.wrapper} data-mdast="ignore">
-        <div className={styles.setup}>
-          <span className={styles.title}>Set up with Sentry CLI</span>
-          <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
-        </div>
-        <div className={styles.subRow}>
-          <ExternalLink href={SENTRY_CLI_URL} className={styles.viewDocs}>
-            Learn more about the Sentry CLI
-          </ExternalLink>
-        </div>
-      </div>
+      {isSignedIn ? (
+        <AgentHandoffCallout skill={skill} platformName={platformName} />
+      ) : (
+        <CliSetupCallout skill={skill} platformName={platformName} />
+      )}
       <CliSetupMarkdown platformName={platformName} />
     </Fragment>
+  );
+}
+
+function CliSetupCallout({skill, platformName}: Pick<Props, 'skill' | 'platformName'>) {
+  return (
+    <div className={styles.wrapper} data-mdast="ignore">
+      <div className={styles.setup}>
+        <span className={styles.title}>Set up with Sentry CLI</span>
+        <CliInstallCommand source="callout" skill={skill} platformName={platformName} />
+      </div>
+      <div className={styles.subRow}>
+        <ExternalLink href={SENTRY_CLI_URL} className={styles.viewDocs}>
+          Learn more about the Sentry CLI
+        </ExternalLink>
+      </div>
+    </div>
   );
 }
 

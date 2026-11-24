@@ -326,6 +326,47 @@ export async function createOrgAuthToken({
   }
 }
 
+export type AgentHandoff = {
+  code: string;
+  expiresAt: string;
+  guideUrl: string;
+};
+
+export function getAgentHandoffGuideUrl(): string {
+  return `${getHost()}/agent-handoff.md`;
+}
+
+/**
+ * Mint a single-use agent handoff code with the user's sentry.io session. The agent
+ * redeems the code for a scoped token, so the docs never see a credential.
+ */
+export async function createAgentHandoff({
+  orgSlug,
+  disableIpPinning,
+}: {
+  disableIpPinning: boolean;
+  orgSlug: string;
+}): Promise<AgentHandoff> {
+  const url = `${getHost()}/api/0/organizations/${orgSlug}/agent-handoff/prompts/`;
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({flow: 'guided_next_steps', disableIpPinning}),
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json; charset=utf-8',
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCsrfToken(),
+    },
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Agent handoff request failed with ${resp.status}`);
+  }
+
+  return resp.json();
+}
+
 const getLocallyStoredSelections = (): SelectedCodeTabs => {
   if (isLocalStorageAvailable()) {
     return Object.fromEntries(
