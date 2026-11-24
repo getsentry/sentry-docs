@@ -19,6 +19,9 @@ handlers=java.util.logging.ConsoleHandler,io.sentry.jul.SentryHandler
 
 # Override the Sentry handler log level to WARNING
 io.sentry.jul.SentryHandler.level=WARNING
+
+# Enable automatic Sentry Logs capture
+io.sentry.jul.SentryHandler.logsEnabled=true
 ```
 
 When starting your application, add the `java.util.logging.config.file` to the system properties, with the full path to the `logging.properties` as its value:
@@ -27,7 +30,7 @@ When starting your application, add the `java.util.logging.config.file` to the s
 java -Djava.util.logging.config.file=/path/to/app.properties MyClass
 ```
 
-Sentry Logs must be enabled for the appender to send log messages as Logs. If Sentry is initialized elsewhere, make sure Logs are enabled there. If the appender initializes the SDK, the `sentry.properties` file as shown in the section below enables them.
+The `logsEnabled` handler option above sends JUL records as Sentry Logs.
 
 ### Set the DSN If Nothing Else Initializes Sentry
 
@@ -37,9 +40,6 @@ If you haven't initialized Sentry elsewhere, the handler initializes the SDK for
 
 ```properties {tabTitle:sentry.properties}
 dsn=___PUBLIC_DSN___
-
-# Enable logs
-logs.enabled=true
 
 # Use Data Collection defaults but don't collect automatic user information.
 # https://docs.sentry.io/platforms/java/guides/jul/data-management/data-collected/
@@ -53,7 +53,7 @@ Two log levels are used to configure this integration:
 1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
 2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`).
 3. Configure the lowest level a message has to be to be sent as Sentry Log (`minimumLevel`).
-<Alert>
+   <Alert>
 
 Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logging.properties` only affects events logged by way of JUL. The settings will have no effect when calling `Sentry.captureMessage` or similar directly.
 
@@ -64,6 +64,8 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
 ```properties {tabTitle:logging.properties}
 io.sentry.jul.SentryHandler.minimumEventLevel=INFO
 io.sentry.jul.SentryHandler.minimumBreadcrumbLevel=CONFIG
+io.sentry.jul.SentryHandler.logsEnabled=true
+io.sentry.jul.SentryHandler.minimumLevel=CONFIG
 io.sentry.jul.SentryHandler.level=CONFIG
 ...
 ```

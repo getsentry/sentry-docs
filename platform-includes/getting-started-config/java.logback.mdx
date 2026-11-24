@@ -19,11 +19,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
     <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
     <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-        <options>
-            <logs>
-                <enabled>true</enabled>
-            </logs>
-        </options>
+        <logsEnabled>true</logsEnabled>
     </appender>
 
     <!-- Enable the Console and Sentry appenders, Console is provided as an example
@@ -35,7 +31,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 </configuration>
 ```
 
-Sentry Logs must be enabled for the appender to send log messages as Logs. If Sentry is initialized elsewhere, make sure Logs are enabled there. If the appender initializes the SDK, the `sentry.properties` file as shown in the section below enables them.
+The `logsEnabled` appender option above sends Logback records as Sentry Logs.
 
 ### Set the DSN If Nothing Else Initializes Sentry
 
@@ -45,9 +41,6 @@ If you haven't initialized Sentry elsewhere, the handler initializes the SDK for
 
 ```properties {filename:sentry.properties}
 dsn=___PUBLIC_DSN___
-
-# Enable logs
-logs.enabled=true
 
 # Use Data Collection defaults but don't collect automatic user information.
 # https://docs.sentry.io/platforms/java/guides/logback/data-management/data-collected/
@@ -63,7 +56,7 @@ Two log levels are used to configure this integration:
 1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
 2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`).
 3. Configure the lowest level a message has to be to be sent as Sentry Log (`minimumLevel`).
-<Alert>
+   <Alert>
 
 Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logback.xml` only affects events logged by way of Logback. The settings will have no effect when calling `Sentry.captureMessage` or similar directly.
 
@@ -71,17 +64,18 @@ Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `logback.xml` only af
 
 Breadcrumbs are kept in memory (by default the last 100 records) and are sent with events. For example, by default, if you log 100 entries with `logger.info` or `logger.warn`, no event is sent to Sentry. If you then log with `logger.error`, an event is sent to Sentry which includes those 100 `info` or `warn` messages. For this to work, `SentryAppender` needs to receive **all** log entries to decide what to keep as breadcrumb or sent as event. Set the `SentryAppender` log level configuration to a value lower than what is set for the `minimumBreadcrumbLevel` and `minimumEventLevel` so that `SentryAppender` receives these log messages.
 
-
 ```xml
 <appender name="Sentry" class="io.sentry.logback.SentryAppender">
     <!-- Optionally change minimum Event level. Default for Events is ERROR -->
     <minimumEventLevel>WARN</minimumEventLevel>
     <!-- Optionally change minimum Breadcrumbs level. Default for Breadcrumbs is INFO -->
     <minimumBreadcrumbLevel>DEBUG</minimumBreadcrumbLevel>
-    <!-- Optionally change minimum Log level. Default for Logs is INFO -->
+    <!-- Enable Sentry Logs and optionally change the minimum level. The default is INFO. -->
+    <logsEnabled>true</logsEnabled>
     <minimumLevel>DEBUG</minimumLevel>
 </appender>
 ```
+
 ### Encoded Messages
 
 A Logback encoder can mask or remove sensitive values before Sentry receives a log entry. When you configure an encoder on `SentryAppender`, Sentry sends the encoded message and omits the original message template and parameters by default.
