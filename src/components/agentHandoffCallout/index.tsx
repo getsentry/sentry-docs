@@ -1,7 +1,6 @@
 'use client';
 
-import {ChevronDownIcon} from '@radix-ui/react-icons';
-import * as RadixSelect from '@radix-ui/react-select';
+import {Button, Callout, Card, Code, Flex, Select, Text, Tooltip} from '@radix-ui/themes';
 import * as Sentry from '@sentry/nextjs';
 import {useCallback, useContext, useEffect, useRef, useState} from 'react';
 import {Check, Copy} from 'react-feather';
@@ -146,69 +145,55 @@ export function AgentHandoffCallout({platformName, skill}: Props) {
   }, [emit, getPrompt, isPending, skill]);
 
   return (
-    <div className={styles.wrapper} data-mdast="ignore">
-      <div className={styles.header}>
-        <span className={styles.title}>Set up with your coding agent</span>
-        {orgSlugs.length > 1 && (
-          <RadixSelect.Root value={activeOrgSlug} onValueChange={setOrgSlug}>
-            <RadixSelect.Trigger aria-label="Organization" className={styles.orgSelect}>
-              <RadixSelect.Value />
-              <RadixSelect.Icon>
-                <ChevronDownIcon />
-              </RadixSelect.Icon>
-            </RadixSelect.Trigger>
-            <RadixSelect.Content
-              aria-label="Organizations"
-              position="popper"
-              sideOffset={4}
-              className={styles.orgPopover}
-            >
-              {orgSlugs.map(slug => (
-                <RadixSelect.Item key={slug} value={slug} className={styles.orgItem}>
-                  <RadixSelect.ItemText>{slug}</RadixSelect.ItemText>
-                </RadixSelect.Item>
-              ))}
-            </RadixSelect.Content>
-          </RadixSelect.Root>
-        )}
-      </div>
-      <p className={styles.description}>
-        Paste one prompt and your agent does the rest. It signs in to Sentry as you, so
-        there's nothing to install first.
-      </p>
+    <Card className={styles.wrapper} data-mdast="ignore">
+      <Flex direction="column" gap="3">
+        <Flex align="center" justify="between" gap="3" wrap="wrap">
+          <Text size="2" weight="bold">
+            Set up with your coding agent
+          </Text>
+          {orgSlugs.length > 1 && (
+            <Select.Root size="1" value={activeOrgSlug} onValueChange={setOrgSlug}>
+              <Select.Trigger aria-label="Organization" />
+              <Select.Content position="popper">
+                {orgSlugs.map(slug => (
+                  <Select.Item key={slug} value={slug}>
+                    {slug}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          )}
+        </Flex>
+        <Text as="div" size="1" color="gray">
+          Paste one prompt and your agent does the rest. It signs in to Sentry as you, so
+          there's nothing to install first.
+        </Text>
 
-      <div className={styles.promptBox}>
-        <code className={styles.promptText}>
+        <code className={styles.prompt}>
           Read and follow{' '}
           <a href={guideUrl} target="_blank" rel="noreferrer">
             {guideUrl}
           </a>{' '}
           verbatim to set up {setupTarget(platformName)}. Your handoff code is{' '}
-          <span
-            className={styles.maskedCode}
-            title="The secret code authorizes your agent on your behalf"
-          >
-            sntryh_****
-          </span>
+          <Tooltip content="The secret code authorizes your agent on your behalf">
+            <Code color="amber" variant="solid">
+              sntryh_****
+            </Code>
+          </Tooltip>
           .
         </code>
-      </div>
 
-      {error && (
-        <div className={styles.error} role="alert">
-          {error}
-        </div>
-      )}
+        {error && (
+          <Callout.Root color="red" size="1" role="alert">
+            <Callout.Text>{error}</Callout.Text>
+          </Callout.Root>
+        )}
 
-      <button
-        className={styles.copyButton}
-        disabled={isPending || !activeOrgSlug}
-        onClick={copyPrompt}
-        type="button"
-      >
-        {copied ? <Check size={14} /> : <Copy size={14} />}
-        {copied ? 'Copied' : isPending ? 'Creating prompt…' : 'Copy prompt'}
-      </button>
-    </div>
+        <Button disabled={isPending || !activeOrgSlug} onClick={copyPrompt}>
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? 'Copied' : isPending ? 'Creating prompt…' : 'Copy prompt'}
+        </Button>
+      </Flex>
+    </Card>
   );
 }
