@@ -1,10 +1,15 @@
 import {describe, expect, it} from 'vitest';
 
-import {getQuickStartTitle, getRuntimeLinks} from './runtimeLinks';
+import {getQuickStartTitle, getRuntimeGroup, getRuntimeLinks} from './runtimeLinks';
 
 const G = 'platforms/javascript/guides';
 
-type Page = {children: Page[]; frontmatter: {runtime?: string}; path: string};
+type Page = {
+  children: Page[];
+  frontmatter: {runtime?: string};
+  path: string;
+  parent?: Page;
+};
 
 const page = (path: string, runtime?: string, children: Page[] = []): Page => ({
   path,
@@ -66,5 +71,39 @@ describe('getQuickStartTitle', () => {
       page(`${G}/hono/bun`, 'bun'),
     ]);
     expect(getQuickStartTitle(hono)).toBe('Quick Start');
+  });
+});
+
+describe('getRuntimeGroup', () => {
+  const manualSetup = page(`${G}/react-router/manual-setup`, 'node', [
+    page(`${G}/react-router/manual-setup/cloudflare`, 'cloudflare'),
+    page(`${G}/react-router/manual-setup/bun`, 'bun'),
+  ]);
+  const reactRouter = page(`${G}/react-router`, undefined, [manualSetup]);
+  manualSetup.parent = reactRouter;
+  manualSetup.children.forEach(child => {
+    child.parent = manualSetup;
+  });
+
+  it('returns the page if one of its child pages sets a runtime', () => {
+    expect(getRuntimeGroup(manualSetup)).toBe(manualSetup);
+    expect(getRuntimeGroup(piDurable)).toBe(piDurable);
+  });
+
+  it('returns the parent of a page for one runtime', () => {
+    expect(getRuntimeGroup(manualSetup.children[1])).toBe(manualSetup);
+  });
+
+  it('links the manual setups for each runtime', () => {
+    expect(
+      getRuntimeLinks(
+        getRuntimeGroup(manualSetup.children[0]),
+        path(`${G}/react-router/manual-setup/cloudflare`)
+      )?.map(l => [l.title, l.selected])
+    ).toEqual([
+      ['Node.js', false],
+      ['Cloudflare', true],
+      ['Bun', false],
+    ]);
   });
 });

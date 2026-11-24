@@ -1,0 +1,173 @@
+---
+title: GPU Crashes
+sidebar_order: 13
+description: "Learn how to capture GPU crashes and identify the faulting shader with Sentry's Unreal Engine SDK."
+---
+
+A GPU crash happens when the graphics device stops responding or is removed, for example because a shader hangs or accesses invalid memory. The Unreal Engine SDK captures GPU crashes like other crashes and attaches the [NVIDIA Nsight Aftermath](https://developer.nvidia.com/nsight-aftermath) GPU crash dump. Sentry decodes the dump into a separate GPU crash event that shows which shader was running on the GPU when the crash occurred.
+
+<Alert>
+
+GPU crash capturing is supported on Windows with the D3D11 and D3D12 RHIs. GPU crash dumps are available only on NVIDIA GPUs.
+
+</Alert>
+
+<Alert level="warning">
+
+GPU crash symbolication is in closed beta and is only available if your organization is participating in its limited release. To request access, contact [Sentry support](https://sentry.io/contact/support/).
+
+</Alert>
+
+## Requirements
+
+Capturing GPU crashes requires:
+
+- Windows with the D3D11 or D3D12 RHI. When the game runs with Vulkan, the engine exits without raising an exception that the SDK can capture.
+- Unreal Engine 5.2 or newer. Unreal Engine 5.2 to 5.6 also need a [modification of the engine source code](#unreal-engine-56-and-older).
+- **Enable automatic crash capturing** (`EnableAutoCrashCapturing`) turned on in the plugin settings. This option is turned on by default.
+
+To get a GPU crash dump and the GPU crash event in Sentry, the player's computer needs an NVIDIA GPU. On other GPUs, the SDK still captures the crash, but without a GPU crash dump.
+
+### Unreal Engine 5.6 and Older
+
+When a GPU crash occurs on Windows, the engine reports it in `ReportGPUCrash`. In Unreal Engine 5.6 and older, this function always passes the crash to the Unreal Engine Crash Reporter, even if a third-party crash handler such as Sentry is active. As a result, the SDK doesn't capture the crash.
+
+[EpicGames/UnrealEngine#12648](https://github.com/EpicGames/UnrealEngine/pull/12648) fixes this, and the fix is included in Unreal Engine 5.7 and newer. For older engine versions, apply the same change to `Engine/Source/Runtime/Core/Private/Windows/WindowsPlatformCrashContext.cpp` and rebuild the engine:
+
+```cpp {filename:WindowsPlatformCrashContext.cpp}
+FORCENOINLINE void ReportGPUCrash(const TCHAR* ErrorMessage, void* ProgramCounter)
+{
+	// ...
+	__try
+	{
+		FAssertInfo Info(ErrorMessage, ProgramCounter);
+
+		ULONG_PTR Arguments[] = { (ULONG_PTR)&Info };
+		::RaiseException(GPUCrashExceptionCode, 0, UE_ARRAY_COUNT(Arguments), Arguments);
+	}
+	// Previously: __except (ReportCrash(GetExceptionInformation()))
+	__except (FPlatformMisc::GetCrashHandlingType() == ECrashHandlingType::Default ? ReportCrash(GetExceptionInformation()) : EXCEPTION_CONTINUE_SEARCH)
+	{
+		FPlatformMisc::RequestExit(false, TEXT("WindowsPlatformCrashContext.ReportGPUCrash"));
+	}
+	// ...
+}
+```
+
+## GPU Crash Dumps
+
+When a GPU crash occurs on an NVIDIA GPU, the engine writes an Aftermath GPU crash dump (`.nv-gpudmp`) to the project's `Saved/Logs` directory. The SDK attaches this file to the crash event. NVIDIA Aftermath is enabled by default in Unreal Engine.
+
+To turn off the GPU crash dump attachment, navigate to **Project Settings > Plugins > Sentry > Enriching Events > Attachments** and clear **Attach GPU dump**.
+
+Alternatively, add the following to your project's configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+AttachGpuDump=False
+```
+
+### Shader Debug Information
+
+Aftermath can also write shader debug information files (`.nvdbg`) next to the GPU crash dump. The SDK attaches the `.nvdbg` files that the engine wrote during the current session together with the GPU crash dump. To let the engine write these files, add the following to your project's configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[ConsoleVariables]
+r.GPUCrashDebugging.Aftermath.DumpShaderDebugInfo=1
+```
+
+Alternatively, start the game with the `-nvAftermathDumpShaderDebugInfo` command-line argument.
+
+## GPU Crash Events
+
+Sentry creates a GPU crash event from the GPU crash dump. This event is separate from the crash event, which keeps the minidump and the other attachments.
+
+How the GPU crash event is created depends on the crash backend:
+
+- **Crashpad** (default on Windows): Sentry creates the GPU crash event from the GPU crash dump attached to the crash report. No configuration is necessary.
+- **<PlatformLink to="/configuration/native-backend/">Native backend</PlatformLink>**: The SDK sends the GPU crash dump with a separate event that shares the trace of the crash event. To enable this, navigate to **Project Settings > Plugins > Sentry > Enriching Events > Attachments** and toggle **Send GPU dump as separate event**. If this option is off, the GPU crash dump is only an attachment of the crash event.
+- **<PlatformLink to="/configuration/crash-reporter/sentry-crash-reporter/">Sentry Crash Reporter</PlatformLink>**: The crash reporter sends the GPU crash event when the user submits the crash report, so the user's consent applies to both events. This works with both crash backends.
+
+To enable the separate event for the native backend in the configuration file, add the following:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+SplitGpuCrashEvents=True
+```
+
+<Alert level="warning">
+
+**Send GPU dump as separate event** is experimental and applies to the native backend on Windows only.
+
+</Alert>
+
+With the native backend, the GPU crash event also counts as an error in the session of the crash, so the session reports two errors for one GPU crash.
+
+The crash event of a GPU crash has the `CrashType` tag set to `GPUCrash`.
+
+## Shader Symbols
+
+The GPU crash dump identifies the shaders that were running by a hash. To show the name of the faulting shader, Sentry needs the compiled shader binaries (DXIL) that the engine exported during the cook. The SDK can upload these files to Sentry as debug files after the cook. With the shader binaries, the GPU crash event shows the entry point of the faulting shader. For material shaders, it also shows the material and the pass, which appear as the culprit and in the `gpu.shader_group`, `gpu.material`, and `gpu.shader_class` tags.
+
+<Alert level="warning">
+
+Shader symbols upload is experimental and available starting from Sentry Unreal SDK version 1.27.0. It's supported on Windows editors with Unreal Engine 5.2 or newer. The automatic upload after the cook requires Unreal Engine 5.5 or newer.
+
+</Alert>
+
+### Exporting Shader Symbols
+
+The engine exports shader binaries only if shader symbols are enabled. Add the following to the configuration file of the target platform, for example `Config/Windows/WindowsEngine.ini`:
+
+```ini {filename:WindowsEngine.ini}
+[ShaderCompiler]
+r.Shaders.Symbols=1
+r.Shaders.SymbolsInfo=1
+```
+
+- `r.Shaders.Symbols` exports each compiled shader as a `<hash>.dxil` file, next to its PDB file.
+- `r.Shaders.SymbolsInfo` writes the `ShaderSymbols.info` file with the material and shader class names. It's optional, but without it, Sentry can't show the material and the pass of material shaders.
+
+After the cook, the files are in the `Saved/ShaderSymbols/<ShaderFormat>/` directory of your project, for example `Saved/ShaderSymbols/PCD3D_SM6/`. The first cook after you enable these settings recompiles all shaders. After that, the export is incremental like the rest of the cook.
+
+### Automatic Upload
+
+To upload the shader symbols automatically at the end of each cook for Windows, navigate to **Project Settings > Plugins > Sentry > Debug Symbols** and toggle **Upload shader symbols after cook**.
+
+Alternatively, add the following to your project's configuration file:
+
+```ini {filename:DefaultEngine.ini}
+[/Script/Sentry.SentrySettings]
+UploadShaderSymbols=True
+```
+
+At the end of the cook, the SDK computes the Aftermath hash of each exported shader binary and writes the `sentry-shader-manifest.tsv` file next to the files. Then it uploads the binaries with the Sentry CLI. The upload uses the same organization, project, and auth token as the <PlatformLink to="/configuration/debug-symbols/">debug symbols upload</PlatformLink>, from the `sentry.properties` file or the `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` environment variables.
+
+### Commandlet
+
+For CI pipelines, or for Unreal Engine 5.2 to 5.4, run the `SentryShaderSymbols` commandlet after the cook:
+
+```bash
+UnrealEditor-Cmd.exe <Project>.uproject -run=SentryShaderSymbols -Upload
+```
+
+The commandlet does the same steps as the automatic upload. Without the `-Upload` argument, it only writes the manifest files, so you can upload the shader binaries manually.
+
+### Manual Upload
+
+To upload the shader binaries manually, first run the commandlet to write the manifest files. Then run the Sentry CLI for each shader format directory:
+
+```bash
+export SENTRY_ORG=___ORG_SLUG___
+export SENTRY_PROJECT=___PROJECT_SLUG___
+export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+
+sentry debug-files upload --type dxil Saved/ShaderSymbols/PCD3D_SM6
+```
+
+The Sentry CLI reads the Aftermath hashes from the manifest file. Shader binaries without a manifest entry can't be matched to GPU crash dumps.
+
+### Limitations
+
+- Only shader binaries are uploaded. The GPU crash event doesn't show source files and line numbers of shaders.
+- Shader symbols exported to a custom location with `r.Shaders.SymbolPathOverride`, or to a ZIP archive with `r.Shaders.WriteSymbols.Zip`, aren't supported.
