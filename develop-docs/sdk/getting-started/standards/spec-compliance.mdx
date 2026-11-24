@@ -1,14 +1,21 @@
 ---
 title: Spec Compliance Manifest
 description: Record which SDK specification versions and sections an SDK implements, explain non-applicable sections, and validate the manifest with JSON Schema.
+spec_id: sdk/getting-started/standards/spec-compliance
+spec_version: 0.1.0
+spec_status: draft
+spec_platforms:
+  - all
+spec_changelog:
+  - version: 0.1.0
+    date: 2026-10-19
+    summary: Initial spec compliance manifest format
 sidebar_order: 1
 ---
 
-<Alert>
-  This document uses key words such as "MUST", "SHOULD", and "MAY" as defined in
-  [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt) to indicate requirement
-  levels.
-</Alert>
+<SpecRfcAlert />
+
+<SpecMeta />
 
 SDK specifications define a shared contract, but SDKs implement that contract at different speeds. A spec compliance manifest records which versions and sections an SDK implements so maintainers and reviewers can identify coverage and gaps without inferring support from the specification alone.
 
@@ -17,8 +24,11 @@ The manifest is an SDK-maintained declaration, not a generated test report or pr
 <Alert level="warning">
   This initial format tracks whole specifications and sections, not individual
   requirements. An omitted section makes no compliance claim. It does not
-  necessarily mean the SDK has no implementation of that section.
+  necessarily mean the SDK has no implementation of that section, so tooling
+  **MUST NOT** report omitted sections as unimplemented.
 </Alert>
+
+<SpecSection id="add-a-manifest" status="draft" since="0.1.0">
 
 ## Add a Manifest
 
@@ -44,6 +54,18 @@ This example records partial attachments support. It declares compliance with th
 
 The example illustrates the format, not a complete inventory of Cocoa support. The manifest in an SDK repository is the source for that SDK's declarations.
 
+### Repositories with Multiple Packages
+
+The manifest describes the repository as a whole. This initial format cannot express differences in compliance between packages or reference per-package manifests.
+
+For repositories such as `sentry-javascript`, a section declaration **MUST** cover every package to which that section's requirements apply. For example, a browser-only section does not require a Node implementation, but every browser package to which it applies must satisfy its requirements. If any applicable package is incomplete, leave the section out of `sections`.
+
+A section **MUST NOT** appear in `non_applicable` unless it requires no implementation in any package in the repository. The overall specification version likewise accounts for applicable requirements across all packages.
+
+</SpecSection>
+
+<SpecSection id="identify-the-sdk-and-specifications" status="draft" since="0.1.0">
+
 ## Identify the SDK and Specifications
 
 Stable identifiers let reviewers match each declaration to the specification it describes. These top-level fields are required:
@@ -67,13 +89,19 @@ Within a specification declaration, `version` is required. `sections` and `non_a
 
 Section keys **MUST** match the `id` of a `<SpecSection>` block in the referenced specification. The same section **MUST NOT** appear in both `sections` and `non_applicable`.
 
+</SpecSection>
+
+<SpecSection id="declare-implemented-versions" status="draft" since="0.1.0">
+
 ## Declare Implemented Versions
 
 Specification versions and SDK release versions are separate. Every version in the manifest **MUST** be an exact specification [SemVer](https://semver.org/) version, not an SDK version, a range such as `>=1.0.0`, or a lifecycle status such as `stable`.
 
 ### Record Section-Level Coverage
 
-Add a section to `sections` only when the implementation satisfies that section's applicable requirements. Set its value to the latest specification version the implementation satisfies. Applicable but incomplete sections **MUST** remain absent.
+Add a section to `sections` only when the implementation satisfies that section's applicable requirements. Set its value to the specification version the implementation was last assessed against. Applicable but incomplete sections **MUST** remain absent.
+
+A declaration is current when its version is equal to or higher than the section's `since`. A value below the latest specification version is not a gap by itself.
 
 Section versions are independent. An SDK can implement one section at `1.5.0` and another at `1.4.0` while its overall specification version remains `0.0.0`. Section versions can also be newer than a nonzero overall version when the SDK implements some, but not all, changes in a newer specification.
 
@@ -86,6 +114,10 @@ Set the spec-level `version` to the highest specification version whose applicab
 The overall version is not the highest or lowest value in `sections`, and **MUST NOT** be calculated from those values alone. Review all applicable requirements in the target specification version, including sections not listed in the manifest. Use `0.0.0` when no complete specification version is implemented.
 
 An omitted specification makes no compliance claim. A specification listed with `version: "0.0.0"` explicitly records that no complete version is implemented and can still report section-level coverage.
+
+</SpecSection>
+
+<SpecSection id="explain-non-applicable-sections" status="draft" since="0.1.0">
 
 ## Explain Non-Applicable Sections
 
@@ -110,6 +142,10 @@ The initial format cannot express partially applicable sections. For example, a 
 
 Such a section **MUST NOT** be marked wholly non-applicable. It **MUST** remain absent from section-level declarations until the format supports requirement-level applicability or the specification splits the section into smaller sections. Do not use a partial implementation entry to imply full section coverage.
 
+</SpecSection>
+
+<SpecSection id="keep-declarations-current" status="draft" since="0.1.0">
+
 ## Keep Declarations Current
 
 Review the manifest whenever an implementation changes behavior covered by a specification, or when a specification update needs a compliance assessment:
@@ -121,6 +157,10 @@ Review the manifest whenever an implementation changes behavior covered by a spe
 5. Update `last_updated` whenever compliance declarations change, and include the manifest update in the implementation review.
 
 A new specification release does not automatically change an SDK's declared versions. Keep the existing declarations until the implementation has been assessed against the new requirements.
+
+</SpecSection>
+
+<SpecSection id="validate-the-manifest" status="draft" since="0.1.0">
 
 ## Validate the Manifest
 
@@ -141,3 +181,9 @@ Schema validation does not check:
 - Whether the overall version is supported by full coverage, or `last_updated` reflects the latest assessment.
 
 These checks require specification and implementation review. Passing schema validation establishes that a declaration is well-formed, not that an SDK conforms to the specification.
+
+</SpecSection>
+
+## Changelog
+
+<SpecChangelog />
