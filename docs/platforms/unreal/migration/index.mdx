@@ -13,33 +13,48 @@ We recommend using this guide starting from the version closes to your current v
 
 ### Breaking changes
 
-#### Crash Backend Selection
+#### Before Log Handler Access
 
-The `UseNativeBackend` option is replaced by the `CrashBackend` option (**Project Settings > Plugins > Sentry > Crash Handling > Crash backend**), and the native backend is now the default on Windows, Linux, and Xbox. `CrashBackend` accepts the following values:
+The `USentrySubsystem::GetBeforeLogHandler` function is removed. Other callback handlers aren't available from the subsystem, and the before log handler now follows the same rule.
 
-| Platform       | `Auto` (default) | `Native` | `Legacy`                      |
-| -------------- | ---------------- | -------- | ----------------------------- |
-| Windows, Linux | Native           | Native   | Crashpad                      |
-| Xbox           | Native           | Native   | Breakpad                      |
-| macOS          | sentry-cocoa     | Native   | sentry-cocoa (same as `Auto`) |
+If your code gets the handler instance from the subsystem, keep the state that you need in your own object instead. The SDK creates the handler from the `BeforeLogHandler` class in the plugin settings and calls it for each structured log, so you don't need the instance to filter or change logs.
 
-The SDK no longer reads `UseNativeBackend`. If your project configuration file sets it, replace it with `CrashBackend`:
+#### Renamed Public Types
 
-```ini
-; Enabling the native backend before v2.0.0
+- Renamed `ESentryAndroidCrashBackend` enum to `ESentryAndroidNativeCrashSource`
+- Renamed `FStructuredLoggingLevels` struct to `FStructuredLogsLevels`
 
-[/Script/Sentry.SentrySettings]
-UseNativeBackend=True
+#### Structured Logs Level
 
-; Enabling the native backend in v2.0.0 (also on macOS)
+Structured logs now use the new `ESentryLogLevel` enum instead of `ESentryLevel`. It adds the `Trace` level, which the logs protocol supports but events, breadcrumbs, and scopes don't. Events, breadcrumbs, and scopes still use `ESentryLevel`.
 
-[/Script/Sentry.SentrySettings]
-CrashBackend=Native
+If you set or read the level of a `USentryLog` (for example, in a custom `USentryBeforeLogHandler`), update your code to use `ESentryLogLevel`:
+
+```cpp
+// Filtering logs by level before v2.0.0
+
+if (LogData->GetLevel() == ESentryLevel::Debug)
+{
+    return nullptr;
+}
+
+// Filtering logs by level in v2.0.0
+
+if (LogData->GetLevel() == ESentryLogLevel::Debug || LogData->GetLevel() == ESentryLogLevel::Trace)
+{
+    return nullptr;
+}
 ```
 
-If you want to keep using Crashpad on Windows and Linux or Breakpad on Xbox, set `CrashBackend=Legacy`.
+If you use Blueprints, recreate the **Set Level** and **Get Level** nodes of `Sentry Log` objects and the nodes connected to them.
 
-The backend is selected at build time, so rebuild your project after changing this option.
+#### Unreal Engine Log Forwarding
+
+`UE_LOG` messages with `VeryVerbose` verbosity are now sent as `trace` structured logs instead of `debug` ones. The `Verbose/VeryVerbose` option in the plugin settings (`StructuredLogsLevels.bOnDebugLog`) is split into the `Verbose` (`bOnDebugLog`) and `VeryVerbose` (`bOnTraceLog`) options.
+
+The `VeryVerbose` option is disabled by default. If your project forwards `Verbose` messages and you also want to forward `VeryVerbose` messages, enable `bOnTraceLog`.
+
+Breadcrumbs for `VeryVerbose` messages still use the `Debug` level.
 
 #### Assert Handling
 
@@ -68,43 +83,41 @@ FSentryDelegates::OnAssert.AddLambda([](const FString& Message)
 
 The delegate is called on the thread that hit the assertion, before the crash is reported. Your handler must be thread-safe and must not access UObjects.
 
-#### Structured Logs Level
+### Crash Backend
 
-Structured logs now use the new `ESentryLogLevel` enum instead of `ESentryLevel`. It adds the `Trace` level, which the logs protocol supports but events, breadcrumbs, and scopes don't. Events, breadcrumbs, and scopes still use `ESentryLevel`.
+The native backend is now the default on Windows, Linux, and Xbox. The `CrashBackend` option (**Project Settings > Plugins > Sentry > Crash Handling > Crash backend**) accepts the following values:
 
-If you set or read the level of a `USentryLog` (for example, in a custom `USentryBeforeLogHandler`), update your code to use `ESentryLogLevel`:
+| Platform       | `Auto` (default) | `Native` | `Legacy`                      |
+| -------------- | ---------------- | -------- | ----------------------------- |
+| Windows, Linux | Native           | Native   | Crashpad                      |
+| Xbox           | Native           | Native   | Breakpad                      |
+| macOS          | sentry-cocoa     | Native   | sentry-cocoa (same as `Auto`) |
 
-```cpp
-// Filtering logs by level before v2.0.0
+If you want to keep using Crashpad on Windows and Linux or Breakpad on Xbox, set `CrashBackend=Legacy`. To keep using the native backend on macOS, set `CrashBackend=Native`.
 
-if (LogData->GetLevel() == ESentryLevel::Debug)
-{
-    return nullptr;
-}
+The backend is selected at build time, so rebuild your project after changing this option.
 
-// Filtering logs by level in v2.0.0
+### SDK Configuration Changes
 
-if (LogData->GetLevel() == ESentryLogLevel::Debug || LogData->GetLevel() == ESentryLogLevel::Trace)
-{
-    return nullptr;
-}
-```
+- Several plugin settings are renamed. The SDK no longer reads the old names, so update them in your project configuration file. The values of the renamed settings don't change:
 
-If you use Blueprints, recreate the **Set Level** and **Get Level** nodes of `Sentry Log` objects and the nodes connected to them.
+  | Before v2.0.0                           | In v2.0.0                          |
+  | --------------------------------------- | ---------------------------------- |
+  | `EnableAutoLogAttachment`               | `AttachGameLog`                    |
+  | `AttachSessionReplay`                   | `EnableSessionReplay`              |
+  | `EnableAutoCrashCapturing`              | `OverrideEngineCrashHandling`      |
+  | `AndroidCrashBackend`                   | `AndroidNativeCrashSource`         |
+  | `StructuredLoggingCategories`           | `StructuredLogsCategories`         |
+  | `StructuredLoggingLevels`               | `StructuredLogsLevels`             |
+  | `bSendBreadcrumbsWithStructuredLogging` | `AddBreadcrumbsWithStructuredLogs` |
+  | `bRequireUserConsent`                   | `RequireUserConsent`               |
+  | `bDefaultUserConsentGiven`              | `DefaultUserConsentGiven`          |
 
-#### Unreal Engine Log Forwarding
+- The deprecated `EnableStructuredLogging` and `EnableMetrics` settings are removed. Structured logs and metrics are always enabled, so you can remove these settings from your configuration file.
 
-`UE_LOG` messages with `VeryVerbose` verbosity are now sent as `trace` structured logs instead of `debug` ones. The `Verbose/VeryVerbose` option in the plugin settings (`StructuredLoggingLevels.bOnDebugLog`) is split into the `Verbose` (`bOnDebugLog`) and `VeryVerbose` (`bOnTraceLog`) options.
+- The `UseNativeBackend` option is replaced by the `CrashBackend` option, and the SDK no longer reads it.
 
-The `VeryVerbose` option is disabled by default. If your project forwards `Verbose` messages and you also want to forward `VeryVerbose` messages, enable `bOnTraceLog`.
-
-Breadcrumbs for `VeryVerbose` messages still use the `Debug` level.
-
-#### Before Log Handler Access
-
-The `USentrySubsystem::GetBeforeLogHandler` function is removed. Other callback handlers aren't available from the subsystem, and the before log handler now follows the same rule.
-
-If your code gets the handler instance from the subsystem, keep the state that you need in your own object instead. The SDK creates the handler from the `BeforeLogHandler` class in the plugin settings and calls it for each structured log, so you don't need the instance to filter or change logs.
+- Session replay is enabled at build time, so rebuild your project after renaming `AttachSessionReplay`.
 
 ## Migrating to 1.0.0
 
