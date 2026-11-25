@@ -289,7 +289,7 @@ If no `name` is provided and the plugin can't automatically detect one, no relea
 
 </SdkOption>
 
-<SdkOption name="release.inject" type='boolean | "html"' defaultValue="true">
+<SdkOption name="release.inject" type="boolean" defaultValue="true">
 
 Whether the plugin should inject release information into the build for the SDK to pick it up when sending events. (recommended)
 
@@ -297,21 +297,7 @@ Whether the plugin should inject release information into the build for the SDK 
 
 The plugin injects the release into the chunks that load at startup. The release name usually changes on every commit, so these chunks get new content hashes, and new file names, on every release, even when their code didn't change. The chunks that import them get new file names too, so returning visitors download all of them again instead of using their browser cache.
 
-To keep these file names stable, set `inject: "html"`. The plugin then adds the release to the `<head>` of each emitted HTML page in an inline `<script>`, and not to any chunk.
-
-<AvailableSince version="11.15.0" />
-
-```javascript {filename:vite.config.js}
-sentryVitePlugin({
-  release: {
-    inject: "html",
-  },
-});
-```
-
-The Vite plugin supports this for builds with HTML entry points, and the webpack plugin for builds that generate their HTML with `html-webpack-plugin`. Your Content Security Policy must allow the inline script, for example with Vite's `html.cspNonce` or a hash of the script. When the plugin can't add the release to the HTML, it warns and injects the release into the startup chunks.
-
-You can also turn off injection and pass the release to `Sentry.init` at runtime, from a value that isn't part of your bundled code, for example from your HTML page:
+To keep these file names stable, turn off injection and pass the release to `Sentry.init` at runtime, from a value that isn't part of your bundled code, for example from your HTML page:
 
 ```javascript {filename:vite.config.js}
 sentryVitePlugin({
