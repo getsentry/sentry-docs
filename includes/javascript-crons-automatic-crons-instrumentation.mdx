@@ -1,5 +1,11 @@
 If you're using the [`cron`](https://www.npmjs.com/package/cron), [`node-cron`](https://www.npmjs.com/package/node-cron) or [`node-schedule`](https://www.npmjs.com/package/node-schedule) libraries to run your periodic tasks, you can use our instrumentation functions in the `Sentry.cron` export to monitor your cron jobs. These functions send the job's schedule with each check-in, so Sentry creates the monitor for you.
 
+<PlatformSection notSupported={["javascript.bun"]}>
+
+If you run jobs from [BullMQ](https://docs.bullmq.io) job schedulers, add `bullmqJobSchedulerIntegration` to monitor them, as described in [BullMQ](#bullmq) below.
+
+</PlatformSection>
+
 ### Cron
 
 Requires SDK version `7.92.0` or higher.
@@ -64,3 +70,70 @@ scheduleWithCheckIn.scheduleJob(
   }
 );
 ```
+
+<PlatformSection notSupported={["javascript.bun"]}>
+
+### BullMQ
+
+Requires the next SDK release after `11.12.0`, and `bullmq` version `5.16.0` to `6.x`.
+
+Add `bullmqJobSchedulerIntegration` to send check-ins for every job a BullMQ `Worker` runs from a [job scheduler](https://docs.bullmq.io/guide/job-schedulers). Every worker in your app is monitored, without changes to your worker code:
+
+```JavaScript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.bullmqJobSchedulerIntegration({
+      excludeJobSchedulers: ["cache-warmup", /^tmp-/], // Optional.
+    }),
+  ],
+});
+```
+
+```JavaScript
+import { Queue, Worker } from "bullmq";
+
+const queue = new Queue("reports", { connection });
+await queue.upsertJobScheduler(
+  "daily-report",
+  { pattern: "0 9 * * 1-5", tz: "Europe/Vienna" },
+  { name: "report" }
+);
+
+const worker = new Worker("reports", processor, { connection });
+```
+
+<PlatformSection notSupported={["javascript.nextjs"]}>
+
+Like the SDK's other auto-instrumentation, this only works if `Sentry.init()` runs before your app loads `bullmq`. Load your instrument file with `--import`, or in CommonJS, `require("./instrument")` before any other module. If `bullmq` is loaded first, no check-ins are sent.
+
+</PlatformSection>
+
+<PlatformSection supported={["javascript.nextjs"]}>
+
+Next.js bundles `bullmq` into your server build by default, which stops this integration from working. Add it to `serverExternalPackages` in your `next.config.js` (`experimental.serverComponentsExternalPackages` on Next.js 14):
+
+```JavaScript {filename:next.config.js}
+const nextConfig = {
+  serverExternalPackages: ["bullmq"],
+};
+```
+
+</PlatformSection>
+
+The monitor slug is the queue name and the job scheduler ID joined by `-`, like `reports-daily-report` in this example, and the scheduler's `pattern` or `every` is sent as the monitor schedule. Each monitored job scheduler creates its own monitor, and each monitor is billed. Jobs that weren't created by a job scheduler aren't monitored. `excludeJobSchedulers` skips job schedulers whose ID matches a string exactly or a regular expression.
+
+Patterns use the scheduler's `tz` time zone, or the server's time zone without one. On BullMQ 5, `utc: true` sends UTC. A job that BullMQ retries shows as one check-in, which fails only if the last attempt fails.
+
+These aren't monitored:
+
+- Schedules Sentry can't express, like an `every` interval that isn't a whole number of minutes or a pattern that runs every few seconds
+- Time zones given as an offset like `UTC+5` rather than an IANA name like `Europe/Vienna`
+- Schedulers with a `limit` or `endDate`
+- On BullMQ 5, patterns with an `nthDayOfWeek` and anything but a single day of the week
+- Patterns on a worker with a custom `repeatStrategy`
+- Repeatable jobs added with `queue.add` and the `repeat` option
+- Workers created without a processor that fetch jobs themselves with `getNextJob`
+- Workers in a server build that bundles BullMQ instead of loading it from `node_modules`
+
+</PlatformSection>
