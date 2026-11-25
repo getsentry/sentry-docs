@@ -1,23 +1,27 @@
 import * as Sentry from '@sentry/nextjs';
 import type {NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
-import {canonicalPath} from 'sentry-docs/canonical';
+import {canonicalPath, markdownExportPath} from 'sentry-docs/canonical';
+import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
+import {formatPreference, shouldServeMarkdown} from 'sentry-docs/lib/contentNegotiation';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
-// DEVELOPER_DOCS is set via next.config.ts env field (inlined at build time for edge runtime).
-// NEXT_PUBLIC_DEVELOPER_DOCS is the canonical env var; DEVELOPER_DOCS is the build-time alias.
-const isDeveloperDocs =
-  process.env.DEVELOPER_DOCS || process.env.NEXT_PUBLIC_DEVELOPER_DOCS;
+const CANONICAL_HOST = new URL(DOCS_ORIGIN).hostname;
 
-const BASE_URL = isDeveloperDocs
-  ? 'https://develop.sentry.dev'
-  : 'https://docs.sentry.io';
+// llms.txt covers every page on the site (llmstxt.org link relation).
+const LLMS_TXT_LINK = `<${DOCS_ORIGIN}/llms.txt>; rel="describedby"`;
 
-const CANONICAL_HOST = new URL(BASE_URL).hostname;
+// Markdown-only resources with no HTML page; they are their own canonical URL.
+const MARKDOWN_ONLY_PATHS = new Set(['/sitemap.md']);
+
+// sentry-for-ai-evals compares a PR's docs with the docs at its merge base, which it reads
+// from that commit's production build URL. It sends this header so the build serves its
+// own pages instead of redirecting to the canonical host.
+const EVALS_PIN_HEADER = 'x-sentry-evals-pin';
 
 // Production domains whose content should be indexable by search engines.
 // All other hostnames (Vercel preview/deployment URLs, old production deployments)
@@ -73,7 +77,10 @@ function redirectProductionBuildUrlToCanonical(
   ) {
     return null;
   }
-  if (request.nextUrl.hostname === CANONICAL_HOST) {
+  if (
+    request.nextUrl.hostname === CANONICAL_HOST ||
+    request.headers.has(EVALS_PIN_HEADER)
+  ) {
     return null;
   }
   const url = request.nextUrl.clone();
@@ -176,15 +183,6 @@ function recordClassification(
 const redirectStatusCode = process.env.NODE_ENV === 'development' ? 302 : 301;
 
 /**
- * Detects if the user agent belongs to an AI/LLM tool or development environment
- * that would benefit from markdown format.
- * Uses shared AI_AGENT_PATTERN from trafficClassification.ts.
- */
-function isAIOrDevTool(userAgentString: string): boolean {
-  return AI_AGENT_PATTERN.test(userAgentString);
-}
-
-/**
  * Traffic classification for metrics tracking.
  * Uses Next.js userAgent() for enhanced bot detection plus custom AI agent patterns.
  */
@@ -227,33 +225,6 @@ function classifyTraffic(request: NextRequest): {
     deviceType: ua.device.type || 'desktop',
     isBot: false,
   };
-}
-
-/**
- * Detects if client wants markdown via Accept header (standards-compliant).
- * Only matches explicit markdown MIME types — not text/plain, which is too broad
- * and matches clients like Axios (`Accept: application/json, text/plain, *\/\/`).
- */
-function wantsMarkdownViaAccept(acceptHeader: string): boolean {
-  return (
-    acceptHeader.includes('text/markdown') || acceptHeader.includes('text/x-markdown')
-  );
-}
-
-/**
- * Detects if client wants markdown via Accept header or user-agent
- */
-function wantsMarkdown(request: NextRequest): boolean {
-  const uaString = request.headers.get('user-agent') || '';
-  const acceptHeader = request.headers.get('accept') || '';
-
-  // Strategy 1: Accept header content negotiation (standards-compliant)
-  if (wantsMarkdownViaAccept(acceptHeader)) {
-    return true;
-  }
-
-  // Strategy 2: User-agent detection (fallback for tools that don't set Accept)
-  return isAIOrDevTool(uaString);
 }
 
 /**
@@ -314,28 +285,31 @@ function mdToCanonicalPath(mdPathname: string): string {
 }
 
 /**
- * Handles redirection to markdown versions for AI/LLM clients
+ * Serves a page URL as HTML or Markdown (content negotiation), and advertises
+ * the other representation on each response.
  */
 const handleAIClientRedirect = (
   request: NextRequest,
   classification: TrafficClassification
 ) => {
-  const userAgentString = request.headers.get('user-agent') || '';
   const acceptHeader = request.headers.get('accept') || '';
   const url = request.nextUrl;
 
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
-  const clientWantsMarkdown = wantsMarkdown(request);
+  const clientWantsMarkdown = shouldServeMarkdown(
+    acceptHeader,
+    classification.trafficType === 'ai_agent'
+  );
   const willServeMarkdown =
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
 
   // Determine detection method for logging
-  const detectionMethod = wantsMarkdownViaAccept(acceptHeader)
-    ? 'Accept header'
-    : isAIOrDevTool(userAgentString)
-      ? 'User-agent'
-      : 'Manual';
+  const detectionMethod = !clientWantsMarkdown
+    ? 'Manual'
+    : formatPreference(acceptHeader) === 'markdown'
+      ? 'Accept header'
+      : 'User-agent';
 
   // Log user agent for debugging (only for non-static assets)
   if (
@@ -358,9 +332,11 @@ const handleAIClientRedirect = (
   // raw markdown. AI agents don't act on this header, so LLM ingestion is unaffected.
   if (url.pathname.endsWith('.md')) {
     const response = nextWithClassification(request, classification);
-    response.headers.set(
-      'Link',
-      `<${BASE_URL}${mdToCanonicalPath(url.pathname)}>; rel="canonical"`
+    setMarkdownResponseHeaders(
+      response,
+      MARKDOWN_ONLY_PATHS.has(url.pathname)
+        ? url.pathname
+        : mdToCanonicalPath(url.pathname)
     );
     return response;
   }
@@ -379,20 +355,15 @@ const handleAIClientRedirect = (
 
   // Check for markdown request (Accept header, user-agent, or manual)
   if (clientWantsMarkdown || forceMarkdown) {
+    const newUrl = url.clone();
+    newUrl.pathname = markdownExportPath(url.pathname);
+
     // Log the rewrite for debugging
     Sentry.logger.info('Markdown rewrite triggered', {
       urlPath: url.pathname,
       detectionMethod: forceMarkdown ? 'Manual format=md' : detectionMethod,
-      targetUrl: url.pathname.replace(/\/+$/, '') + '.md',
+      targetUrl: newUrl.pathname,
     });
-
-    // Create new URL with .md extension
-    const newUrl = url.clone();
-    // Handle root path and ensure proper .md extension
-    let pathname = url.pathname === '/' ? '/index' : url.pathname;
-    // Remove all trailing slashes if present, then add .md
-    pathname = pathname.replace(/\/+$/, '') + '.md';
-    newUrl.pathname = pathname;
 
     // Clean up the format query parameter if it was used
     if (forceMarkdown) {
@@ -401,21 +372,65 @@ const handleAIClientRedirect = (
 
     // Rewrite to serve markdown inline (same URL, different content)
     // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
-    return rewriteWithClassification(request, newUrl, classification);
+    const response = rewriteWithClassification(request, newUrl, classification);
+    setMarkdownResponseHeaders(response, canonicalPath(url.pathname));
+    return response;
   }
 
-  // Default: pass through with traffic classification headers
-  return nextWithClassification(request, classification);
+  // Default: serve HTML, and point agents at the Markdown version and llms.txt
+  // (llmstxt.org link relations, also rendered as <link> tags in the page head).
+  // No `Vary` here: the App Router page renderer replaces it on HTML responses.
+  const response = nextWithClassification(request, classification);
+  response.headers.set(
+    'Link',
+    [
+      `<${DOCS_ORIGIN}${markdownExportPath(url.pathname)}>; rel="alternate"; type="text/markdown"`,
+      LLMS_TXT_LINK,
+    ].join(', ')
+  );
+  return response;
 };
+
+/**
+ * Headers for every Markdown response: `Vary: Accept` so caches keep the HTML
+ * and Markdown versions of a URL apart, a canonical link to the HTML page, and
+ * a link to llms.txt.
+ */
+function setMarkdownResponseHeaders(response: NextResponse, htmlPath: string): void {
+  response.headers.set('Vary', 'Accept');
+  response.headers.set(
+    'Link',
+    [`<${DOCS_ORIGIN}${htmlPath}>; rel="canonical"`, LLMS_TXT_LINK].join(', ')
+  );
+}
 
 const handleRedirects = (request: NextRequest) => {
   const urlPath = request.nextUrl.pathname;
 
+  // Every page has a `.md` export, so a redirected page's `.md` URL redirects to the
+  // destination's `.md` export instead of falling through to the Markdown soft-404.
+  const isMarkdown = urlPath.endsWith('.md');
+  const htmlPath = isMarkdown
+    ? urlPath === '/index.md'
+      ? '/'
+      : `${urlPath.slice(0, -'.md'.length)}/`
+    : urlPath;
+
+  const redirectTo = resolveRedirect(htmlPath);
+  if (!redirectTo) {
+    return undefined;
+  }
+
+  const destination = isMarkdown ? toMarkdownDestination(redirectTo) : redirectTo;
+  return NextResponse.redirect(new URL(destination, request.url), {
+    status: redirectStatusCode,
+  });
+};
+
+const resolveRedirect = (urlPath: string): string | undefined => {
   const redirectTo = redirectMap.get(urlPath);
   if (redirectTo) {
-    return NextResponse.redirect(new URL(redirectTo, request.url), {
-      status: redirectStatusCode,
-    });
+    return redirectTo;
   }
 
   // If we don't find an exact match, we try to look for a :guide placeholder
@@ -430,20 +445,23 @@ const handleRedirects = (request: NextRequest) => {
   const pathWithPlaceholder = urlPath.replace(guideRegex, guidePlaceholder);
   const guide = match[1];
 
-  const redirectToGuide = redirectMap.get(pathWithPlaceholder);
-  if (redirectToGuide) {
-    const finalRedirectToPath = redirectToGuide.replace(
-      guidePlaceholder,
-      `/guides/${guide}/`
-    );
-
-    return NextResponse.redirect(new URL(finalRedirectToPath, request.url), {
-      status: redirectStatusCode,
-    });
-  }
-
-  return undefined;
+  return redirectMap
+    .get(pathWithPlaceholder)
+    ?.replace(guidePlaceholder, `/guides/${guide}/`);
 };
+
+/**
+ * Maps a redirect destination to its `.md` export. External URLs and
+ * destinations with a query string are returned unchanged.
+ */
+function toMarkdownDestination(destination: string): string {
+  if (/^https?:\/\//.test(destination) || destination.includes('?')) {
+    return destination;
+  }
+  const [path, hash] = destination.split('#');
+  const mdPath = markdownExportPath(path);
+  return hash === undefined ? mdPath : `${mdPath}#${hash}`;
+}
 
 type Redirect = {
   /** a string with a leading and a trailing slash */
@@ -544,6 +562,10 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   {
     from: '/platforms/react-native/install/',
     to: '/platforms/react-native/manual-setup/manual-setup/',
+  },
+  {
+    from: '/platforms/unity/configuration/app-not-responding/',
+    to: '/platforms/unity/app-hangs/',
   },
   {
     from: '/platforms/unity/data-management/event-grouping/sdk-fingerprinting/',

@@ -2,6 +2,112 @@
 
 If you're using **Celery Beat** to run your periodic tasks, have a look at our [Celery Beat Auto Discovery documentation](/platforms/python/integrations/celery/crons/).
 
+### arq
+
+<Alert>
+
+Crons monitoring for arq ships in version `2.73.0` of `sentry-sdk`.
+
+</Alert>
+
+If you're using [arq](/platforms/python/integrations/arq/), set `monitor_cron_jobs=True` to capture check-ins for the cron jobs in your worker's `cron_jobs`:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.arq import ArqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        ArqIntegration(
+            monitor_cron_jobs=True,
+            # optional: regular expressions for cron jobs to skip
+            exclude_cron_jobs=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+from arq import cron
+
+class WorkerSettings:
+    cron_jobs = [
+        cron(send_report, hour=9, minute=0),
+    ]
+```
+
+The monitor slug is the cron job's `name`, without arq's `cron:` prefix, so the example above reports to `send_report`. Sentry creates the monitor from the job's `month`, `day`, `weekday`, `hour`, and `minute` in the worker's `timezone`. Cron jobs aren't monitored when their schedule can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), when they set both `day` and `weekday`, or when the worker's time zone has a fixed offset that isn't a whole number of hours.
+
+### Huey
+
+<Alert>
+
+Crons monitoring for Huey ships in version `2.73.0` of `sentry-sdk`.
+
+</Alert>
+
+If you're using [Huey](/platforms/python/integrations/huey/), set `monitor_periodic_tasks=True` to capture check-ins for your periodic tasks:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.huey import HueyIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        HueyIntegration(
+            monitor_periodic_tasks=True,
+            # optional: regular expressions for periodic tasks to skip
+            exclude_periodic_tasks=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+from huey import crontab
+
+@huey.periodic_task(crontab(minute="0", hour="9"))
+def send_report():
+    ...
+```
+
+The monitor slug is the task's name, which defaults to the function name. Sentry creates the monitor from the task's `crontab()` schedule in UTC. Periodic tasks aren't monitored when they use a custom schedule function, when their crontab sets both `day` and `day_of_week`, or when the Huey instance is created with `utc=False`.
+
+### RQ
+
+<Alert>
+
+Crons monitoring for RQ ships in version `2.73.0` of `sentry-sdk`.
+
+</Alert>
+
+If you're using [RQ](/platforms/python/integrations/rq/) with [rq-scheduler](https://github.com/rq/rq-scheduler), set `monitor_cron_jobs=True` in your workers to capture check-ins for recurring jobs:
+
+```python
+import sentry_sdk
+from sentry_sdk.integrations.rq import RqIntegration
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    integrations=[
+        RqIntegration(
+            monitor_cron_jobs=True,
+            # optional: regular expressions for jobs to skip
+            exclude_cron_jobs=["cleanup"],
+        ),
+    ],
+)
+```
+
+```python
+scheduler.cron("0 9 * * *", func=send_report, id="send-report")
+scheduler.schedule(datetime.now(timezone.utc), sync_accounts, interval=600, id="sync-accounts")
+```
+
+The monitor slug is the job's `id`. Without an `id`, rq-scheduler generates a new one each time the job is scheduled, so the SDK uses the function's import path instead. Sentry creates the monitor from `cron()` jobs and from `schedule()` jobs whose `interval` is a whole number of minutes. rq-scheduler runs cron strings in the system's local time, so `cron()` jobs are only monitored when the worker's time zone is UTC. Jobs whose schedule can't be expressed in the Crons schedule format (for example, a job that runs every 10 seconds), jobs with `repeat`, and one-off jobs from `enqueue_at` and `enqueue_in` aren't monitored.
+
 ## Job Monitoring
 
 Use the Python SDK to monitor and notify you if your periodic task is missed (or doesn't start when expected), if it fails due to a problem in the runtime (such as an error), or if it fails by exceeding its maximum runtime.

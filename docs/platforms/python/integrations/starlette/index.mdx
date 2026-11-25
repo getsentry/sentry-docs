@@ -1,6 +1,6 @@
 ---
 title: Starlette
-description: "Learn how to set up Sentry in your Starlette app, capture your first errors and traces, and view them in Sentry."
+description: "Learn how to set up Sentry in your Starlette app, capture your first events and traces, and view them in Sentry."
 ---
 
 <Include name="python-stream-mode-general-callout.mdx" />
@@ -22,13 +22,12 @@ You need:
 
 <PlatformContent includePath="getting-started-install" />
 
+This guide requires `sentry-sdk` version 2.70.0 or later. If you already have the SDK installed, upgrade it with `pip install --upgrade sentry-sdk`.
+
 ## Configure
 
-Choose the features you want to configure, and this guide will show you how:
-
-<OnboardingOptionButtons
-  options={["error-monitoring", "performance", "profiling", "logs", "metrics"]}
-/>
+**Error Monitoring** starts working as soon as you call `sentry_sdk.init()`. **Logs** and **Application Metrics** need no extra configuration when using `sentry_sdk.logger` and `sentry_sdk.metrics`, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing** and **Profiling**.
 
 <Include name="quick-start-features-expandable" />
 
@@ -42,23 +41,39 @@ If you have the `starlette` package in your dependencies, the Sentry Starlette i
 
 </Alert>
 
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
 Import and initialize the SDK in your app's entry point:
 
-</SplitSectionText>
-<SplitSectionCode>
+The snippet also turns on:
 
-<PlatformContent
-  includePath="getting-started-config"
-  platform="python.splitlayout"
-/>
+- Collection of user data, such as the user's IP address: via <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink>
+- Tracing: via <PlatformLink to="/configuration/options/#traces_sample_rate">`traces_sample_rate`</PlatformLink>
+- Profiling: via <PlatformLink to="/configuration/options/#profile_session_sample_rate">`profile_session_sample_rate`</PlatformLink> and <PlatformLink to="/configuration/options/#profile_lifecycle">`profile_lifecycle`</PlatformLink>
 
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
+Don't need a feature? Remove its options from the snippet.
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "user_info": True,
+    },
+
+    # Enables Tracing.
+    # Set to 1.0 to capture 100% of spans for tracing.
+    # We recommend reducing this value in production.
+    traces_sample_rate=1.0,
+
+    # Enables Profiling.
+    # Set to 1.0 to profile 100% of sessions.
+    profile_session_sample_rate=1.0,
+    # Profiles are collected while there is an active span.
+    profile_lifecycle="trace",
+)
+```
 
 To further customize your setup, review the [Options section](#options) below.
 
@@ -68,63 +83,55 @@ Sentry automatically captures errors and reports issues for you.
 You can also expect the following for your Starlette project:
 
 - By default, all exceptions leading to an Internal Server Error are reported. The HTTP status codes to report on are configurable via the `failed_request_status_codes` [option](#options).
-- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads.
-- Sentry also excludes personally identifiable information (such as user ids, usernames, cookies, authorization headers, IP addresses) unless you set `send_default_pii` to `True`.
+- Request data will be attached to all events: HTTP method, URL, headers, form data, JSON payloads. Sentry excludes raw bodies and multipart file uploads. Form data and JSON payloads are only attached if your handler already read them with `await request.form()` or `await request.json()` before the event was captured.
+- Personally identifiable information (such as user IDs, usernames, cookies, and IP addresses) is also attached, with sensitive values like authorization headers scrubbed. Use the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to configure which categories to collect. In SDK versions prior to `3.0`, Sentry excludes this information unless you use `data_collection` or set `send_default_pii` to `True`.
 
 To learn how to manually report issues, see <PlatformLink to="/usage/">Capturing Errors</PlatformLink>.
+
+## Send Logs
+
+Use `sentry_sdk.logger` to send structured logs at different levels. You can include searchable attributes with each message.
+
+To capture records from Python's standard-library `logging` module or Loguru as Sentry logs, add the corresponding integration to your `integrations`. See the <PlatformLink to="/integrations/logging/">standard logging</PlatformLink> and <PlatformLink to="/integrations/loguru/">Loguru</PlatformLink> integration guides.
+
+See <PlatformLink to="/logs/">Set Up Logs</PlatformLink> for all available logging methods and formatting options.
+
+```python
+import sentry_sdk
+
+sentry_sdk.logger.info("Order processed {order_id}", order_id="order-123")
+sentry_sdk.logger.warning("Rate limit reached", attributes={"endpoint": "/api/orders"})
+```
+
+## Send Application Metrics <FeatureBadge type="new" />
+
+Use `sentry_sdk.metrics` to send counters, gauges, and distributions from your app. Metrics are enabled by default after you initialize the SDK.
+
+See <PlatformLink to="/metrics/">Set Up Metrics</PlatformLink> for all available metric types and configuration options.
+
+```python
+import sentry_sdk
+
+sentry_sdk.metrics.count("checkout.failed", 1)
+sentry_sdk.metrics.gauge("active_connections", 42)
+sentry_sdk.metrics.distribution("api_latency", 187, unit="millisecond")
+```
 
 ## Verify Your Setup
 
 Let's test your setup and confirm that data reaches your Sentry project.
 
-### Issues
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
-
-To verify that Sentry captures errors and creates issues in your Sentry project, add this intentional error to your application:
-
-</SplitSectionText>
-<SplitSectionCode>
+Add this route to your Starlette app, then request `/sentry-debug`:
 
 ```python
 from starlette.applications import Starlette
 from starlette.routing import Route
 
-sentry_sdk.init(...)  # same as above
-
 async def trigger_error(request):
-    division_by_zero = 1 / 0
+    1 / 0
 
-app = Starlette(routes=[
-    Route("/sentry-debug", trigger_error),
-])
+app = Starlette(routes=[Route("/sentry-debug", trigger_error)])
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
-
-Point your browser to [http://localhost:8000/sentry-debug](http://localhost:8000/sentry-debug) to trigger the error which will be sent to Sentry.
-
-<OnboardingOption optionId="performance">
-
-<Include name="tracing/python-quick-start-verify-tracing-splitlayout.mdx" />
-
-</OnboardingOption>
-
-<OnboardingOption optionId="logs">
-
-<Include name="logs/python-quick-start-verify-logs-splitlayout.mdx" />
-
-</OnboardingOption>
-
-<OnboardingOption optionId="metrics">
-
-<Include name="metrics/python-quick-start-verify-metrics-splitlayout.mdx" />
-
-</OnboardingOption>
 
 ### View Captured Data in Sentry
 
@@ -145,7 +152,6 @@ sentry_sdk.init(
     # ...
     integrations=[
         StarletteIntegration(
-            transaction_style="endpoint",
             failed_request_status_codes={403, *range(500, 599)},
             middleware_spans=False,
             http_methods_to_capture=("GET",),
@@ -158,20 +164,19 @@ You can pass the following keyword arguments to `StarletteIntegration()`:
 
 <SdkOption name='transaction_style' type='string' defaultValue='"url"'>
 
+<Alert>
+
+Only available in SDK versions prior to `3.0`. In SDK `3.x`, service spans are always named after the route pattern, for example `/catalog/product/{product_id}`.
+
+</Alert>
+
 How to name transactions that show up in Sentry tracing.
 The default is `"url"`.
-
-<SplitLayout>
-<SplitSection>
-<SplitSectionText>
 
 In the code example, the transaction name will be:
 
 - `"/catalog/product/{product_id}"` if you set `transaction_style="url"`.
 - `"product_detail"` if you set `transaction_style="endpoint"`
-
-</SplitSectionText>
-<SplitSectionCode>
 
 ```python
   async def product_detail(request):
@@ -181,10 +186,6 @@ In the code example, the transaction name will be:
       Route('/catalog/product/{product_id}', product_detail),
   ])
 ```
-
-</SplitSectionCode>
-</SplitSection>
-</SplitLayout>
 
 </SdkOption>
 
@@ -215,7 +216,7 @@ The default is `False`.
 
 <SdkOption name='http_methods_to_capture' type='Tuple[str, ...]' defaultValue='("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)' availableSince='2.15.0'>
 
-A tuple containing all the HTTP methods (as uppercase strings) that should create a transaction in Sentry.
+A tuple containing all the HTTP methods (as uppercase strings) that should create a service span in Sentry.
 The default is `("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE",)`.
 
 Note that `OPTIONS` and `HEAD` are excluded by default.
@@ -224,7 +225,11 @@ Note that `OPTIONS` and `HEAD` are excluded by default.
 
 ## Next Steps
 
-<PlatformContent includePath="getting-started-next-steps" />
+At this point, you should have integrated Sentry into your Starlette application. Here's what to explore next:
+
+- Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
+- <PlatformLink to="/agent-tracing/">Set up Agent Tracing</PlatformLink> to follow agent runs from system prompt to final output, capturing every model call, tool execution, and handoff as a span
+- Learn how to <PlatformLink to="/usage/">manually capture errors</PlatformLink>
 
 <Expandable permalink={false} title="Are you having problems setting up the SDK?">
 

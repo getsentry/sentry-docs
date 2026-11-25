@@ -1,0 +1,137 @@
+---
+title: Using Sentry Within an SDK
+description: "Learn how to use Sentry inside a library or SDK that is consumed by React Native apps, without interfering with the app's own Sentry setup."
+sidebar_order: 2000
+keywords:
+  [
+    "shared environment",
+    "library",
+    "third-party SDK",
+    "BrowserClient",
+    "ReactNativeClient",
+    "multiple clients",
+  ]
+---
+
+<Alert>
+
+Using a Sentry SDK within another SDK or library is [discouraged](/platforms/). It can lead to unexpected behavior and to the app's user data leaking to your Sentry organization. If you need to use Sentry within a library that React Native apps consume, follow the best practices below.
+
+</Alert>
+
+A React Native app runs a single JavaScript runtime and a single native Sentry SDK per platform. If your library initializes Sentry, it shares that state with the app, and the app may be using Sentry too.
+
+## What Not to Do
+
+<Alert level="warning">
+
+Don't call `Sentry.init()` from `@sentry/react-native` in your library, and don't create a `ReactNativeClient` either. Both interfere with the app's own Sentry setup.
+
+</Alert>
+
+- **`Sentry.init()`** replaces the app's global client and configuration.
+- **`new ReactNativeClient(...)` with native enabled** starts the native Sentry SDKs again with your DSN. From then on, the app's own events go to **your** project, including native crashes, screenshots, view hierarchies, and attachments, and the app stops receiving them.
+- **`new ReactNativeClient(...)` with `enableNative: false`** turns off the native layer for the whole app. The app's events, which go through the native transport, are then dropped.
+
+The same applies to the native SDKs. If your React Native library wraps native code, don't call `SentrySDK.start()` (iOS) or `Sentry.init()` / `SentryAndroid.init()` (Android) from it. The native Sentry SDK version is also the one the app's `@sentry/react-native` brings, because CocoaPods and Gradle each resolve a single version.
+
+## Shared Environment Setup
+
+Create a JavaScript-only client from `@sentry/browser` and keep it on your own `Scope`. This client sends events over `fetch` and never touches the native SDKs.
+
+Remove the default integrations that use global state, and capture errors manually. Unhandled errors keep going to the app's own Sentry setup, not to yours.
+
+```javascript
+import {
+  BrowserClient,
+  defaultStackParser,
+  getDefaultIntegrations,
+  makeFetchTransport,
+  Scope,
+} from "@sentry/browser";
+
+// filter integrations that use the global variable
+const integrations = getDefaultIntegrations({}).filter((defaultIntegration) => {
+  return ![
+    "BrowserApiErrors",
+    "BrowserSession",
+    "Breadcrumbs",
+    "ConversationId",
+    "GlobalHandlers",
+    "FunctionToString",
+  ].includes(defaultIntegration.name);
+});
+
+const scope = new Scope();
+
+const client = new BrowserClient({
+  dsn: "___PUBLIC_DSN___",
+  release: "my-library@1.0.0",
+  transport: makeFetchTransport,
+  stackParser: defaultStackParser,
+  integrations,
+  beforeSend(event, hint) {
+    // Events also receive data from the app's global and isolation scopes,
+    // such as the app's breadcrumbs, user, tags, and attachments.
+    // Keep only the data your library set on its own scope.
+    const own = scope.getScopeData();
+    // Drop all attachments: the app's attachments must not reach your
+    // project, and envelopes with attachments fail to send on Android.
+    hint.attachments = [];
+    return {
+      event_id: event.event_id,
+      timestamp: event.timestamp,
+      platform: event.platform,
+      level: event.level,
+      release: event.release,
+      environment: event.environment,
+      sdk: event.sdk,
+      exception: event.exception,
+      message: event.message,
+      fingerprint: event.fingerprint,
+      tags: own.tags,
+      extra: own.extra,
+      user: own.user,
+      breadcrumbs: own.breadcrumbs,
+      contexts: { ...own.contexts, trace: event.contexts?.trace },
+    };
+  },
+});
+
+scope.setClient(client);
+client.init(); // initializing has to be done after setting the client on the scope
+
+// Capture errors from your library's code manually:
+try {
+  // your library code
+} catch (error) {
+  scope.captureException(error);
+}
+```
+
+### Why `beforeSend` Is Needed
+
+A client you create yourself still merges the app's **global** and **isolation** scopes into every event it captures. Without the `beforeSend` above, your events can contain the app's breadcrumbs, user (including email or IP address), tags, extra data, and attachments. The app's scope event processors also run on them. This happens whenever your `@sentry/browser` version matches the `@sentry/core` version that the app's `@sentry/react-native` uses, because both then share the same global state. Keep the `beforeSend` filter regardless of versions.
+
+## Limitations
+
+The JavaScript-only client doesn't support:
+
+- Native crashes, App Hangs, or ANRs
+- Session Replay, screenshots, or view hierarchy
+- Native device, OS, and app contexts
+- Automatic capture of unhandled JavaScript errors
+- Attachments: on Android, React Native's `fetch` can't send the binary body of an envelope that contains an attachment, so the whole event is dropped
+
+Your library's code ships inside the app's JavaScript bundle, which the app's build minifies. You can't upload source maps for the app's bundle, so the stack traces you receive may not be symbolicated.
+
+## Privacy
+
+Data you capture belongs to the app's users. Don't enable `sendDefaultPii`, only attach data your library owns, and let the app opt out of your library's error reporting. Tell the apps that use your library which data you collect.
+
+## Native Libraries
+
+If your library is native code that React Native apps use, follow the native SDK guides instead:
+
+- [Android: Using Sentry within an SDK](/platforms/android/configuration/shared-environments/)
+- [Apple: Using Sentry Within an SDK](/platforms/apple/configuration/shared-environments/)

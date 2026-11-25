@@ -204,27 +204,11 @@ Note: Enabling this option can lead to longer build times.
 </SdkOption>
 
 <SdkOption name="tunnelRoute" type="string | boolean">
-<Alert level="info">
-This feature requires **Next.js version 11+** and doesn't currently work with self-hosted Sentry instances.
+<Alert level="warning">
+This option is deprecated and will be removed in v12. Set `tunnel: true` in the browser and add `serveTunnelIntegration` on the server instead, as described in <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
 </Alert>
 
-Tunnel Sentry requests through this route on your Next.js server to prevent ad-blockers from blocking Sentry events from being sent.
-
-This option can be set to:
-
-- `true` for auto-generated routes, which are unpredictable and change with each deployment.
-- A custom static string path like `/error-monitoring`.
-
-Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-with-ad-blockers">troubleshooting section</PlatformLink>.
-
-<Expandable level="warning" title="Using Next.js middleware on Turbopack">
-  If you're using Turbopack, client-side event recording will fail if your
-  Next.js middleware intercepts the configured tunnel route. To fix this, set
-  the route to a fixed string (like `/error-monitoring`) and add a negative
-  matcher like `(?!error-monitoring)` in your middleware to exclude the tunnel
-  route. If you're not using Turbopack, Sentry will automatically skip the
-  tunnel route in your middleware.
-</Expandable>
+Tunnels Sentry requests through a route on your Next.js server, so ad blockers don't drop them. Set it to `true` for a path derived from your DSN, or to a path like `/error-monitoring`.
 
 </SdkOption>
 
@@ -237,7 +221,7 @@ Learn more about tunneling in the <PlatformLink to="/troubleshooting/#dealing-wi
 Enables the use of the [`runAfterProductionCompile` hook from Next.js](https://nextjs.org/docs/architecture/nextjs-compiler#runafterproductioncompile) to upload sourcemaps after the build is completed.
 
 - This option is set to `true` by default for Turbopack as there are no alternative ways to upload sourcemaps here.
-- This option is set to `false` for Webpack as the default behavior is to upload sourcemaps during the build process using the [Sentry Webpack Plugin](https://github.com/getsentry/sentry-javascript-bundler-plugins).
+- This option is set to `false` for Webpack as the default behavior is to upload sourcemaps during the build process using the Sentry Webpack Plugin.
 
 **Important:** Enabling this option will mutate your Next.js build output by injecting [Debug IDs](/platforms/javascript/guides/nextjs/sourcemaps/troubleshooting_js/debug-ids/) via the Sentry CLI. If you are relying on any sort of integrity hashes for your build artifacts, you will need to disable this option.
 

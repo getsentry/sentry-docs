@@ -3,17 +3,54 @@ title: Set Up Agent Tracing
 sidebar_title: Agent Tracing
 sidebar_order: 7
 sidebar_section: features
-description: "Monitor agents with token usage, latency, tool execution, and error tracking."
-new: true
+description: "Debug agent runs and see where they fail or slow down."
+new_until: 2027-02-17
+integration_grid:
+  - to: "/agent-tracing/bedrock/"
+    title: "Amazon Bedrock"
+    icon: "aws"
+  - to: "/agent-tracing/anthropic/"
+    title: "Anthropic"
+    icon: "anthropic"
+  - to: "/agent-tracing/google-genai/"
+    title: "Google Gen AI"
+    icon: "google-genai"
+  - to: "/agent-tracing/openai/"
+    title: "OpenAI"
+    icon: "openai"
+  - to: "/agent-tracing/openai-agents/"
+    title: "OpenAI Agents SDK"
+    icon: "openai"
+  - to: "/agent-tracing/langchain/"
+    title: "LangChain"
+    icon: "langchain"
+  - to: "/agent-tracing/langgraph/"
+    title: "LangGraph"
+    icon: "langgraph"
+  - to: "/agent-tracing/litellm/"
+    title: "LiteLLM"
+    icon: "litellm"
+  - to: "/agent-tracing/pydantic-ai/"
+    title: "Pydantic AI"
+    icon: "pydantic-ai"
+  - to: "/agent-tracing/huggingface_hub/"
+    title: "Hugging Face Hub"
+    icon: "huggingface_hub"
+  - to: "/agent-tracing/mistral/"
+    title: "Mistral"
+    icon: "mistral"
+  - to: "/agent-tracing/typesafe/"
+    title: "TypeSafe AI"
+    icon: "typesafe-ai"
 ---
 
-With <Link to="/product/agents/dashboards/">Sentry Agent Tracing</Link>, you can monitor and debug your AI systems with full-stack context. You'll be able to track key insights like token usage, latency, tool usage, and error rates — and group multi-turn chats in <Link to="/product/agents/conversations/">Conversations</Link>. Agent Tracing data is fully connected to your other Sentry data like logs, errors, and traces.
+With <Link to="/product/agents/">Sentry Agent Tracing</Link>, you can debug how an agent run flows through your application, and where it fails or slows down. Token usage, latency, and errors show up on that same trace, next to your requests, jobs, and logs. Multi-turn chats are grouped in <Link to="/product/agents/conversations/">Conversations</Link>.
 
 <AgentSetupCallout skill="sentry-setup-ai-monitoring" platformName="Python" />
 
 ## Getting Started
 
-Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is off by default — set `send_default_pii=True` to capture it (or configure `include_prompts` per integration).
+Enable <PlatformLink to="/tracing/">tracing</PlatformLink>. Supported AI libraries are instrumented automatically when their packages are installed. Prompt and response content is captured by default — use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink> to turn it off. In SDK versions prior to `3.0`, it's off by default unless you use `data_collection` or set `send_default_pii=True`.
 
 ```python
 import sentry_sdk
@@ -21,7 +58,10 @@ import sentry_sdk
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    # Check https://docs.sentry.io/platforms/python/data-management/data-collected/ to configure what data is collected
+    data_collection={
+        "gen_ai": {"inputs": True, "outputs": True},
+    },
 )
 ```
 
@@ -29,21 +69,7 @@ sentry_sdk.init(
 
 Pick your AI stack. Each page has install and verify details.
 
-<IntegrationGrid
-  integrations={[
-    {to: "/agent-tracing/anthropic/", title: "Anthropic", icon: "anthropic"},
-    {to: "/agent-tracing/google-genai/", title: "Google Gen AI", icon: "google-genai"},
-    {to: "/agent-tracing/openai/", title: "OpenAI", icon: "openai"},
-    {to: "/agent-tracing/openai-agents/", title: "OpenAI Agents SDK", icon: "openai"},
-    {to: "/agent-tracing/langchain/", title: "LangChain", icon: "langchain"},
-    {to: "/agent-tracing/langgraph/", title: "LangGraph", icon: "langgraph"},
-    {to: "/agent-tracing/litellm/", title: "LiteLLM", icon: "litellm"},
-    {to: "/agent-tracing/pydantic-ai/", title: "Pydantic AI", icon: "pydantic-ai"},
-    {to: "/agent-tracing/huggingface_hub/", title: "Hugging Face Hub", icon: "huggingface_hub"},
-    {to: "/agent-tracing/mistral/", title: "Mistral", icon: "mistral"},
-    {to: "/agent-tracing/typesafe/", title: "TypeSafe AI", icon: "typesafe-ai"},
-  ]}
-/>
+<IntegrationGrid />
 
 ## Tracking Conversations
 
@@ -73,12 +99,27 @@ Any of `id`, `email`, or `username` is sufficient — the Conversations tab disp
 
 ### Privacy Controls
 
-LLM inputs and outputs are treated as PII and are **off** by default. Set `send_default_pii=True` to capture them. To keep other PII on but turn AI content off, set `include_prompts=False` on the integration:
+LLM inputs and outputs, such as prompts, messages, responses, and tool definitions, are recorded by default. See each integration page for details. To control this, use the `gen_ai` key of the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, which lets you control inputs and outputs separately:
+
+```python
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn="___PUBLIC_DSN___",
+    data_collection={
+        # Record LLM inputs, but not outputs
+        "gen_ai": {"inputs": True, "outputs": False},
+    },
+)
+```
+
+In SDK versions prior to `3.0`, LLM inputs and outputs are treated as PII and are **off** by default unless you pass a `data_collection` dictionary or set `send_default_pii=True`. To keep other PII on but turn AI content off with `send_default_pii=True`, set `include_prompts=False` on the integration:
 
 ```python
 import sentry_sdk
 from sentry_sdk.integrations.openai import OpenAIIntegration
 
+# SDK 2.x only
 sentry_sdk.init(
     dsn="___PUBLIC_DSN___",
     send_default_pii=True,
@@ -91,6 +132,12 @@ sentry_sdk.init(
 See each integration page for the options that apply to your stack.
 
 ### Streaming Gen AI Spans
+
+<Alert>
+
+Only available in SDK versions prior to `3.0`. Starting with `3.0`, all spans, including `gen_ai` spans, are streamed, and the `stream_gen_ai_spans` option was removed.
+
+</Alert>
 
 From SDK `2.64.0`, `gen_ai` spans are sent as standalone envelope items (avoids large-payload drops; required for <Link to="/product/agents/conversations/">Conversations</Link>).
 
