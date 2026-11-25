@@ -1,0 +1,60 @@
+---
+title: Supabase Seer Integration
+sidebar_order: 1
+
+description: "Learn how adding Supabase data to Seer's context helps you debug and fix issues."
+---
+
+<Include name="feature-stage-beta.mdx" />
+
+The Supabase for Seer integration lets [Seer Agent](/product/ai-in-sentry/seer/#seer-agent) investigate project logs and check current infrastructure and Postgres metrics in your Supabase organization. For example, you can ask Seer to find recent Postgres errors or check how many database connections are open now.
+
+The connection is shared across your Sentry organization. You can connect one Supabase organization per Sentry organization. Individual Sentry users don't need to connect their own Supabase accounts.
+
+Seer uses the [Supabase Management API](https://supabase.com/docs/reference/api/introduction) to list projects, query logs, and read a metrics snapshot. A snapshot shows measurements at the time of the request, not historical metrics. The integration doesn't request permission to query application tables or change Supabase resources.
+
+This integration is separate from [Supabase Log Drains](/product/drains/supabase/), which forward Supabase logs to Sentry.
+
+## Install the Supabase for Seer Integration
+
+<Alert>
+
+Sentry Owner, Manager, or Admin permissions are required to install this integration.
+
+You also need to be a Supabase organization owner to authorize access across the organization's projects. A Supabase organization owner can complete these steps for you.
+
+</Alert>
+
+1. Navigate to [Seer Connector Settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/seer/connectors/).
+2. Select the Supabase for Seer integration and click **Add Organization**.
+3. Click **Authorize Supabase**. A Supabase authorization window opens. If it doesn't, allow popups from Sentry in your browser and click **Authorize Supabase** again.
+4. In the Supabase window, select the organization you want to connect, review the requested access, and approve it.
+
+   Sentry's app requests read-only access to **Analytics**, **Organizations**, and **Projects**. Analytics access lets Seer read project logs and metrics. The connection covers the organization's current and future projects; you don't select individual projects during setup.
+
+5. After you approve, Sentry checks that it can identify the authorized organization before completing installation. The new connection appears as **Supabase (_Organization Name_)**.
+
+   This check does not test logs or metrics for every project. If setup fails, the error appears in the setup modal. Correct the problem and click **Authorize Supabase** again. You can retry in the same setup modal.
+
+## Configure
+
+The integration has no settings to edit. Sentry refreshes the Supabase access token automatically, so you don't need to create or rotate API keys or personal access tokens.
+
+To reauthorize the connection, open the [**Configurations** tab in Supabase for Seer settings](https://sentry.io/orgredirect/organizations/:orgslug/settings/integrations/supabase/?tab=configurations). Click **Configure** for your organization, then **Reconnect Supabase**. Click **Authorize Supabase** and approve access for the same Supabase organization.
+
+To connect a different Supabase organization, uninstall the current connection first, then install the integration again.
+
+When you uninstall the integration, Sentry attempts to revoke its access in Supabase. If another Sentry organization is connected to the same Supabase organization, Sentry keeps the grant so that organization's connection keeps working.
+
+## Troubleshooting
+
+If the connection needs attention:
+
+- **Supabase authorization was canceled:** You closed or declined the Supabase authorization window. Click **Authorize Supabase** to try again.
+- **The authorization popup was blocked:** Allow popups from Sentry in your browser, then click **Authorize Supabase** again.
+- **Could not reach Supabase:** Supabase could not be reached during setup. Wait a moment, then try again.
+- **Supabase authorization failed:** Confirm that you're a Supabase organization owner and approved the requested access, then authorize the organization again. If someone revoked access in Supabase, click **Reconnect Supabase** in the integration settings to restore it.
+- **Could not verify the connection to Supabase:** Retry authorization and select one Supabase organization. If the error persists, contact Sentry support with the error shown.
+- **Remove the current Supabase connection before connecting a different organization:** Your Sentry organization is already connected to a different Supabase organization. Uninstall that connection, or select the original organization when you reauthorize.
+- **The integration was disabled:** Sentry disables the connection if Supabase rejects its refresh token, for example after access is revoked. Click **Reconnect Supabase** in the integration settings and authorize the same organization again.
+- **Setup succeeds, but Seer cannot read logs or metrics:** Setup verifies the organization, not every project's logs and metrics. Confirm that the project belongs to the connected Supabase organization and that the requested data is available in Supabase.
