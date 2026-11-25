@@ -1,0 +1,87 @@
+---
+title: Trusted Types
+sidebar_order: 350
+description: "Learn which Trusted Types policies the Sentry SDK and Loader Script create, and how to allow them in your Content Security Policy."
+supportedCategories:
+  - browser
+keywords:
+  [
+    "trusted types",
+    "require-trusted-types-for",
+    "content security policy",
+    "csp",
+    "sentry-sdk",
+    "sentry-loader",
+  ]
+---
+
+{/* TODO: Replace with the SDK version that ships getsentry/sentry-javascript#26764. */}
+
+<AvailableSince version="TODO" />
+
+[Trusted Types](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API) protect DOM sinks such as `script.src` and `new Worker()` from DOM-based XSS. When your page sends `require-trusted-types-for 'script'` in its Content Security Policy (CSP), these sinks reject plain strings and only accept values created by an allowed Trusted Types policy.
+
+The Sentry SDK loads some scripts and workers itself, so it creates its own policies for them. You don't need to write a policy for Sentry. Allow the SDK's policy names in your `trusted-types` directive instead.
+
+## Policies Created by Sentry
+
+| Policy          | Created by                                                           | Used for                                                                                                                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sentry-sdk`    | The Browser SDK (npm packages and CDN bundles)                       | The Session Replay compression worker, integrations loaded with `lazyLoadIntegration` (for example, <PlatformLink to="/user-feedback/configuration/#feedbackasyncintegration">`feedbackAsyncIntegration`</PlatformLink>), and the `showReportDialog` script |
+| `sentry-loader` | The <PlatformLink to="/install/loader/">Loader Script</PlatformLink> | Loading the SDK bundle from the CDN                                                                                                                                                                                                                         |
+
+Both policies only create script URLs, and only for the URLs Sentry expects to load:
+
+- `sentry-sdk` accepts `blob:` URLs of your page's origin, the report dialog URL of your DSN, and CDN bundles of the same SDK version from `https://browser.sentry-cdn.com` (or your `cdnBaseUrl`). It throws for any other URL.
+- `sentry-loader` only returns the SDK bundle URL that Sentry rendered into your Loader Script.
+
+The SDK creates `sentry-sdk` the first time it needs it, not on `Sentry.init()`.
+
+## Configure Your Content Security Policy
+
+Add the Sentry policies to your `trusted-types` directive, next to your own policies:
+
+```text
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types my-app-policy sentry-sdk sentry-loader
+```
+
+If you don't use the Loader Script, you can leave out `sentry-loader`. If you set your CSP with a `<meta>` tag, use the same directives:
+
+```html
+<meta
+  http-equiv="Content-Security-Policy"
+  content="require-trusted-types-for 'script'; trusted-types my-app-policy sentry-sdk sentry-loader"
+/>
+```
+
+Trusted Types don't replace your other CSP directives. You still need to allow the SDK's sources in `script-src`, `connect-src`, and `worker-src`. See the <PlatformLink to="/session-replay/#content-security-policy-csp">Session Replay CSP</PlatformLink> and <PlatformLink to="/install/loader/#content-security-policy">Loader Script CSP</PlatformLink> docs.
+
+### Multiple SDK Versions on One Page
+
+A browser only lets a page create a policy name once. Copies of the SDK with the same version share one `sentry-sdk` policy, so a CDN bundle and its add-on bundles work without changes.
+
+If your page runs different SDK versions, for example in <PlatformLink to="/best-practices/micro-frontends/">micro frontends</PlatformLink>, each version creates its own `sentry-sdk` policy. Add `'allow-duplicates'` so all of them can be created:
+
+```text
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types my-app-policy sentry-sdk 'allow-duplicates'
+```
+
+## When a Sentry Policy Isn't Allowed
+
+If your `trusted-types` directive doesn't list a Sentry policy, the SDK can't create it and falls back to plain URLs. With `debug: true`, the SDK logs a warning that names the missing policy.
+
+What happens next depends on `require-trusted-types-for 'script'`:
+
+- **Without** `require-trusted-types-for 'script'`, the browser accepts plain URLs and everything works as before.
+- **With** `require-trusted-types-for 'script'`, the browser blocks the plain URLs:
+  - Session Replay can't start its compression worker and sends uncompressed recordings.
+  - `lazyLoadIntegration` can't load the integration.
+  - The Loader Script can't load the SDK.
+
+Browsers without Trusted Types support ignore both directives, and the SDK uses plain URLs.
+
+## Limitations
+
+- **Custom compression worker:** The SDK passes a custom <PlatformLink to="/session-replay/configuration/#using-a-custom-compression-worker">`workerUrl`</PlatformLink> to the browser unchanged. On pages that enforce Trusted Types, a plain string URL is blocked and Session Replay sends uncompressed recordings.
+- **Canvas recording:** <PlatformLink to="/session-replay/#canvas-recording">Canvas recording</PlatformLink> doesn't use the `sentry-sdk` policy yet, so `require-trusted-types-for 'script'` blocks its worker.
+- **Report dialog:** `showReportDialog` loads its script through the `sentry-sdk` policy, but the dialog itself still writes HTML in a way that `require-trusted-types-for 'script'` blocks.
