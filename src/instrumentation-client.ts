@@ -34,6 +34,7 @@ Sentry.init({
       linkPreviousTrace: 'session-storage',
     }),
     Sentry.consoleLoggingIntegration(),
+    Sentry.experimentalReportSdkConfigIntegration(),
   ],
 
   // Filter sensitive metric attributes (no PII in metrics)
