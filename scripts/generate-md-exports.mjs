@@ -412,6 +412,10 @@ function buildFrontmatterMap(docTree) {
   return map;
 }
 
+// Appended to every page export so an agent that doesn't find its answer on
+// this page can pick the next one to read.
+const DISCOVERY_FOOTER = `\n\n---\n\nFind other pages: [Sitemap](${DOCS_ORIGIN}/sitemap.md) lists every page with a one-line summary, and [llms.txt](${DOCS_ORIGIN}/llms.txt) gives an overview with guidance for agents.\n`;
+
 /**
  * Formats a YAML frontmatter block for a markdown file.
  * Only includes fields that have non-empty values.
@@ -912,7 +916,11 @@ async function createWork() {
       : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
-      const updatedContent = existingContent + childSection;
+      // Insert the listing before the discovery footer so the footer stays last.
+      const body = existingContent.endsWith(DISCOVERY_FOOTER)
+        ? existingContent.slice(0, -DISCOVERY_FOOTER.length)
+        : existingContent;
+      const updatedContent = `${body}\n${childSection.trimEnd()}${DISCOVERY_FOOTER}`;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
       if (hasR2) {
@@ -1214,9 +1222,10 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         applyKeywordDefaults(data),
         frontmatter?.url
       );
-      const output = frontmatter
-        ? formatYamlFrontmatter(frontmatter) + resolved
-        : resolved;
+      const output =
+        (frontmatter ? formatYamlFrontmatter(frontmatter) : '') +
+        resolved.trimEnd() +
+        DISCOVERY_FOOTER;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {

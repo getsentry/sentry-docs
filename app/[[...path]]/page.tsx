@@ -3,7 +3,7 @@ import {Metadata} from 'next';
 import {notFound} from 'next/navigation';
 import {Fragment, useMemo} from 'react';
 import {apiCategories} from 'sentry-docs/build/resolveOpenAPI';
-import {resolvePageCanonical} from 'sentry-docs/canonical';
+import {markdownExportPath, resolvePageCanonical} from 'sentry-docs/canonical';
 import {ApiCategoryPage} from 'sentry-docs/components/apiCategoryPage';
 import {ApiPage} from 'sentry-docs/components/apiPage';
 import {DocPage} from 'sentry-docs/components/docPage';
@@ -414,6 +414,10 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     },
     alternates: {
       canonical,
+      // Points agents at the page's Markdown export (llmstxt.org link relation).
+      types: {
+        'text/markdown': `${DOCS_ORIGIN}${markdownExportPath(params.path?.join('/') ?? '')}`,
+      },
     },
     robots: noindex ? 'noindex' : undefined,
   };

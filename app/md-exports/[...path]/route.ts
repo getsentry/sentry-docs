@@ -77,6 +77,7 @@ function findWhatYouNeedLines(): string[] {
     '## Find what you need',
     '',
     `- [Site index](${DOCS_ORIGIN}/llms.txt) — LLM-optimized page listing`,
+    `- [Sitemap](${DOCS_ORIGIN}/sitemap.md) — every page with a one-line summary`,
     `- [Documentation root](${DOCS_ORIGIN}/index.md) — full docs overview`,
     `- [Platforms](${DOCS_ORIGIN}/platforms.md) — all SDK platforms`,
     '',
