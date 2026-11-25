@@ -54,23 +54,6 @@ Sentry.init({
 });
 ```
 
-### Build With the Sentry Plugin (Recommended)
-
-We recommend building with the Sentry plugin, because it adds spans from your dependencies, such as database drivers, AI SDKs, and web frameworks like Express, Koa and Hapi. Bun has no runtime hook Sentry can use to instrument those packages, so the plugin rewrites them as `bun build` bundles them.
-
-Add `sentryBunPlugin` from `@sentry/bun/plugin` to your `Bun.build()` call, then run the output the same way, with `--preload`. Errors, the spans you create yourself, and `Bun.serve`, `node:http` and `fetch` spans work either way.
-
-```typescript {filename:build.ts}
-import { sentryBunPlugin } from "@sentry/bun/plugin";
-
-await Bun.build({
-  entrypoints: ["./app.ts"],
-  outdir: "./dist",
-  target: "bun",
-  plugins: [sentryBunPlugin()],
-});
-```
-
 ### Apply Instrumentation to Your App
 
 Preload your instrumentation file with the [`--preload`](https://bun.com/docs/runtime#param-preload) flag. This is what guarantees that `Sentry.init()` runs before any other module is loaded.
@@ -81,6 +64,31 @@ bun --preload ./instrument.js app.js
 
 ```bash {tabTitle:Built output}
 bun --preload ./instrument.js dist/app.js
+```
+
+On Bun `1.4.6` or later, with SDK version `11.15.0` or later, `Sentry.init()` also instruments your dependencies as they load, so `bun run` records spans from database drivers, AI SDKs, and web frameworks like Express, Koa and Hapi without a build step. Packages that load before `Sentry.init()` runs aren't instrumented, which is another reason to preload the file.
+
+If you call `Sentry.init()` inside your app instead of preloading it, preload `@sentry/bun/import` so the static imports of your entry file are instrumented too:
+
+```bash
+bun --preload @sentry/bun/import app.js
+```
+
+### Build With the Sentry Plugin (Optional)
+
+Build with the Sentry plugin if you bundle your app with `Bun.build()`, or if you run a Bun version earlier than `1.4.6`, where Sentry can't instrument packages at runtime. The plugin rewrites your dependencies as `Bun.build()` bundles them, so they also record spans.
+
+Add `sentryBunPlugin` from `@sentry/bun/plugin` to your `Bun.build()` call, then run the output with `--preload` as shown above. Errors, the spans you create yourself, and `Bun.serve`, `node:http` and `fetch` spans work either way.
+
+```typescript {filename:build.ts}
+import { sentryBunPlugin } from "@sentry/bun/plugin";
+
+await Bun.build({
+  entrypoints: ["./app.ts"],
+  outdir: "./dist",
+  target: "bun",
+  plugins: [sentryBunPlugin()],
+});
 ```
 
 ### Add Readable Stack Traces With Source Maps
