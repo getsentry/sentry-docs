@@ -14,7 +14,7 @@ export const conceptsSections: NavSection[] = [
   {label: 'Migration', href: '/concepts/migration/'},
   {label: 'Data Management', href: '/concepts/data-management/'},
   {label: 'OpenTelemetry (OTLP)', href: '/concepts/otlp/'},
-  {label: 'Sentry CLI', href: '/cli/'},
+  {label: 'Sentry CLI', href: 'https://cli.sentry.dev/'},
 ];
 
 // "Manage" sub-sections (combines Admin + Security, Legal, & PII)

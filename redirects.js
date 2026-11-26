@@ -974,7 +974,7 @@ const userDocsRedirects = [
   },
   {
     source: '/account/cli/configuration/',
-    destination: '/cli/configuration/',
+    destination: 'https://cli.sentry.dev/configuration/',
   },
   {
     source: '/organization/integrations/telegram-alerts-bot/',
@@ -1691,7 +1691,7 @@ const userDocsRedirects = [
   },
   {
     source: '/product/cli/:path*',
-    destination: '/cli/:path*',
+    destination: 'https://cli.sentry.dev/',
   },
   {
     source: '/product/reference/:path*',
@@ -2418,6 +2418,52 @@ const userDocsRedirects = [
   {
     source: '/ai/sentry-cli/',
     destination: 'https://cli.sentry.dev',
+  },
+  // Legacy sentry-cli (v3) docs moved to cli.sentry.dev with Sentry CLI v4.
+  // Pages with a v4 equivalent map one-to-one; everything else goes to the root.
+  {
+    source: '/cli/',
+    destination: 'https://cli.sentry.dev/',
+  },
+  {
+    source: '/cli/installation/',
+    destination: 'https://cli.sentry.dev/getting-started/',
+  },
+  {
+    source: '/cli/configuration/',
+    destination: 'https://cli.sentry.dev/configuration/',
+  },
+  {
+    source: '/cli/releases/',
+    destination: 'https://cli.sentry.dev/commands/release/',
+  },
+  {
+    source: '/cli/dif/',
+    destination: 'https://cli.sentry.dev/commands/debug-files/',
+  },
+  {
+    source: '/cli/send-event/',
+    destination: 'https://cli.sentry.dev/commands/event/',
+  },
+  {
+    source: '/cli/crons/',
+    destination: 'https://cli.sentry.dev/commands/monitor/',
+  },
+  {
+    source: '/cli/logs/',
+    destination: 'https://cli.sentry.dev/commands/log/',
+  },
+  {
+    source: '/cli/code-mappings/',
+    destination: 'https://cli.sentry.dev/commands/code-mappings/',
+  },
+  {
+    source: '/cli/snapshots/',
+    destination: 'https://cli.sentry.dev/commands/snapshots/',
+  },
+  {
+    source: '/cli/:path*',
+    destination: 'https://cli.sentry.dev/',
   },
   // Redirects for Insights → Product Agents migration
   {
@@ -3592,11 +3638,11 @@ const userDocsRedirects = [
   // Cron + uptime docs live under Monitors (monitors-and-alerts)
   {
     source: '/product/crons/getting-started/cli/',
-    destination: '/cli/crons/',
+    destination: 'https://cli.sentry.dev/commands/monitor/',
   },
   {
     source: '/product/monitors-and-alerts/monitors/crons/getting-started/cli/',
-    destination: '/cli/crons/',
+    destination: 'https://cli.sentry.dev/commands/monitor/',
   },
   {
     source: '/product/crons/:path*',

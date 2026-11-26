@@ -278,13 +278,7 @@ const frameworkPopularity: Record<string, number> = {
   unity: 17,
 };
 
-const PRODUCT_DOC_PREFIXES = [
-  'product/',
-  'concepts/',
-  'cli/',
-  'get-started/',
-  'integrations/',
-];
+const PRODUCT_DOC_PREFIXES = ['product/', 'concepts/', 'get-started/', 'integrations/'];
 
 const getPopularity = (
   slug: string,

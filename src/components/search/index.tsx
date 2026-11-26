@@ -111,7 +111,6 @@ const STORAGE_KEY = 'sentry-docs-search-platforms';
 const SDK_AGNOSTIC_PATH_PREFIXES = [
   '/product/',
   '/concepts/',
-  '/cli/',
   '/get-started/',
   '/integrations/',
 ];
