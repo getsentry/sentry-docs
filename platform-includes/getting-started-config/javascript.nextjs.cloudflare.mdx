@@ -1,0 +1,276 @@
+
+**Error Monitoring** starts working once the SDK is initialized. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
+
+### Apply Instrumentation to Your App
+
+Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.ts` file.
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+});
+```
+
+### Configure Wrangler
+
+The SDK uses Node.js APIs that the Workers runtime only provides with the `nodejs_compat` [compatibility flag](https://developers.cloudflare.com/workers/runtime-apis/nodejs/). Set the [compatibility date](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) to `2025-08-16` or later, which adds the `https.request` API that the SDK uses to send data:
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "2025-08-16",
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2025-08-16"
+```
+
+### Configure Client-Side Sentry
+Create a `instrumentation-client.ts` file in your application's root directory (or `src` folder if you have one).
+
+<Alert level="success" title="Tip">
+  Include your DSN directly in this file, or use a _public_ environment variable like `NEXT_PUBLIC_SENTRY_DSN`.
+</Alert>
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> in all three files
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>.
+
+Don't need a feature? Remove its integration and options from the snippets.
+
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  integrations: [
+    // enables Session Replay
+    Sentry.replayIntegration(),
+    // enables User Feedback
+    Sentry.feedbackIntegration({
+      // Additional integration configuration goes in here
+      colorScheme: "system",
+    }),
+  ],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+```
+
+### Wrap the Worker Entry
+
+<AvailableSince version="11.6.0" />
+
+On Cloudflare Workers, your Next.js app runs inside the Worker entry, so this is where you initialize the server-side SDK. `withSentry` creates the Sentry client, and you set all server options there. You get the same Next.js spans as on Node.js, plus Cloudflare data such as spans for D1 queries. Each request gets one `http.server` span with the name of the Next.js route, and the Next.js spans become its children.
+
+`@sentry/nextjs` depends on `@sentry/cloudflare`, so you don't need to install another package.
+
+If you build your app with vinext, skip to [Wrap the Worker Entry With vinext](#wrap-the-worker-entry-with-vinext).
+
+OpenNext generates the Worker entry (`.open-next/worker.js`). Create a [custom Worker](https://opennext.js.org/cloudflare/howtos/custom-worker) that imports the OpenNext handler and wraps it with `withSentry`:
+
+```typescript {filename:worker.ts}
+import * as Sentry from "@sentry/nextjs/cloudflare";
+// @ts-ignore `.open-next/worker.js` is generated at build time
+import handler from "./.open-next/worker.js";
+
+// Re-export the Durable Objects your app uses, for example for the DO Queue and DO Tag Cache of OpenNext
+// @ts-ignore `.open-next/worker.js` is generated at build time
+export { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
+
+export default Sentry.withSentry(
+  () => ({
+    dsn: "___PUBLIC_DSN___",
+
+    // Enables Tracing.
+    tracesSampleRate: 1.0,
+  }),
+  handler
+);
+```
+
+Then, point `main` in your Wrangler configuration to this file:
+
+```jsonc {tabTitle:JSON} {filename:wrangler.jsonc}
+{
+  "main": "./worker.ts",
+}
+```
+
+```toml {tabTitle:Toml} {filename:wrangler.toml}
+main = "./worker.ts"
+```
+
+#### Wrap the Worker Entry With vinext
+
+With [vinext](https://github.com/cloudflare/vinext), you don't need a custom Worker. Add the [Sentry Vite plugin](/platforms/javascript/guides/cloudflare/install/vite-plugin/) to your Vite config, and it wraps your Worker entry with `withSentry` from `@sentry/nextjs/cloudflare` automatically.
+
+### Register Server-Side Error Capturing
+
+Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` next to your `app` directory (in your project root, or in `src` if you use `src/app`). Next.js production builds don't pick it up from other folders. It exports `onRequestError`, which Next.js uses to report server errors from Server Components, route handlers, and middleware. This works on Workers too.
+
+<Alert level="info">
+  The `onRequestError` hook requires `@sentry/nextjs` version `8.28.0` or higher
+  and Next.js 15.
+</Alert>
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+// Capture errors from Server Components, middleware, and proxies
+export const onRequestError = Sentry.captureRequestError;
+```
+
+### Initialize the SDK for Local Development (Optional)
+`next dev` runs on Node.js and doesn't use your Worker entry, so it needs its own server-side initialization.
+
+Create these files in your application's root directory (or `src` folder):
+
+- `sentry.server.config.ts` - Node.js runtime
+- `sentry.edge.config.ts` - Edge runtime
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+Then load them via `register()` in your `instrumentation.ts`:
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+
+// Capture errors from Server Components, middleware, and proxies
+export const onRequestError = Sentry.captureRequestError;
+```
+
+On Workers, `Sentry.init()` in these files creates no client and only applies the `release` option. Set all other options in `withSentry`.
+
+#### Set the Release (Optional)
+
+The SDK takes the release from the first of these sources that has a value:
+
+1. The `release` option of `withSentry`
+2. The `SENTRY_RELEASE` environment variable
+3. The ID of the `CF_VERSION_METADATA` binding
+4. The `release` option of `Sentry.init()` in `sentry.server.config.ts` or `sentry.edge.config.ts`, or else the release that `withSentryConfig` sets at build time
+
+On Node.js, the build release comes before `SENTRY_RELEASE`.
+
+### Capture React Render Errors
+
+Create `app/global-error.tsx` to capture errors that occur anywhere in your App Router application.
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
+
+### Server Actions
+
+Wrap your Server Actions with `Sentry.withServerActionInstrumentation()`.
+
+```typescript {filename:app/actions.ts}
+"use server";
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export async function submitForm(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "submitForm", // Action name for Sentry
+    {
+      headers: await headers(), // Connect client and server traces
+      formData, // Attach form data to events
+      recordResponse: true, // Include response data
+    },
+    async () => {
+      // Your server action logic
+      const result = await processForm(formData);
+      return { success: true, data: result };
+    }
+  );
+}
+```
+
+### Add Readable Stack Traces With Source Maps
+
+Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
+
+<Alert level="warning" title="Important">
+  Keep your auth token secret and out of version control.
+</Alert>
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload a larger set of source maps for prettier stack traces
+  widenClientFileUpload: true,
+});
+```
+
+```sh {filename:.env.local}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
