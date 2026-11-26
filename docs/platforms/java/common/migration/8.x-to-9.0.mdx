@@ -4,11 +4,54 @@ description: "Learn how to migrate from version 8.x to 9.0 of the Sentry Java SD
 sidebar_order: 994
 ---
 
-Version 9 removes deprecated Hub compatibility and OpenTelemetry APIs, along with the global Logs and Metrics enable options. Migrate remaining Hub and OpenTelemetry references, then update your telemetry configuration.
+Version 9 removes deprecated Hub compatibility and OpenTelemetry APIs, the `sendDefaultPii` option, and the global Logs and Metrics enable options. Migrate remaining Hub and OpenTelemetry references, then update your data and telemetry configuration.
 
 ## Minimum Java Version
 
 The Sentry Java SDK is now compiled for Java 11. To use version 9, configure your build to use a Java 11 or newer compiler/toolchain and run your application on Java 11 or newer. Stay on Sentry Java SDK 8.x if either environment must remain on Java 8.
+
+## Replace `sendDefaultPii` With Data Collection
+
+Version 9 removes `sendDefaultPii` from the Java API, external configuration, and Spring's `@EnableSentry` annotation. Remove the following configuration:
+
+- `SentryOptions.setSendDefaultPii(...)` and `SentryOptions.isSendDefaultPii()`
+- `ExternalOptions.setSendDefaultPii(...)` and `ExternalOptions.isSendDefaultPii()`
+- `send-default-pii` from `sentry.properties`
+- The `sentry.send-default-pii` Java system property and Spring Boot property
+- The `SENTRY_SEND_DEFAULT_PII` environment variable
+- The `sendDefaultPii` argument from `@EnableSentry`
+
+Use <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> to configure each category instead. The SDK now applies Data Collection defaults even when you don't configure any fields:
+
+- User information, database query data, file paths, GraphQL documents and variables, and HTTP request and response bodies are enabled.
+- Cookies, URL query parameters, and HTTP request and response headers use deny lists that replace sensitive values with `"[Filtered]"`.
+
+Explicit Data Collection settings still take precedence. If you previously used `sendDefaultPii=false` and want to disable these categories, configure them directly:
+
+```java
+import io.sentry.DataCollection;
+import io.sentry.KeyValueCollectionBehavior;
+import io.sentry.Sentry;
+
+Sentry.init(
+    options -> {
+      DataCollection dataCollection = options.getDataCollection();
+      dataCollection.setUserInfo(false);
+      dataCollection.setDatabaseQueryData(false);
+      dataCollection.setFilePaths(false);
+      dataCollection.setCookies(KeyValueCollectionBehavior.off());
+      dataCollection.setUrlQueryParams(KeyValueCollectionBehavior.off());
+      dataCollection.setHttpBodies(java.util.Collections.emptySet());
+      dataCollection.getHttpHeaders().setRequest(KeyValueCollectionBehavior.off());
+      dataCollection.getHttpHeaders().setResponse(KeyValueCollectionBehavior.off());
+      dataCollection.getGraphql().setDocument(false);
+      dataCollection.getGraphql().setVariables(false);
+    });
+```
+
+The old header filtering also omitted headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr`. The default Data Collection deny list filters credential and secret values, but not these identifying headers. To collect headers while continuing to filter them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a custom deny list.
+
+`DataCollection.forceDataCollection()` has also been removed because the defaults now apply automatically. For Logback, use `includeUnencodedMessage` to control whether events include the original message template and parameters when an encoder is configured. OpenTelemetry-derived HTTP headers now follow `dataCollection.httpHeaders.request`.
 
 ## Removed Hub APIs
 

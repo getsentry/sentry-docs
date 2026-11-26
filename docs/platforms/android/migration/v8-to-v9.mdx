@@ -4,11 +4,44 @@ description: "Learn how to migrate from Sentry Android SDK 8.x to 9.0.0."
 sidebar_order: 8890
 ---
 
-Version 9 removes the deprecated Hub compatibility APIs, the global Logs and Metrics enable options, and the `enablePerformanceV2` option. Migrate remaining Hub references to Scopes, then update your telemetry configuration.
+Version 9 removes the deprecated Hub compatibility APIs, the `sendDefaultPii` option, the global Logs and Metrics enable options, and the `enablePerformanceV2` option. Migrate remaining Hub references to Scopes, then update your data and telemetry configuration.
 
 ## Minimum Android Version
 
 All Sentry Android SDK modules now require Android 7.0 (API level 24) or newer. Set your app's `minSdk` to `24` or stay on Sentry Android SDK 8.x if you must support older devices.
+
+## Replace `sendDefaultPii` With Data Collection
+
+Version 9 removes `sendDefaultPii` from the options API and removes the `io.sentry.send-default-pii` Android manifest option. Delete the manifest entry and replace any `setSendDefaultPii(...)` calls with <PlatformLink to="/configuration/options/#dataCollection">`dataCollection`</PlatformLink> settings.
+
+The SDK now applies Data Collection defaults even when you don't configure any fields:
+
+- User information, database query data, file paths, GraphQL documents and variables, and HTTP request and response bodies are enabled.
+- Cookies, URL query parameters, and HTTP request and response headers use deny lists that replace sensitive values with `"[Filtered]"`.
+
+Explicit Data Collection settings still take precedence. If you previously used `sendDefaultPii=false` and want to disable these categories, configure them directly:
+
+```kotlin
+import io.sentry.KeyValueCollectionBehavior
+import io.sentry.android.core.SentryAndroid
+
+SentryAndroid.init(this) { options ->
+  options.dataCollection.userInfo = false
+  options.dataCollection.databaseQueryData = false
+  options.dataCollection.filePaths = false
+  options.dataCollection.cookies = KeyValueCollectionBehavior.off()
+  options.dataCollection.urlQueryParams = KeyValueCollectionBehavior.off()
+  options.dataCollection.httpBodies = emptySet()
+  options.dataCollection.httpHeaders.request = KeyValueCollectionBehavior.off()
+  options.dataCollection.httpHeaders.response = KeyValueCollectionBehavior.off()
+  options.dataCollection.graphql.document = false
+  options.dataCollection.graphql.variables = false
+}
+```
+
+The old header filtering also omitted headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr`. The default Data Collection deny list filters credential and secret values, but not these identifying headers. To collect headers while continuing to filter them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a custom deny list.
+
+`DataCollection.forceDataCollection()` has also been removed because the defaults now apply automatically. Data Collection doesn't control Session Replay. Configure Replay's URL, header, and body collection separately in the <PlatformLink to="/session-replay/configuration/">Session Replay options</PlatformLink>.
 
 ## Removed Hub APIs
 
