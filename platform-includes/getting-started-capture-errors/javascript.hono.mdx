@@ -1,3 +1,27 @@
 ### Report Unhandled Exceptions
 
-By default, Sentry captures exceptions from Hono's `onError` handler. Errors with a 3xx or 4xx status code are excluded. You can customize this behavior through the `sentry()` middleware's `shouldHandleError` option.
+`honoIntegration` captures errors from your routes and middleware automatically, so you don't need to add a Sentry middleware or error handler. It skips errors with a 3xx or 4xx status code, since they're usually expected redirects or client errors.
+
+To change this, pass a `shouldHandleError` callback to `honoIntegration()`. Return `true` to capture an error or `false` to skip it:
+
+```javascript {filename:instrument.mjs}
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.honoIntegration({
+      shouldHandleError(error) {
+        const status = error?.status;
+        // Capture 401/403 in addition to the default 5xx errors
+        return (
+          status === 401 ||
+          status === 403 ||
+          typeof status !== "number" ||
+          status >= 500
+        );
+      },
+    }),
+  ],
+});
+```
