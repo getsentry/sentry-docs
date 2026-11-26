@@ -1,33 +1,44 @@
 ---
 title: Echo
-description: "Echo is a high-performance web framework for building robust and scalable applications in Go. Learn how to set it up with Sentry. Requires Echo v5."
+description: "Learn how to set up Sentry in your Echo app and capture your first events."
 ---
 
+<Alert title="Resources">
 For a quick reference, there is a [complete example](https://github.com/getsentry/sentry-go/tree/master/_examples/echo) at the Go SDK source code repository.
-
 [Go Dev-style API documentation](https://pkg.go.dev/github.com/getsentry/sentry-go/echo) is also available.
+</Alert>
+
+## Prerequisites
+
+You need:
+
+- A Sentry [account](https://sentry.io/signup/) and [project](/product/projects/)
+- Your application up and running
+- Echo v5
 
 <StepConnector selector="h2" showNumbers={true}>
 
 ## Install
+
+Install our Go SDK using `go get`:
 
 ```bash
 go get github.com/getsentry/sentry-go
 go get github.com/getsentry/sentry-go/echo
 ```
 
-<Break />
-
 ## Configure
 
-### Initialize the Sentry SDK
+**Error Monitoring** starts working as soon as initialize the SDK. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#4](#send-logs) and [#5](#send-application-metrics-).
+This guide also enables **Tracing**.
 
-<PlatformContent includePath="getting-started-config-quickstart" />
+<PlatformContent includePath="getting-started-config" />
 
-### Options
+### Configure the Handler
 
 `sentryecho` accepts a struct of `Options` that allows you to configure how the handler will behave.
 
+Available options:
 ```go
 // Repanic configures whether Sentry should repanic after recovery, in most cases it should be set to true,
 // as echo includes its own Recover middleware that handles http responses.
@@ -40,7 +51,7 @@ WaitForDelivery bool
 Timeout time.Duration
 ```
 
-<Break />
+Apply options via `sentryecho`:
 
 ```go
 app := echo.New()
@@ -54,6 +65,7 @@ app.Use(sentryecho.New(sentryecho.Options{
 
 ### Set Up the Sentry Middleware
 
+Attach the `sentryecho` handler as one of your middlewares:
 ```go
 app := echo.New()
 app.Use(middleware.Logger())
@@ -73,15 +85,17 @@ app.GET("/", func(ctx *echo.Context) error {
 app.Logger.Fatal(app.Start(":3000"))
 ```
 
-### Use Sentry in Your Application
+## Use Sentry in Your Application
 
-`sentryecho` attaches an instance of `*sentry.Hub` (https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the `*echo.Context`, which makes it available throughout the rest of the request's lifetime.
+`sentryecho` attaches an instance of [`*sentry.Hub`](https://pkg.go.dev/github.com/getsentry/sentry-go#Hub) to the `*echo.Context`, which makes it available throughout the rest of the request's lifetime.
 You can access it by using the `sentryecho.GetHubFromContext()` method on the context itself in any of your proceeding middleware and routes.
-And it should be used instead of the global `sentry.CaptureMessage`, `sentry.CaptureException` or any other calls, as it keeps the separation of data between the requests.
+Make sure you use it instead of the global `sentry.CaptureMessage`, `sentry.CaptureException` or any other calls, as it keeps the separation of data between the requests.
 
 <PlatformContent includePath="tracing/automatic-instrumentation/middleware-note" />
 
-**Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryecho`!**
+<Alert level="warning">
+Keep in mind that `*sentry.Hub` won't be available in middleware attached before `sentryecho`.
+</Alert>
 
 ```go
 app := echo.New()
@@ -121,15 +135,27 @@ app.GET("/foo", func(ctx *echo.Context) error {
 app.Logger.Fatal(app.Start(":3000"))
 ```
 
-#### Accessing Request in `BeforeSend` callback
+### Filter Error Events With `BeforeSend`
 
 <PlatformContent includePath="configuration/before-send-request" />
 
-<PlatformContent includePath="getting-started-send-logs" />
+## Send Logs
 
-<PlatformContent includePath="getting-started-send-metrics" />
+<PlatformContent includePath="getting-started-logs" />
 
-<PlatformContent includePath="getting-started-verify-quickstart" />
+## Send Application Metrics <FeatureBadge type="new" />
+
+<PlatformContent includePath="getting-started-metrics" />
+
+## Verify Your Setup
+
+<PlatformContent includePath="getting-started-verify" />
+
+### View Captured Data in Sentry
+
+Now, head over to your project on [Sentry.io](https://sentry.io/) to view the collected data (it takes a couple of moments for the data to appear).
+
+<Include name="quick-start-locate-data-expandable" />
 
 ## Next Steps
 
@@ -137,5 +163,12 @@ At this point, you've integrated Sentry into your Go application. Here's what to
 
 - Explore [practical guides](/get-started/guides/) on what to monitor, log, track, and investigate after setup
 - Set up [Source Context](/platforms/go/source-context/) for readable stack traces
+
+<Expandable permalink={false} title="Are you having problems setting up the SDK?">
+
+- Find various topics in <PlatformLink to="/troubleshooting/">Troubleshooting</PlatformLink>
+- [Get support](https://www.sentry.help/en/)
+
+</Expandable>
 
 </StepConnector>

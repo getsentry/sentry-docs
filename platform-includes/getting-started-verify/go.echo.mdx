@@ -1,0 +1,20 @@
+Let's test your setup and confirm that Sentry is working correctly and sending data to your Sentry project.
+
+This snippet includes an intentional error for Sentry to capture:
+
+```go
+app := echo.New()
+app.Use(middleware.Logger())
+app.Use(middleware.Recover())
+// Attach the sentryecho handler as one of your middlewares
+app.Use(sentryecho.New(sentryecho.Options{
+// specify options here...
+}))
+// Set up routes
+app.GET("/", func(ctx *echo.Context) error {
+    // capturing an error intentionally to simulate usage
+    sentry.CaptureMessage("It works!")
+	return ctx.String(http.StatusOK, "Hello, World!")
+})
+app.Logger.Fatal(app.Start(":3000"))
+```
