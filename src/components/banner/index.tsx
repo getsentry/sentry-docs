@@ -48,6 +48,13 @@ type BannerType = {
 // ];
 
 const BANNERS: BannerType[] = [
+  {
+    appearsOn: ['^/pricing/$'],
+    text: 'On December 8, Seer moves from active-contributor pricing to usage-based credits.',
+    linkURL: '/pricing/#seer-pricing',
+    linkText: 'Seer pricing',
+    expiresOn: '2026-12-22T00:00:00Z',
+  },
   /// ⚠️ KEEP THIS LAST BANNER ACTIVE FOR DOCUMENTATION
   // check it out on `/contributing/pages/banners/`
   {
@@ -155,7 +162,7 @@ export function Banner() {
       </div>
       <button
         className={styles['promo-banner-dismiss']}
-        role="button"
+        aria-label="Dismiss banner"
         onClick={() => {
           const manifest = readOrResetLocalStorage() || [];
           const payload = JSON.stringify([...manifest, banner.hash]);

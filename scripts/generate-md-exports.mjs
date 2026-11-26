@@ -366,6 +366,17 @@ function normalizeRelativePath(filePath) {
   return filePath.replace(/\\/g, '/');
 }
 
+/** Absolute custom canonicals are kept; everything else stays on this site. */
+function canonicalPageUrl(nodePath, customCanonicalTag) {
+  if (
+    typeof customCanonicalTag === 'string' &&
+    /^https?:\/\//i.test(customCanonicalTag)
+  ) {
+    return customCanonicalTag;
+  }
+  return `${DOCS_ORIGIN}/${nodePath}/`;
+}
+
 /**
  * Walks the doctree to build a map of relativePath → {title, description, url}
  * for YAML frontmatter generation.
@@ -382,7 +393,7 @@ function buildFrontmatterMap(docTree) {
       map.set(relativePath, {
         title: getTitle(node),
         description: node.frontmatter?.description || '',
-        url: `${DOCS_ORIGIN}/${node.path}/`,
+        url: canonicalPageUrl(node.path, node.frontmatter?.customCanonicalTag),
       });
     }
     if (node.children) {
@@ -400,6 +411,10 @@ function buildFrontmatterMap(docTree) {
 
   return map;
 }
+
+// Appended to every page export so an agent that doesn't find its answer on
+// this page can pick the next one to read.
+const DISCOVERY_FOOTER = `\n\n---\n\nFind other pages: [Sitemap](${DOCS_ORIGIN}/sitemap.md) lists every page with a one-line summary, and [llms.txt](${DOCS_ORIGIN}/llms.txt) gives an overview with guidance for agents.\n`;
 
 /**
  * Formats a YAML frontmatter block for a markdown file.
@@ -744,19 +759,40 @@ async function createWork() {
     }
   }
 
-  // Warn about MDX overrides that didn't match any HTML file
+  // Emit `standalone` overrides that have no HTML page (e.g. dynamic routes such as
+  // /platform-redirect/), and warn about other overrides that didn't match any file.
   const usedOverrides = new Set(
     workerTasks
       .flat()
       .filter(t => mdxOverrides.has(t.relativePath))
       .map(t => t.relativePath)
   );
-  for (const [key] of mdxOverrides) {
-    if (!usedOverrides.has(key)) {
+  for (const [key, override] of mdxOverrides) {
+    if (usedOverrides.has(key)) {
+      continue;
+    }
+    if (!override.frontmatter.standalone) {
       console.warn(
         `⚠️ MDX override "${key}" did not match any HTML file and will be ignored`
       );
+      continue;
     }
+    const targetPath = path.join(OUTPUT_DIR, key);
+    await mkdir(path.dirname(targetPath), {recursive: true});
+    const urlPath = key.replace(/\.md$/, '');
+    workerTasks[workerIdx].push({
+      sourcePath: override.htmlPath,
+      targetPath,
+      relativePath: key,
+      r2Hash: existingFilesOnR2 ? existingFilesOnR2.get(key) : null,
+      frontmatter: {
+        title: override.frontmatter.title || '',
+        description: override.frontmatter.description || '',
+        url: `${DOCS_ORIGIN}/${urlPath}/`,
+      },
+    });
+    workerIdx = (workerIdx + 1) % numWorkers;
+    numFiles++;
   }
 
   console.log(`📄 Converting ${numFiles} files with ${numWorkers} workers...`);
@@ -880,7 +916,11 @@ async function createWork() {
       : buildFallbackChildSection(parentPath, children);
 
     if (childSection) {
-      const updatedContent = existingContent + childSection;
+      // Insert the listing before the discovery footer so the footer stays last.
+      const body = existingContent.endsWith(DISCOVERY_FOOTER)
+        ? existingContent.slice(0, -DISCOVERY_FOOTER.length)
+        : existingContent;
+      const updatedContent = `${body}\n${childSection.trimEnd()}${DISCOVERY_FOOTER}`;
       await writeFile(parentFile, updatedContent, {encoding: 'utf8'});
       updatedCount++;
       if (hasR2) {
@@ -1080,10 +1120,15 @@ async function genMDFromHTML(source, {cacheDir, noCache, usedCacheFiles}) {
           comment() {},
         },
         handlers: {
-          // HACK: Extract the canonical URL during parsing
+          // HACK: Extract the canonical URL during parsing. Off-site canonicals
+          // stay out of baseUrl so relative docs links still rewrite against
+          // this site.
           link: (_state, node) => {
             if (node.properties.rel.includes('canonical') && node.properties.href) {
-              baseUrl = node.properties.href;
+              const href = String(node.properties.href);
+              if (href.startsWith(`${DOCS_ORIGIN}/`)) {
+                baseUrl = href;
+              }
             }
           },
           // Remove buttons as they usually get confusing in markdown, especially since we use them as tab headers
@@ -1177,9 +1222,10 @@ async function processTaskList({id, tasks, cacheDir, noCache, usedCacheFiles}) {
         applyKeywordDefaults(data),
         frontmatter?.url
       );
-      const output = frontmatter
-        ? formatYamlFrontmatter(frontmatter) + resolved
-        : resolved;
+      const output =
+        (frontmatter ? formatYamlFrontmatter(frontmatter) : '') +
+        resolved.trimEnd() +
+        DISCOVERY_FOOTER;
       await writeFile(targetPath, output, {encoding: 'utf8'});
 
       if (r2Hash !== null && s3Client) {

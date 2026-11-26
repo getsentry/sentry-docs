@@ -1,0 +1,81 @@
+---
+title: Express
+description: "Captures errors and adds performance instrumentation for Express. (default)"
+supportedCategories:
+  - server
+---
+
+For more information on setting up Sentry Express support, see the [Express Sentry documentation](/platforms/javascript/guides/express/).
+
+_Import name: `Sentry.expressIntegration`_
+
+This integration is enabled by default, whether or not tracing is enabled. If you'd like to modify your default integrations, read [this](./../#modifying-default-integrations).
+
+The `expressIntegration` captures errors thrown from your Express routes and middleware, and creates a span for each middleware, router, and request handler when tracing is enabled. The SDK instruments Express through diagnostics channels, so you don't need to register a Sentry error handler.
+
+```JavaScript
+Sentry.init({
+  integrations: [Sentry.expressIntegration()],
+});
+```
+
+## Options
+
+### `shouldHandleError`
+
+_Type: `((error: MiddlewareError) => boolean) | false`_
+
+A function that decides whether an error is captured. By default, errors with a 5xx status code (and errors without a resolvable status code) are captured, and errors with a 3xx or 4xx status code aren't. The SDK reads the status code from the error's `status`, `statusCode`, `status_code`, or `output.statusCode` property.
+
+```javascript
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+  integrations: [
+    Sentry.expressIntegration({
+      shouldHandleError(error) {
+        const status = Number(error.status ?? error.statusCode ?? 500);
+        // Capture 401/403 in addition to the default 5xx errors
+        return status === 401 || status === 403 || status >= 500;
+      },
+    }),
+  ],
+});
+```
+
+Set `shouldHandleError: false` to turn off automatic error capture. Use this if you capture errors yourself with `Sentry.captureException` in your own error-handling middleware, to avoid duplicate events.
+
+### `ignoreLayers`
+
+_Type: `Array<string | RegExp | ((name: string) => boolean)>`_
+
+An array of patterns matched against the name of each Express layer. No span is created for layers that match. The name is the function name for middleware, the mount path for routers, and the route for request handlers. Strings must match the name exactly.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.expressIntegration({
+      ignoreLayers: ["jsonParser", "/health", /^cors/],
+    }),
+  ],
+});
+```
+
+### `ignoreLayersType`
+
+_Type: `Array<'middleware' | 'router' | 'request_handler'>`_
+
+An array of Express layer types to ignore when creating spans. Use this to filter out all middleware, router, or request handler spans.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.expressIntegration({
+      ignoreLayersType: ["middleware"],
+    }),
+  ],
+});
+```
+
+## Supported Versions
+
+- `express`: `^4.0.0 || ^5.0.0`

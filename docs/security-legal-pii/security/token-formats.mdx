@@ -10,6 +10,8 @@ keywords:
     "SENTRY_AUTH_TOKEN",
     "sntryu_",
     "sntrys_",
+    "sntryc_",
+    "sntryh_",
   ]
 description: >-
   What Sentry credentials look like, the strings that appear near them, and the
@@ -20,17 +22,21 @@ Use this page to write secret scanning rules, or to identify a credential you fo
 
 ## Formats
 
-| Format | Credential |
-| --- | --- |
-| `sntryu_[a-f0-9]{64}` | Personal auth token |
-| `sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}` | Organization auth token |
-| `sntrya_[a-f0-9]{64}`, `sntryi_[a-f0-9]{64}` | Reserved prefixes (user app, integration) |
-| `[a-f0-9]{64}` | Legacy tokens, [internal integration](/integrations/integration-platform/internal-integration/) tokens, OAuth client IDs and secrets, OAuth access and refresh tokens, device codes, [webhook](/integrations/integration-platform/webhooks/) signing secrets |
-| `[a-f0-9]{32}` | Legacy API key |
-| `[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}` | OAuth device user code |
-| `[A-Za-z0-9_-]{43}` | [Relay](/product/relay/getting-started/) public or secret key |
+| Format                                                | Credential                                                                                                                                                                                                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `sntryu_[a-f0-9]{64}`                                 | Personal auth token                                                                                                                                                                                                                                          |
+| `sntrys_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}`            | Organization auth token                                                                                                                                                                                                                                      |
+| `sntryc_[A-Za-z0-9+/=]+_[A-Za-z0-9+/]{43}`            | Single-use CLI setup code                                                                                                                                                                                                                                    |
+| `sntryh_[A-Za-z0-9_-]{43}`                            | Single-use agent handoff code                                                                                                                                                                                                                                |
+| `sntrya_[a-f0-9]{64}`, `sntryi_[a-f0-9]{64}`          | Reserved prefixes (user app, integration)                                                                                                                                                                                                                    |
+| `[a-f0-9]{64}`                                        | Legacy tokens, [internal integration](/integrations/integration-platform/internal-integration/) tokens, OAuth client IDs and secrets, OAuth access and refresh tokens, device codes, [webhook](/integrations/integration-platform/webhooks/) signing secrets |
+| `[a-f0-9]{32}`                                        | Legacy API key                                                                                                                                                                                                                                               |
+| `[BCDFGHJKLMNPQRSTVWXZ]{4}-[BCDFGHJKLMNPQRSTVWXZ]{4}` | OAuth device user code                                                                                                                                                                                                                                       |
+| `[A-Za-z0-9_-]{43}`                                   | [Relay](/product/relay/getting-started/) public or secret key                                                                                                                                                                                                |
 
-Organization tokens run about 180 to 250 characters, since the payload contains the org slug. A fixed-length pattern may miss valid tokens.
+Organization tokens run about 180 to 250 characters, since the payload contains the org slug. CLI setup codes also vary with the length of the Sentry URL in their payload. A fixed-length pattern may miss valid credentials.
+
+CLI setup codes and agent handoff codes expire after five minutes and can be used once. Treat either as a credential while it is active.
 
 Nothing issues the `sntrya_` or `sntryi_` prefixes today. They're reserved, so matching them now may cover tokens issued later.
 

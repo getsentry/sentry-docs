@@ -54,6 +54,20 @@ const SAMPLE_DOCTREE = {
           frontmatter: {title: 'Python'},
           children: [],
         },
+        {
+          // Synthetic node: fills a gap in the hierarchy and has no page of its own.
+          path: 'platforms/native',
+          slug: 'native',
+          frontmatter: {title: ''},
+          missing: true,
+          children: [
+            {
+              path: 'platforms/native/crashpad',
+              slug: 'crashpad',
+              frontmatter: {title: 'Crashpad'},
+            },
+          ],
+        },
       ],
     },
   ],
@@ -165,6 +179,7 @@ describe('md-exports 404 catch-all route', () => {
           requested_path: 'platforms/javascript/made/up/page',
           has_suggestions: true,
           agent: 'claude',
+          outcome: 'unknown_path',
         },
       })
     );
@@ -177,5 +192,55 @@ describe('md-exports 404 catch-all route', () => {
       1,
       expect.objectContaining({attributes: expect.objectContaining({agent: 'other'})})
     );
+  });
+
+  describe('pages that exist but have no export', () => {
+    it('says the export is unavailable and links the HTML page', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      const body = await res.text();
+      expect(body).toContain('# Markdown Export Unavailable');
+      expect(body).toContain('https://docs.sentry.io/platforms/javascript/');
+    });
+
+    it('lists the page children as suggestions', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      const body = await res.text();
+      expect(body).toContain('Pages in Browser JavaScript');
+      expect(body).toContain('Installation Methods');
+    });
+
+    it('uses a shorter cache lifetime so a fixed export takes over quickly', async () => {
+      const res = await callRoute(['platforms', 'javascript.md']);
+      expect(res.headers.get('Cache-Control')).toBe('public, max-age=60');
+    });
+
+    it('treats synthetic doctree nodes as unknown paths', async () => {
+      const res = await callRoute(['platforms', 'native.md']);
+      const body = await res.text();
+      expect(body).toContain('# Page Not Found');
+      expect(body).not.toContain('Markdown Export Unavailable');
+      expect(res.headers.get('Cache-Control')).toBe('public, max-age=300');
+      expect(metricsCount).toHaveBeenCalledWith(
+        'docs.md_export.not_found',
+        1,
+        expect.objectContaining({
+          attributes: expect.objectContaining({outcome: 'unknown_path'}),
+        })
+      );
+    });
+
+    it('emits the metric with a page_exists outcome', async () => {
+      await callRoute(['platforms', 'javascript.md']);
+      expect(metricsCount).toHaveBeenCalledWith(
+        'docs.md_export.not_found',
+        1,
+        expect.objectContaining({
+          attributes: expect.objectContaining({
+            outcome: 'page_exists',
+            has_suggestions: true,
+          }),
+        })
+      );
+    });
   });
 });

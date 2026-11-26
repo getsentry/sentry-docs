@@ -13,7 +13,7 @@ export function SdkDefinition({name, children, categorySupported = []}: Props) {
   return (
     <PlatformCategorySection supported={categorySupported}>
       <div className={styles['sdk-config-option']}>
-        <h3 id={name} aria-label={name} data-sdk-option>
+        <h3 id={name} data-sdk-option>
           <a href={`#${name}`}>
             <svg
               className="anchorlink before"

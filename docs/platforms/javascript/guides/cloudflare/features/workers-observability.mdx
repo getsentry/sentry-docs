@@ -1,0 +1,69 @@
+---
+title: Cloudflare Workers Observability
+sidebar_title: Workers Observability
+description: "Learn how the Sentry Cloudflare SDK links errors and logs to Cloudflare Workers traces when you use Sentry for error monitoring only."
+---
+
+<AvailableSince version="11.13.0" />
+
+If you use Sentry for error monitoring only and have [Workers tracing](https://developers.cloudflare.com/workers/observability/traces/) turned on in Cloudflare, the SDK gives your errors and logs the trace ID of the Cloudflare invocation. Search for that trace ID in Workers Observability to see the Cloudflare spans and logs that led up to an error.
+
+<Alert level="warning" title="Error Monitoring Only">
+
+The SDK only uses the Cloudflare trace when both of these are true:
+
+- Sentry tracing isn't set up: your Sentry options don't contain `tracesSampleRate` or `tracesSampler`. If you set either one, even `tracesSampleRate: 0`, the SDK uses its own trace instead.
+- Cloudflare traces the invocation: `observability.traces.enabled` is `true` in your wrangler config, and the invocation is sampled by its `head_sampling_rate`.
+
+With Sentry tracing set up, the SDK starts its own traces, as before. A trace always comes from one source, either Sentry or Cloudflare, so Sentry never gets the same request spans twice.
+
+</Alert>
+
+<PlatformLink to="/tracing/">Sentry tracing</PlatformLink> is still the best way to connect your errors to what happened before them. It traces your requests, bindings, and AI calls, connects them across services, and shows it all in Sentry next to your errors. Use the Cloudflare trace when you don't want to send spans from the SDK yet.
+
+## Set Up
+
+1. Turn on Workers tracing in your wrangler config:
+
+   ```jsonc {filename:wrangler.jsonc}
+   {
+     "observability": {
+       "traces": {
+         "enabled": true,
+       },
+     },
+   }
+   ```
+
+   ```toml {filename:wrangler.toml}
+   [observability.traces]
+   enabled = true
+   ```
+
+2. Leave `tracesSampleRate` and `tracesSampler` out of your Sentry options:
+
+   ```typescript {filename:src/instrument.server.ts}
+   import { defineCloudflareOptions } from "@sentry/cloudflare";
+
+   export default defineCloudflareOptions((env) => ({
+     dsn: env.SENTRY_DSN,
+     // No `tracesSampleRate` or `tracesSampler`, so errors and logs
+     // get the trace ID of the Cloudflare invocation
+   }));
+   ```
+
+## Supported Handlers
+
+The SDK uses the Cloudflare trace in `fetch`, `scheduled`, `queue`, and `email` handlers, and in `WorkerEntrypoint` RPC methods. Durable Objects keep the trace ID that the SDK creates, because the Durable Object state doesn't expose the Cloudflare trace.
+
+An incoming Sentry trace, such as a `sentry-trace` header or the RPC trace data of another instrumented Worker, always takes precedence over the Cloudflare trace.
+
+## See the Cloudflare Spans in Sentry
+
+The parent span of these errors and logs is a Cloudflare span. Sentry only has that span if you export your Workers traces to Sentry. Otherwise, the trace in Sentry shows the error without its parent span.
+
+To send your Workers traces to Sentry, set up a traces destination as described in [Cloudflare Workers Observability](/product/drains/cloudflare/).
+
+## Requirements
+
+The Cloudflare runtime must be workerd `1.20261009.1` or newer, which added `Span.spanContext()`. On older runtimes, errors and logs keep the trace ID that the SDK creates.

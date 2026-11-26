@@ -165,7 +165,12 @@ The following inbound filters **do** apply to sessions:
 - **Legacy Browsers** and **Web Crawlers** - Filter sessions by the user agent, if the SDK sends it with the session
 - **Localhost** - Filters sessions whose IP address is a loopback address, if the SDK sends it with the session
 
-A [custom filter](#custom-filters) drops sessions only through its **Release** and **IP Address** conditions when filtering Errors. A filter that also has a condition of another kind never drops a session, because sessions do not carry information to allow the filters to match.
+A [custom filter](#custom-filters) drops a session that matches all of its conditions. Only these conditions can match a session:
+
+- **Release** and **Environment** - On a filter with the **Errors** or **All Data Types** data type. A filter on Logs, Metrics, or Spans reads the release and the environment from attributes that sessions do not have.
+- **IP Address** - On a filter of any data type, because the condition reads the IP address of the request.
+
+A filter that also has a condition of another kind, such as **Error Message** or **Country**, never drops a session, because sessions do not carry that information.
 
 A filter drops the whole session. The SDK marks a session as crashed or errored before it sends the session, so a session still counts as crashed when a filter drops its crash event. This is why the number of crashes on the [Release Details](/product/releases/release-details/) page can differ from the number of crashed sessions.
 
@@ -175,13 +180,15 @@ Sentry does not record outcomes for sessions. Dropped sessions do not appear in 
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
 
-<Include name="feature-available-for-user-group-early-adopter.mdx" />
-
 A custom filter drops data that matches all of its conditions. Use it for noise the built-in filters do not cover, such as a flaky error message, traffic from one IP range, or logs from an old release.
 
 Like every inbound filter, a custom filter runs at ingest time, and filtered data does not count toward your quota.
 
-Create and manage custom filters under **Custom Inbound Filters** in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/), or with the [API](#custom-filter-api). A filter has:
+Create and manage custom filters under **Custom Inbound Filters** in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/), or with the [API](#custom-filter-api). The table lists each filter with its data type, its conditions, and the amount of data it dropped.
+
+![The Custom Inbound Filters table with the Trend and Filtered columns for each filter](./img/custom-inbound-filters.png)
+
+A filter has:
 
 - A **name** that identifies it in the table and in its statistics.
 - A **data type** that specifies which data will be filtered.
@@ -214,6 +221,7 @@ Conditions specify which data will be matched and therefore discarded. Each cond
 | Log Message   | `log_message`      | Logs       | The body of the log                                              |
 | Metric Name   | `metric_name`      | Metrics    | The name of the metric, such as `checkout.total`                 |
 | Release       | `release`          | All        | The release the data was sent from                               |
+| Environment   | `environment`      | All        | The environment the data was sent from, such as `production`     |
 | IP Address    | `ip_address`       | All        | The IP address the data was sent from                            |
 
 Filters may consist of at most 10 conditions or 4000 characters when sent to the API endpoint.
@@ -268,6 +276,10 @@ A version comparison follows these rules:
 - A value with a package only matches releases of that package. A value without a package compares with releases of every package.
 - A release without a version, such as a commit hash, never matches a comparison.
 
+#### Environment
+
+The condition matches the environment provided during SDK initialization as text. On logs, metrics, and spans, the condition reads the `sentry.environment` attribute. For example, `environment:staging` drops data from the staging environment. The condition never matches data without an environment.
+
 #### Log Message
 
 The condition matches the body of the log. Match with wildcards instead of the full message. For example, to drop any "Connection timeout asbq33q", use `log_message:*Connection timeout*`.
@@ -318,9 +330,7 @@ A filter in the API uses the keys of the [conditions](#conditions) and [operator
 
 <Include name="feature-available-for-plan-trial-business.mdx" />
 
-Projects not in the Early Adopter program filter error messages, releases, log messages, and application metrics with the **Custom Filters** form in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/). Each list holds glob patterns, one per line.
-
-For projects in the Early Adopter program, these lists appear as rows of the [custom filters](#filter-lists-from-the-project-settings) table.
+The legacy custom filters for error messages, releases, log messages, and application metrics are lists of glob patterns, one per line. They appear as rows of the [custom filters](#filter-lists-from-the-project-settings) table in [**Project Settings > Inbound Filters**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/filters/data-filters/).
 
 Inbound data filters are not case-sensitive.
 

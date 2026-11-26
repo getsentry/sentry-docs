@@ -78,10 +78,9 @@ This will create a corresponding `GraphQLError` in the Issues section of
 ## Options
 
 The Ariadne integration can capture request and response payload for each GraphQL
-error that happens. Since these may contain sensitive data, no request and response
-data will be attached by default.
+error that happens. This is enabled by default.
 
-To attach this data, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
+To control which data is attached, use the <PlatformLink to="/configuration/options/#data_collection">`data_collection`</PlatformLink> option. The `graphql` key controls the query document and its variables in the request
 payload, and the `outgoing_response` entry in `http_bodies` controls the response
 payload:
 
@@ -95,26 +94,9 @@ sentry_sdk.init(
 )
 ```
 
-These are also the defaults when you pass a `data_collection` dictionary, so you only
-need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
+These are the defaults, so you only need to set the keys you want to change. See <PlatformLink to="/data-management/data-collected/">Data Collected</PlatformLink> for all available keys.
 
-Alternatively, you can initialize the SDK with the <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink> option set to `True`, though `send_default_pii` will be removed in version 3.0 of the SDK:
-
-```python
-sentry_sdk.init(
-    # same options as above
-    send_default_pii=True,
-)
-```
-
-<Alert level="warning" title="Note">
-
-Since `send_default_pii` is a global SDK option, setting it to `True` will affect all integrations, not just Ariadne. Please make sure to
-[scrub sensitive data](/platforms/python/data-management/sensitive-data/)
-from events before enabling this option. With `data_collection`, you can enable
-only the categories you need instead.
-
-</Alert>
+In SDK versions prior to `3.0`, this data isn't attached by default. To attach it, pass a `data_collection` dictionary as shown above, or set the `send_default_pii` option to `True`. Since `send_default_pii` is a global SDK option, setting it to `True` affects all integrations, so make sure to [scrub sensitive data](/platforms/python/data-management/sensitive-data/) from events first.
 
 ## Supported Versions
 

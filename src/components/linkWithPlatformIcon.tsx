@@ -5,7 +5,7 @@ import {SmartLink} from './smartLink';
 type Props = {
   label?: string;
   platform?: string;
-  /** Agent skill name, e.g. "sentry-react-sdk". When provided, renders an inline "Agent Setup" copy-prompt button. */
+  /** Agent skill name, e.g. "sentry-react-sdk". When provided, renders an inline Sentry CLI setup button. */
   skill?: string;
   url?: string;
 };

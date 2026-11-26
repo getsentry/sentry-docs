@@ -27,7 +27,7 @@ If you have the `clickhouse-driver` package in your dependencies, the clickhouse
 
 <PlatformContent includePath="getting-started-config" />
 
-By default, the parameters of the query are not retrieved. To see the query parameters in Sentry, enable `database_query_data` in the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, or enable <PlatformLink to="/configuration/options/#send_default_pii">`send_default_pii`</PlatformLink>. `send_default_pii` will be removed in version 3.0 of the SDK.
+The integration doesn't record query parameters or the query ID. In SDK versions prior to `3.0`, you can see the query parameters in Sentry by enabling `database_query_data` in the <PlatformLink to="/configuration/options/#data_collection">`data_collection` option</PlatformLink>, or by enabling `send_default_pii`.
 
 ## Verify
 
@@ -37,8 +37,8 @@ from clickhouse_driver import Client
 def main():
     sentry_init(...)  # same as above
 
-    # or sentry_sdk.traces.start_span(name="your_span_name", parent_span=None) in stream mode
-    with sentry_sdk.start_transaction(name="testing_sentry"):
+    # In SDK 2.x, use sentry_sdk.start_transaction(name="testing_sentry") instead
+    with sentry_sdk.start_span(name="testing_sentry"):
         client = Client(host=DATABASE_HOST)
         client.execute("DROP TABLE IF EXISTS sentry_test")
         client.execute("CREATE TABLE sentry_test (x Int32) ENGINE = Memory")
@@ -47,7 +47,7 @@ def main():
 main()
 ```
 
-This will create a transaction called `testing_sentry` in the Performance section of [sentry.io](https://sentry.io), and create spans for the database operations.
+This will create a service span called `testing_sentry` in the Traces section of [sentry.io](https://sentry.io), and create spans for the database operations.
 
 It takes a couple of moments for the data to appear in [sentry.io](https://sentry.io).
 

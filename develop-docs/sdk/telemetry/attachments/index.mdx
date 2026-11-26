@@ -2,7 +2,7 @@
 title: Attachments
 description: File attachments associated with events and traces, including screenshots, minidumps, crash reports, view hierarchies, and flame graphs.
 spec_id: sdk/telemetry/attachments
-spec_version: 1.8.0
+spec_version: 1.8.1
 spec_status: stable
 spec_depends_on:
   - id: sdk/foundations/transport/envelopes
@@ -10,6 +10,9 @@ spec_depends_on:
   - id: sdk/telemetry/profiles
     version: ">=2.0.0"
 spec_changelog:
+  - version: 1.8.1
+    date: 2026-11-23
+    summary: Allowed runtime frames without instruction_addr in flame graphs
   - version: 1.8.0
     date: 2026-10-02
     summary: Added draft flame graph attachment contract
@@ -211,7 +214,7 @@ Consumers **MUST** process the payload according to its `version`. Within versio
 
 ##### Flame Graph Frames
 
-Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Native frames **MUST** retain `instruction_addr`, even when already symbolicated.
+Frame entries **MUST** use the same schema as the `profile.frames` entries in a [V2 profile chunk](/sdk/telemetry/profiles/#profile-data). Each entry **MUST** contain at least one of `filename`, `function`, or `instruction_addr`. Frames with a native platform (`cocoa`, `objc`, `native`, or `c`), taken from the frame's `platform` or, when absent, the payload's `platform`, **MUST** retain `instruction_addr`, even when already symbolicated. Frames that a runtime reports without a native address, such as Hermes built-in and host function frames, **MAY** omit `instruction_addr`. Such frames **MUST NOT** use a native platform.
 
 Producers **SHOULD** deduplicate frames using their complete frame data, including addressing mode and binary association. The same frame index **MAY** occur at multiple tree positions, including recursive calls. The frame table has no stack ordering.
 

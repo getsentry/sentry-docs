@@ -3,9 +3,9 @@
 /**
  * Generates /llms.txt and /index.md from public/doctree.json.
  *
- * Both files share the same body: product description, AI instructions,
- * platforms and frameworks, and the doc sections listed for agents.
- * index.md adds YAML frontmatter for the Markdown export.
+ * Both files include a product description, AI instructions, platforms and
+ * frameworks, setup guidance for agents, and doc sections. index.md adds
+ * YAML frontmatter for the Markdown export.
  *
  * Platforms with a guides/ directory list those guides as frameworks.
  * Platforms that document frameworks as integrations (Python, Elixir, and
@@ -119,6 +119,14 @@ function linkEntry(node) {
   return `- [${title}](${url})`;
 }
 
+/** Every visible page, nested like the sidebar, one link entry per line. */
+function buildSitemapLines(node, depth = 0) {
+  return getVisibleChildren(node).flatMap(child => [
+    `${'  '.repeat(depth)}${linkEntry(child)}`,
+    ...buildSitemapLines(child, depth + 1),
+  ]);
+}
+
 function resolvePaths(docTree, nodePaths) {
   const nodes = [];
   for (const nodePath of nodePaths) {
@@ -207,7 +215,7 @@ Key Sentry capabilities include:
 - Application metrics take counters, gauges, and distributions from application code to track application health and drill down into related traces, logs, and errors, without cardinality blowing up your bill.
 - Seer is Sentry's AI debugging tool that detects and diagnoses errors using Sentry data.
 
-The full list of Sentry features, as well as information on SDKs and pricing, can be found in the Sentry docs (${DOCS_ORIGIN}/index.md). All documentation pages are available as clean Markdown, for example ${DOCS_ORIGIN}/platforms/javascript.md. Use these Markdown URLs for full content.`;
+The full list of Sentry features, as well as information on SDKs and pricing, can be found in the Sentry docs (${DOCS_ORIGIN}/index.md). All documentation pages are available as clean Markdown, for example ${DOCS_ORIGIN}/platforms/javascript.md. Use these Markdown URLs for full content. ${DOCS_ORIGIN}/sitemap.md lists every page with a one-line summary.`;
 
 const INSTRUCTIONS = `\
 ## For AI Agents
@@ -217,6 +225,10 @@ When helping a developer set up or use Sentry, follow these guidelines:
 - **SDK versions**: Always check the package registry (npm, PyPI, RubyGems, etc.) for the latest Sentry SDK version. Do not rely on memorized version numbers from training data. Get up to date information on SDKs in the docs (${DOCS_ORIGIN}/platforms/)
 - **DSN handling**: Use environment variables for the DSN (\`SENTRY_DSN\` or \`NEXT_PUBLIC_SENTRY_DSN\`).
 - **Pricing questions**: Don't quote prices or quotas from memory; fetch ${DOCS_ORIGIN}/pricing.md. Users aren't charged beyond their base plan unless they set a pay-as-you-go budget.`;
+
+const SETUP_INSTRUCTIONS = `\
+- **Setting up Sentry in a project**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/get-started.md before the platform or framework guide. It covers setup through the Sentry CLI, the Sentry MCP server, or neither, from choosing a project to confirming a real error reaches Sentry.
+- **Adding a feature to a project that already uses Sentry**: Fetch and follow ${DOCS_ORIGIN}/ai/agent-setup/instrument.md for tracing, logs, Session Replay, metrics, profiling, crons, uptime, or AI agent monitoring.`;
 
 const ABOUT_SENTRY_DOCS = `\
 ## About Sentry Docs
@@ -251,6 +263,7 @@ async function main() {
     DESCRIPTION,
     '',
     INSTRUCTIONS,
+    SETUP_INSTRUCTIONS,
     '',
     buildPlatformsExpanded(platformsNode),
     '',
@@ -280,6 +293,24 @@ async function main() {
   const indexMdPath = path.join(mdExportsDir, 'index.md');
   await writeFile(indexMdPath, indexMd, 'utf8');
   console.log(`Generated ${indexMdPath} (${indexMd.length} bytes)`);
+
+  const sitemapMd = [
+    '---',
+    `title: ${JSON.stringify('Sitemap')}`,
+    `description: ${JSON.stringify('Every documentation page, with a one-line summary and its Markdown URL.')}`,
+    `url: ${DOCS_ORIGIN}/sitemap.md`,
+    '---',
+    '',
+    '# Sitemap',
+    '',
+    `Every documentation page, nested like the sidebar. Each link points to the page's Markdown version. See ${DOCS_ORIGIN}/llms.txt for an overview and guidance for agents.`,
+    '',
+    ...buildSitemapLines(docTree),
+    '',
+  ].join('\n');
+  const sitemapMdPath = path.join(mdExportsDir, 'sitemap.md');
+  await writeFile(sitemapMdPath, sitemapMd, 'utf8');
+  console.log(`Generated ${sitemapMdPath} (${sitemapMd.length} bytes)`);
 }
 
 main().catch(err => {

@@ -215,9 +215,21 @@ The number of characters after which the values containing text in the event pay
 
 </SdkOption>
 
+<SdkOption name="max_breadth" type='int|null' defaultValue='null'>
+
+The number of items of an array or object after which the next ones are left out when serializing frame arguments and query bindings. When `null`, there is no limit. Available in `sentry/sentry` `4.35.0` and `sentry/sentry-symfony` `5.17.0` and later.
+
+</SdkOption>
+
 <SdkOption name="before_breadcrumb" type='function (\Sentry\Breadcrumb $breadcrumb): ?\Sentry\Breadcrumb'>
 
 This function is called with a breadcrumb object before the breadcrumb is added to the scope. When `null` is returned from the function, the breadcrumb is dropped. To pass the breadcrumb through, return the breadcrumb itself.
+
+</SdkOption>
+
+<SdkOption name="send_client_reports" type='bool' defaultValue='false'>
+
+If enabled, the SDK sends client reports with the number of events, transactions, spans, logs, metrics, and profiles it dropped, for example because of sampling, rate limits, or `before_send` callbacks. Available in `sentry/sentry` `4.35.0` and `sentry/sentry-symfony` `5.17.0` and later.
 
 </SdkOption>
 
@@ -283,6 +295,35 @@ Either this or `traces_sample_rate` must be defined to enable tracing.
 A list of strings that match transaction names that shouldn't be sent to Sentry.
 
 </SdkOption>
+
+<PlatformSection notSupported={["php.symfony"]}>
+
+<SdkOption name="trace_ignore_status_codes" type='array' defaultValue='[]'>
+
+A list of HTTP status codes. The SDK drops the transaction of an incoming request when the response has one of these status codes. Each entry is either a single status code or an inclusive `[min, max]` range, for example `[[400, 404], 429]`. Available in `sentry/sentry` `4.35.0` and later.
+
+</SdkOption>
+
+</PlatformSection>
+
+<PlatformSection supported={["php.symfony"]}>
+
+<SdkOption name="trace_ignore_status_codes" type='array' defaultValue='[]' availableSince="5.16.0">
+
+A list of HTTP status codes. The SDK drops the transaction of an incoming request when the response has one of these status codes. Each entry is either a single status code or an inclusive `[min, max]` range.
+
+{/* prettier-ignore */}
+```yaml {filename:config/packages/sentry.yaml}
+sentry:
+    options:
+        trace_ignore_status_codes:
+            - [400, 404]
+            - 429
+```
+
+</SdkOption>
+
+</PlatformSection>
 
 <SdkOption name="before_send_transaction" type='function (\Sentry\Event $transaction, ?\Sentry\EventHint $hint): ?\Sentry\Event'>
 
@@ -423,3 +464,19 @@ Leave this enabled if you want to reduce connection setup overhead for frequent 
 A number between `0` and `1`, controlling the percentage chance a given profile will be sent to Sentry. (`0` represents 0% while `1` represents 100%.) Setting this to a non null value will enable profiling.
 
 </SdkOption>
+
+<PlatformSection notSupported={["php.symfony"]}>
+
+<SdkOption name="profile_session_sample_rate" type="float" defaultValue="null">
+
+A number between `0` and `1`, controlling the percentage chance a profiling session is sampled for continuous profiling. It has no effect if `profiles_sample_rate` is set. Available in `sentry/sentry` `4.36.0` and later.
+
+</SdkOption>
+
+<SdkOption name="profile_lifecycle" type="string" defaultValue="manual">
+
+Controls when the continuous profiler runs. With `manual`, you start and stop it with `\Sentry\profiler()`. With `trace`, it runs while a sampled transaction is active.
+
+</SdkOption>
+
+</PlatformSection>

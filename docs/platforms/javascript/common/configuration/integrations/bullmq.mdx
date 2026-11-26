@@ -1,0 +1,81 @@
+---
+title: BullMQ
+description: "Adds tracing and metrics for BullMQ."
+supportedCategories:
+  - server
+notSupported:
+  - javascript.elysia
+  - javascript.deno
+  - javascript.cloudflare
+---
+
+<AvailableSince version="11.11.0" />
+
+_Import name: `Sentry.BullMQTelemetry`_
+
+`BullMQTelemetry` adds tracing for [BullMQ](https://bullmq.io/) queues and workers, and can send BullMQ's job metrics to Sentry. It implements BullMQ's [telemetry interface](https://docs.bullmq.io/guide/telemetry), so you do not add it to `integrations` in `Sentry.init()`. Instead, pass it to the `telemetry` option of each `Queue`, `Worker`, and `FlowProducer`:
+
+```javascript
+import * as Sentry from "___SDK_PACKAGE___";
+import { Queue, Worker } from "bullmq";
+
+const connection = { host: "127.0.0.1", port: 6379 };
+const telemetry = new Sentry.BullMQTelemetry();
+
+const queue = new Queue("emails", { connection, telemetry });
+
+const worker = new Worker(
+  "emails",
+  async (job) => {
+    // Process the job
+  },
+  { connection, telemetry }
+);
+```
+
+What gets sent to Sentry:
+
+- **Spans** follow your tracing configuration in `Sentry.init()`, such as <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink>. Without tracing, no spans are sent.
+- **Errors** from failed jobs are always captured.
+- **Metrics** are off by default. To send them, set [`enableMetrics`](#enablemetrics).
+
+## Options
+
+### `enableMetrics`
+
+_Type: `boolean`_
+
+Sends BullMQ's job metrics to Sentry. Defaults to `false`. Requires `bullmq` `5.69.0` or higher.
+
+```javascript
+const telemetry = new Sentry.BullMQTelemetry({ enableMetrics: true });
+```
+
+## Spans
+
+The SDK creates a span when you add a job to a queue and when a worker processes it, and links the two so you can follow each job from the code that added it to the worker that ran it. These spans populate the [Queues dashboard](/product/dashboards/sentry-dashboards/backend/queues/).
+
+Span attributes follow Sentry's `messaging.*` conventions, for example `messaging.destination.name` for the queue name. Other BullMQ attributes are sent as `messaging.bullmq.*`, some with underscores instead of dots, such as `messaging.bullmq.worker.force_close`.
+
+## Errors
+
+When a job fails, the SDK captures an error with the failure message. This also applies to failed attempts that BullMQ retries. BullMQ gives only the message to the telemetry interface, so the stack trace of the error does not show where in the job the error occurred.
+
+## Metrics
+
+With `enableMetrics: true`, the SDK sends these <PlatformLink to="/metrics/">metrics</PlatformLink>:
+
+| Metric                                   | Type         | Unit   | Description                                                                                                                                                    |
+| ---------------------------------------- | ------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `messaging.bullmq.jobs.completed`        | counter      | none   | Jobs that completed                                                                                                                                            |
+| `messaging.bullmq.jobs.failed`           | counter      | none   | Jobs that failed and are not retried                                                                                                                           |
+| `messaging.bullmq.jobs.retried`          | counter      | none   | Failed jobs that are retried without a delay                                                                                                                   |
+| `messaging.bullmq.jobs.delayed`          | counter      | none   | Jobs that moved to the delayed state, for a retry with a backoff delay or through `job.moveToDelayed()`                                                        |
+| `messaging.bullmq.jobs.waiting`          | counter      | none   | Jobs that `job.moveToWait()` moved back to the wait state                                                                                                      |
+| `messaging.bullmq.jobs.waiting_children` | counter      | none   | Jobs that moved to the waiting-children state to wait for their child jobs                                                                                     |
+| `messaging.process.duration`             | distribution | second | Time from the start of processing until the job left the active state, with `messaging.system` set to `bullmq` and `messaging.operation.name` set to `process` |
+| `messaging.bullmq.queue.jobs`            | gauge        | none   | Jobs in a queue in one job state, sent when you call `queue.recordJobCountsMetric()`                                                                           |
+
+## Supported Versions
+
+- `bullmq`: `>=5.22.0`

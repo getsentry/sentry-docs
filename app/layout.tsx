@@ -9,7 +9,7 @@ import {SkipToContent} from 'sentry-docs/components/skipToContent';
 import {ThemeProvider} from 'sentry-docs/components/theme-provider';
 
 const rubik = Rubik({
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
   variable: '--font-rubik',
@@ -34,6 +34,8 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* llms.txt covers every page on the site (llmstxt.org link relation). */}
+        <link rel="describedby" type="text/plain" href="/llms.txt" />
         <PlausibleProvider taggedEvents domain="docs.sentry.io,rollup.sentry.io" />
       </head>
       <body className={rubik.variable} suppressHydrationWarning>
