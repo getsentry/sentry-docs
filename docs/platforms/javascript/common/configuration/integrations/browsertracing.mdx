@@ -25,4 +25,57 @@ Sentry.init({
 });
 ```
 
-See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#configuration-options">Configuration Options</PlatformLink> for a full list of available options for `browserTracingIntegration` 
+See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#configuration-options">Configuration Options</PlatformLink> for a full list of available options for `browserTracingIntegration`
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+## Included Integrations
+
+BrowserTracing creates pageload and navigation spans itself. Since SDK version 11.14.0, it sets up the rest of its features by adding these integrations for you:
+
+| Integration                                                                              | What it captures                                  | BrowserTracing options                                                                                    |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink>       | LCP, CLS, and INP                                 | `webVitals`                                                                                               |
+| <PlatformLink to="/configuration/integrations/fetchtracing/">FetchTracing</PlatformLink> | Spans and trace headers for `fetch` requests      | `traceFetch`, `shouldCreateSpanForRequest`, `enableHTTPTimings`, `onRequestSpanStart`, `onRequestSpanEnd` |
+| <PlatformLink to="/configuration/integrations/xhrtracing/">XhrTracing</PlatformLink>     | Spans and trace headers for XHR requests          | `traceXHR`, `shouldCreateSpanForRequest`, `enableHTTPTimings`, `onRequestSpanStart`, `onRequestSpanEnd`   |
+| <PlatformLink to="/configuration/integrations/linkedtraces/">LinkedTraces</PlatformLink> | Links from each trace to the previous one         | `linkPreviousTrace`, `consistentTraceSampling`                                                            |
+| <PlatformLink to="/configuration/integrations/longtasks/">LongTasks</PlatformLink>       | Long animation frames and long tasks              | `enableLongTask`, `enableLongAnimationFrame`                                                              |
+| <PlatformLink to="/configuration/integrations/resources/">Resources</PlatformLink>       | Scripts, stylesheets, images, and other resources | `ignoreResourceSpans`                                                                                     |
+
+You don't need to change anything: the options above still work on `browserTracingIntegration`. If you add one of these integrations yourself, your instance takes precedence over the one BrowserTracing would add.
+
+</PlatformSection>
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript"]}>
+
+## Reduce Bundle Size
+
+_Import name: `Sentry.browserTracingCoreIntegration`_
+
+Because `browserTracingIntegration` adds all of the integrations above, your bundler can't remove the ones you don't use. To ship less code, use `browserTracingCoreIntegration` instead and add only the integrations you need. Requires SDK version 11.14.0 or later.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingCoreIntegration(),
+    // Add only what you need:
+    Sentry.webVitalsIntegration(),
+    Sentry.fetchTracingIntegration(),
+  ],
+});
+```
+
+`browserTracingCoreIntegration` keeps:
+
+- Pageload, navigation, and back/forward cache restore spans, including redirect detection
+- Trace continuation from the `sentry-trace` and `baggage` meta tags
+- Browser timing and paint data on the pageload span
+- Marking the active span as errored when an uncaught error happens
+
+It accepts the options that configure these spans: `instrumentPageLoad`, `instrumentNavigation`, `instrumentBfcacheRestore`, `beforeStartSpan`, `idleTimeout`, `finalTimeout`, `childSpanTimeout`, `markBackgroundSpan`, `detectRedirects`, and `enableReportPageLoaded`. The options listed in the table above move to their own integration.
+
+The CDN bundles that include tracing export `browserTracingCoreIntegration` and the standalone integrations too.
+
+</PlatformSection>
