@@ -1,2 +1,212 @@
-To complete your configuration, add <PlatformLink to="/configuration/options/">options</PlatformLink> to your `Sentry.init()` calls.
-Here you can also set context data - data about the <PlatformLink to="/enriching-events/identify-user/">user</PlatformLink>, for example, or <PlatformLink to="/enriching-events/tags/">tags</PlatformLink>, or even <PlatformLink to="/enriching-events/context/">arbitrary data</PlatformLink> - which will be added to every event sent to Sentry.
+
+**Error Monitoring** starts working as soon as you call `Sentry.init()`. **Logs** and **Application Metrics** need no extra configuration, and you'll learn how to send them in steps [#3](#send-logs) and [#4](#send-application-metrics-).
+This guide also enables **Tracing**, **Session Replay**, and **User Feedback**.
+
+<Include name="quick-start-features-expandable" />
+
+### Apply Instrumentation to Your App
+
+Extend your app's default Next.js options by adding `withSentryConfig` into your `next.config.ts` file.
+
+```typescript {filename:next.config.ts}
+import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
+
+const nextConfig: NextConfig = {
+  // Your existing Next.js configuration
+};
+
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+});
+```
+
+### Initialize Sentry SDKs
+
+Create the following files in your application's root directory (or `src` folder if you have one):
+
+- `instrumentation-client.ts` - Client-side SDK initialization
+- `sentry.server.config.ts` - Server-side SDK initialization
+- `sentry.edge.config.ts` - Edge runtime SDK initialization
+
+<Alert level="success" title="Tip">
+  Include your DSN directly in these files, or use a _public_ environment
+  variable like `NEXT_PUBLIC_SENTRY_DSN`.
+</Alert>
+
+The snippets also turn on:
+
+- Tracing: via <PlatformLink to="/configuration/options/#tracesSampleRate">`tracesSampleRate`</PlatformLink> in all three files
+- Session Replay: via `replayIntegration()`, sampled with <PlatformLink to="/configuration/options/#replaysSessionSampleRate">`replaysSessionSampleRate`</PlatformLink> and <PlatformLink to="/configuration/options/#replaysOnErrorSampleRate">`replaysOnErrorSampleRate`</PlatformLink>
+- User Feedback: via <PlatformLink to="/user-feedback/configuration/">`feedbackIntegration()`</PlatformLink>.
+
+Don't need a feature? Remove its integration and options from the snippets.
+
+```typescript {tabTitle:Client} {mdExpandTabs} {filename:instrumentation-client.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+  integrations: [
+    // enables Session Replay
+    Sentry.replayIntegration(),
+    // enables User Feedback
+    Sentry.feedbackIntegration({
+      // Additional integration configuration goes in here
+      colorScheme: "system",
+    }),
+  ],
+
+  // Capture replays for 10% of all sessions,
+  // plus for 100% of sessions with an error
+  // Requires Sentry.replayIntegration()
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+});
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+```
+
+```typescript {tabTitle:Server} {filename:sentry.server.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+```typescript {tabTitle:Edge} {filename:sentry.edge.config.ts}
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: "___PUBLIC_DSN___",
+
+  // Enables Tracing.
+  // Capture 100% in dev, 10% in production
+  // Adjust based on your traffic volume
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+});
+```
+
+<Alert level="info" title="Adjust sample rates for production">
+
+The example above samples 100% of traces in development and 10% in production. Monitor your [usage stats](https://sentry.io/orgredirect/organizations/:orgslug/settings/stats/?dataCategory=spans) and adjust `tracesSampleRate` based on your traffic volume. Learn more about [sampling configuration](/platforms/javascript/guides/nextjs/configuration/sampling/).
+
+</Alert>
+
+### Register Server-Side SDK
+
+Create a [Next.js Instrumentation file](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) named `instrumentation.ts` next to your `app` directory (in your project root, or in `src` if you use `src/app`). Next.js production builds don't pick it up from other folders. This file imports your server and edge configurations and exports `onRequestError` to capture server-side errors.
+
+<Alert level="info">
+  The `onRequestError` hook requires `@sentry/nextjs` version `8.28.0` or higher
+  and Next.js 15.
+</Alert>
+
+```typescript {filename:instrumentation.ts}
+import * as Sentry from "@sentry/nextjs";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
+}
+
+// Capture errors from Server Components, middleware, and proxies
+export const onRequestError = Sentry.captureRequestError;
+```
+
+### Capture React Render Errors
+
+Create `app/global-error.tsx` to capture errors that occur anywhere in your App Router application.
+
+<PlatformContent includePath="getting-started-capture-errors/nextjs/app-router-global-error" />
+
+### Server Actions
+
+Wrap your Server Actions with `Sentry.withServerActionInstrumentation()`.
+
+```typescript {filename:app/actions.ts}
+"use server";
+import * as Sentry from "@sentry/nextjs";
+import { headers } from "next/headers";
+
+export async function submitForm(formData: FormData) {
+  return Sentry.withServerActionInstrumentation(
+    "submitForm", // Action name for Sentry
+    {
+      headers: await headers(), // Connect client and server traces
+      formData, // Attach form data to events
+      recordResponse: true, // Include response data
+    },
+    async () => {
+      // Your server action logic
+      const result = await processForm(formData);
+      return { success: true, data: result };
+    }
+  );
+}
+```
+
+### Add Readable Stack Traces With Source Maps
+
+Add the `authToken` option to your `next.config.ts` to enable readable stack traces. Set the `SENTRY_AUTH_TOKEN` environment variable in your CI/CD.
+
+<Alert level="warning" title="Important">
+  Keep your auth token secret and out of version control.
+</Alert>
+
+```typescript {filename:next.config.ts}
+export default withSentryConfig(nextConfig, {
+  org: "___ORG_SLUG___",
+  project: "___PROJECT_SLUG___",
+
+  // Pass the auth token
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload a larger set of source maps for prettier stack traces
+  widenClientFileUpload: true,
+});
+```
+
+```sh {filename:.env.local}
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
+```
+
+### Avoid Ad Blockers With Tunneling
+
+Prevent ad blockers from blocking Sentry events by routing them through your Next.js server.
+
+<Alert level="info">
+  This increases server load. Consider the trade-off for your application.
+</Alert>
+
+Set `tunnel: true` in your browser `Sentry.init`, and add `serveTunnelIntegration` to your server `Sentry.init`:
+
+<PlatformContent includePath="configuration/tunnel-browser-init" />
+
+<PlatformContent includePath="configuration/tunnel-server-init" />
+
+Learn more in <PlatformLink to="/configuration/tunneling/">Tunneling</PlatformLink>.
+
+### Control the Data You Send to Sentry
+
+<PlatformContent includePath="getting-started-data-collection" />
