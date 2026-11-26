@@ -100,34 +100,11 @@ Note that enabling this option may increase the payload size of events sent to S
 
 </SdkOption>
 
-<SdkOption name="sendDefaultPii" type="boolean" defaultValue="false">
-
-<Alert level="warning">
-  `sendDefaultPii` is deprecated and will be removed in the next major version
-  (v9). Use [`dataCollection`](#dataCollection) instead.
-</Alert>
-
-If this flag is enabled, certain personally identifiable information (PII) is added by active integrations. By default, no such data is sent.
-
-This option is turned off by default.
-
-If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
-
-For backwards compatibility, `sendDefaultPii` keeps its existing behavior when no Data Collection field is configured. As soon as you configure any `dataCollection` field, Data Collection becomes the source of truth for its categories and `sendDefaultPii` no longer controls them.
-
-Unencoded Logback messages aren't a Data Collection category. To include original message templates and parameters when an encoder is configured, use the Logback appender's `includeUnencodedMessage` option. The legacy `sendDefaultPii` behavior remains supported for compatibility. OpenTelemetry-derived HTTP data also isn't controlled by Data Collection yet. Sensitive HTTP header attributes continue to use `sendDefaultPii`; URL and query string attributes are collected when present regardless of that flag.
-
-</SdkOption>
-
 <SdkOption name="dataCollection" type="DataCollection" availableSince="8.58.0">
 
 Controls which categories of data SDK integrations collect automatically. Data Collection applies only where an integration supports the category. It doesn't remove data you add explicitly through scopes, event processors, or callbacks such as `beforeSend`.
 
-<Alert>
-
-Call `options.getDataCollection().forceDataCollection()` or explicitly configure any field to enable Data Collection. All fields you don't configure use the defaults below, and the `sendDefaultPii` option is ignored.
-
-</Alert>
+The SDK applies the defaults below when a field isn't configured. Explicit settings take precedence.
 
 | Field                    | Type                         | Default        | Behavior                                                                                                                                  |
 | ------------------------ | ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,6 +116,7 @@ Call `options.getDataCollection().forceDataCollection()` or explicitly configure
 | `urlQueryParams`\*       | `KeyValueCollectionBehavior` | `DENY_LIST`    | Collects URL query parameters and filters sensitive values.                                                                               |
 | `graphql.document`       | `boolean`                    | `true`         | Collects GraphQL documents.                                                                                                               |
 | `graphql.variables`      | `boolean`                    | `true`         | Collects GraphQL variables.                                                                                                               |
+| `databaseQueryData`      | `boolean`                    | `true`         | Collects supported database query data.                                                                                                   |
 | `filePaths`              | `boolean`                    | `true`         | Allows File I/O instrumentation to collect file names and absolute paths. File extensions and byte counts remain available when disabled. |
 
 The Spring and Spring Boot integrations collect incoming request body content only when `httpBodies` includes `INCOMING_REQUEST` and the body meets the configured <PlatformLink to="/configuration/options/#maxRequestBodySize">`maxRequestBodySize`</PlatformLink> limit.
@@ -153,8 +131,6 @@ The `cookies`, `httpHeaders.request`, `httpHeaders.response`, and `urlQueryParam
 
 Matching is partial and case-insensitive. The built-in terms are `auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, and `identity`. Filtered values are replaced with `"[Filtered]"`. Custom deny-list terms extend the built-in list rather than replacing it.
 
-When migrating from `sendDefaultPii`, review your header configuration. The legacy header filtering omitted sensitive headers such as `X-Forwarded-For`, `X-Real-IP`, and `Remote-Addr` in supported integrations. After you configure any Data Collection field, `sendDefaultPii` no longer controls these headers. Data Collection's default deny list filters credential and secret values but doesn't automatically match those identifying headers. To continue filtering them, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a deny list. These terms also match keys such as `CF-Connecting-IP` and `X-User-Id`. Add them to `cookies`, `httpHeaders.request`, `httpHeaders.response`, or `urlQueryParams` as needed.
-
 Configure only the fields that differ from these defaults:
 
 ```java
@@ -164,6 +140,7 @@ import io.sentry.Sentry;
 Sentry.init(
     options -> {
       options.getDataCollection().setUserInfo(false);
+      options.getDataCollection().setDatabaseQueryData(false);
       options.getDataCollection().setFilePaths(false);
       options
           .getDataCollection()
@@ -190,10 +167,11 @@ data-collection.http-headers.response.mode=off
 data-collection.url-query-params.mode=off
 data-collection.graphql.document=false
 data-collection.graphql.variables=false
+data-collection.database-query-data=false
 data-collection.file-paths=false
 ```
 
-Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO`, `SENTRY_DATA_COLLECTION_HTTP_BODIES`, and `SENTRY_DATA_COLLECTION_FILE_PATHS`.
+Environment variables use the same names in uppercase with the `SENTRY_` prefix, for example, `SENTRY_DATA_COLLECTION_USER_INFO`, `SENTRY_DATA_COLLECTION_HTTP_BODIES`, and `SENTRY_DATA_COLLECTION_DATABASE_QUERY_DATA`.
 
 <PlatformSection supported={["java.spring-boot"]}>
 
@@ -205,22 +183,11 @@ sentry.data-collection.http-bodies=incoming-request,outgoing-request
 sentry.data-collection.http-headers.request.mode=deny-list
 sentry.data-collection.http-headers.request.terms=forwarded,-ip,remote-,via,-user
 sentry.data-collection.url-query-params.mode=off
+sentry.data-collection.database-query-data=false
 sentry.data-collection.file-paths=false
 ```
 
 </PlatformSection>
-
-### Migrating From `sendDefaultPii`
-
-Data Collection preserves existing applications until you opt in:
-
-| Configuration             | Result                                                                                                                                       |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| No Data Collection fields | Existing `sendDefaultPii` behavior is preserved.                                                                                             |
-| `forceDataCollection()`   | All Data Collection categories use the defaults above.                                                                                       |
-| Any Data Collection field | That field uses its configured value, omitted fields use the defaults above, and `sendDefaultPii` is ignored for Data Collection categories. |
-
-If you previously used `sendDefaultPii=false`, either leave Data Collection unset to preserve that behavior or explicitly disable every category you don't want collected. If you used `sendDefaultPii=true`, call `options.getDataCollection().forceDataCollection()` to opt into the new filtered defaults. For unencoded Logback messages, use `includeUnencodedMessage` as described in the [Logback documentation](/platforms/java/guides/logback/). Keep `sendDefaultPii=true` only if you need the legacy OpenTelemetry header behavior.
 
 </SdkOption>
 
