@@ -197,16 +197,18 @@ Sessions are not a data type of their own. See [Session Filtering](#session-filt
 
 Conditions specify which data will be matched and therefore discarded. Each condition consists of a property, an operator and one or more values. When there are multiple conditions, they will be combined using logical `AND`. When a condition gets a list of values, it will match any of the values in the list.
 
-| Property      | Key                | Data types | Matches                                                          |
-| ------------- | ------------------ | ---------- | ---------------------------------------------------------------- |
-| Error Message | `error_message`    | Errors     | The error message of the event                                   |
-| Error Type    | `error_type`       | Errors     | The exception type alone, such as `TypeError`                    |
-| Country       | `geo_country_code` | Errors     | The two-letter country code of the user's location, such as `US` |
-| Log Message   | `log_message`      | Logs       | The body of the log                                              |
-| Metric Name   | `metric_name`      | Metrics    | The name of the metric, such as `checkout.total`                 |
-| Release       | `release`          | All        | The release the data was sent from                               |
-| Environment   | `environment`      | All        | The environment the data was sent from, such as `production`     |
-| IP Address    | `ip_address`       | All        | The IP address the data was sent from                            |
+| Property        | Key                | Data types | Matches                                                          |
+| --------------- | ------------------ | ---------- | ---------------------------------------------------------------- |
+| Error Message   | `error_message`    | Errors     | The error message of the event                                   |
+| Error Type      | `error_type`       | Errors     | The exception type alone, such as `TypeError`                    |
+| Country         | `geo_country_code` | Errors     | The two-letter country code of the user's location, such as `US` |
+| Log Message     | `log_message`      | Logs       | The body of the log                                              |
+| Metric Name     | `metric_name`      | Metrics    | The name of the metric, such as `checkout.total`                 |
+| Release         | `release`          | All        | The release the data was sent from                               |
+| Environment     | `environment`      | All        | The environment the data was sent from, such as `production`     |
+| IP Address      | `ip_address`       | All        | The IP address the data was sent from                            |
+| Browser         | `browser_name`     | All        | The name of the browser, such as `Chrome`                        |
+| Browser Version | `browser_version`  | All        | The version of the browser, such as `120.0.6099`                 |
 
 Filters may consist of at most 10 conditions or 4000 characters when sent to the API endpoint.
 
@@ -214,14 +216,14 @@ Filters may consist of at most 10 conditions or 4000 characters when sent to the
 
 Type `key:value` for a plain match, or pick another operator from the menu of the term.
 
-| Operator                                                 | In the API                                                     | Properties               | Matches when                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------- |
-| is (`key:value`)                                         | `equals`, or wildcard matching when the value contains `*`     | Text properties, Release | The property equals the value or the value with the wildcard              |
-| contains, starts with, ends with                         | `contains`, `starts_with`, `ends_with`                         | Text properties, Release | The property contains, starts with, or ends with the value                |
-| does not contain, does not start with, does not end with | `does_not_contain`, `does_not_start_with`, `does_not_end_with` | Text properties, Release | No value matches                                                          |
-| `>`, `>=`, `<`, `<=`                                     | `gt`, `gte`, `lt`, `lte`                                       | Release                  | The [version](#release) of the release compares as given. Takes one value |
-| matches                                                  | `cidr`                                                         | IP Address               | The address is one of the values, or inside one of the ranges             |
-| does not match                                           | `not_cidr`                                                     | IP Address               | The address is outside every value                                        |
+| Operator                                                 | In the API                                                     | Properties                                | Matches when                                                                                                                |
+| -------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| is (`key:value`)                                         | `equals`, or wildcard matching when the value contains `*`     | Text properties, Release, Browser Version | The property equals the value or the value with the wildcard                                                                |
+| contains, starts with, ends with                         | `contains`, `starts_with`, `ends_with`                         | Text properties, Release, Browser Version | The property contains, starts with, or ends with the value                                                                  |
+| does not contain, does not start with, does not end with | `does_not_contain`, `does_not_start_with`, `does_not_end_with` | Text properties, Release, Browser Version | No value matches                                                                                                            |
+| `>`, `>=`, `<`, `<=`                                     | `gt`, `gte`, `lt`, `lte`                                       | Release, Browser Version                  | The [version](#release) of the release or the [version of the browser](#browser-version) compares as given. Takes one value |
+| matches                                                  | `cidr`                                                         | IP Address                                | The address is one of the values, or inside one of the ranges                                                               |
+| does not match                                           | `not_cidr`                                                     | IP Address                                | The address is outside every value                                                                                          |
 
 A value with `*` follows the [glob matching](#glob-matching) rules. Text comparisons are not case-sensitive. A negated operator also matches data that has no value for the property. For example, a Release condition with the `does not contain` operator and the value `beta` also drops data that was sent without a release.
 
@@ -263,6 +265,17 @@ A version comparison follows these rules:
 #### Environment
 
 The condition matches the environment provided during SDK initialization as text. On logs, metrics, and spans, the condition reads the `sentry.environment` attribute. For example, `environment:staging` drops data from the staging environment. The condition never matches data without an environment.
+
+#### Browser
+
+The condition matches the name of the browser as text, such as `Chrome` or `Firefox`. Sentry derives the browser from the user agent, unless the SDK sets one. On logs, metrics, and spans, the condition reads the `browser.name` attribute. Mobile browsers have names of their own, such as `Chrome Mobile` or `Mobile Safari`, so `browser_name:Chrome*` matches every Chrome. The condition never matches data without a browser.
+
+#### Browser Version
+
+- The condition matches the version of the browser, such as `120.0.6099`. On logs, metrics, and spans, the condition reads the `browser.version` attribute.
+- The `is`, `contains`, `starts with`, and `ends with` operators treat the version as text. This allows for matching prefixes, such as `browser_version:120.*`.
+- The `>`, `>=`, `<`, and `<=` operators compare the version part by part, so `120.0.6099` is greater than `120`. The value is one version without a package, such as `120` or `120.0.6099`.
+- Combine it with a Browser condition to target one browser. For example, `browser_name:Chrome browser_version:<110` drops data from every Chrome before version 110.
 
 #### Log Message
 
