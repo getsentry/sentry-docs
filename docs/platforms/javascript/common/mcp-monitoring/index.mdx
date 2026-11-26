@@ -62,27 +62,6 @@ If you use `McpAgent`, make sure the `McpServer` returned by its `server` getter
 
 </PlatformSection>
 
-<PlatformSection supported={["javascript.hono"]}>
-
-## Hono on Cloudflare Workers
-
-If your Hono app runs on Cloudflare Workers, MCP work can finish after the Worker returns its response. The Hono Sentry middleware uses span streaming by default, so each sampled span can be sent when it finishes:
-
-```javascript {filename:index.js}
-import { sentry } from "@sentry/hono/cloudflare";
-
-app.use(
-  sentry(app, {
-    dsn: "___PUBLIC_DSN___",
-    tracesSampleRate: 1.0,
-  })
-);
-```
-
-On Cloudflare Workers, MCP servers are instrumented automatically only when you build with the Sentry Cloudflare Vite plugin. Otherwise, you still need `wrapMcpServerWithSentry` to instrument MCP operations. See <PlatformLink to="/tracing/streamed-spans/">Streamed Spans</PlatformLink> for configuration and filtering differences.
-
-</PlatformSection>
-
 ## Manual Instrumentation
 
 The setup above instruments MCP servers built with the official [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk) (`@modelcontextprotocol/server` or `@modelcontextprotocol/sdk`). If your server uses a different library or a custom implementation that the SDK can't instrument, you can record the same spans manually.

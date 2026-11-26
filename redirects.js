@@ -1122,7 +1122,7 @@ const userDocsRedirects = [
   {
     source: '/platforms/javascript/guides/hono/install/lightweight/',
     destination:
-      '/platforms/javascript/guides/hono/configuration/integrations/opentelemetry/',
+      '/platforms/javascript/guides/node/configuration/integrations/opentelemetry/',
   },
   {
     source: '/platforms/javascript/guides/koa/install/lightweight/',
@@ -1139,18 +1139,22 @@ const userDocsRedirects = [
       '/platforms/javascript/guides/:guide(node|express|fastify|hapi|hono|koa|nestjs)/install/commonjs/',
     destination: '/platforms/javascript/guides/:guide/',
   },
-  // Express, Fastify, Hapi and Koa are single landing pages, their subpages moved to Node.js.
+  // Express, Fastify, Hapi, Hono and Koa are single landing pages, their subpages moved to Node.js.
   {
     source: '/platforms/javascript/guides/fastify/features/:path*',
     destination: '/platforms/javascript/guides/node/configuration/integrations/fastify/',
   },
   {
+    source: '/platforms/javascript/guides/hono/:section(features|manual-setup)/:path*',
+    destination: '/platforms/javascript/guides/hono/',
+  },
+  {
     source:
-      '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)__v:version/:path*',
+      '/platforms/javascript/guides/:guide(express|fastify|hapi|hono|koa)__v:version/:path*',
     destination: '/platforms/javascript/guides/node/',
   },
   {
-    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|koa)/:path+',
+    source: '/platforms/javascript/guides/:guide(express|fastify|hapi|hono|koa)/:path+',
     destination: '/platforms/javascript/guides/node/:path+/',
   },
   {
@@ -2573,7 +2577,7 @@ const userDocsRedirects = [
     source: '/platforms/javascript/guides/cloudflare/features/d1/:path*',
     destination: '/platforms/javascript/guides/cloudflare/features/bindings/',
   },
-  // honoIntegration was removed in v11 in favor of the @sentry/hono SDK.
+  // The Cloudflare honoIntegration page moved to the Hono landing page.
   {
     source:
       '/platforms/javascript/guides/cloudflare/configuration/integrations/hono/:path*',

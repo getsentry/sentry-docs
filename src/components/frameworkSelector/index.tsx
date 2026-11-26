@@ -48,7 +48,7 @@ const itemClassName = `${styles.item} ${frameworkStyles.option}`;
 /** The state of a switchable block while a framework is selected. */
 type ContentStatus =
   | {state: 'loading' | 'unchanged'}
-  /** `step` is the title of the `h2` step that contains the block, `targetId` the block's id. */
+  /** `step` is the title of the block's `h2` step (its own or the one before it), `targetId` the block's id. */
   | {state: 'changed'; targetId: string; step?: string};
 
 type FrameworkContextValue = {
@@ -127,9 +127,12 @@ function GuideGroup({guides, label}: {guides: FrameworkGuide[]; label: string}) 
 }
 
 function stepTitle(el: HTMLElement): string | undefined {
-  const step = Array.from(document.querySelectorAll<HTMLElement>('main h2[id]'))
-    .filter(h => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
-    .pop();
+  // A block can start its own step, like Prerequisites, before the first step of the page
+  const step =
+    el.querySelector<HTMLElement>('h2') ??
+    Array.from(document.querySelectorAll<HTMLElement>('main h2[id]'))
+      .filter(h => h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .pop();
   return (step?.querySelector('a') ?? step)?.textContent?.trim();
 }
 
