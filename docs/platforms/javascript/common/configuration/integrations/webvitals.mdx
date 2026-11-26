@@ -19,7 +19,7 @@ The WebVitals integration captures LCP, CLS, and INP for the [Web Vitals dashboa
 <PlatformLink to="/configuration/integrations/browsertracing/">
   BrowserTracing
 </PlatformLink>
-adds this integration automatically. In SDK version 11 and later, configure it through BrowserTracing's
+adds this integration automatically, so you only need to configure it if you want to change its defaults. Configure it through BrowserTracing's
 `webVitals` option:
 
 ```javascript
@@ -34,19 +34,6 @@ Sentry.init({
 });
 ```
 
-To configure it in SDK versions before 11, add `Sentry.webVitalsIntegration({ ... })` directly to `integrations`:
-
-```javascript
-Sentry.init({
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.webVitalsIntegration({ ignore: ["inp"] }),
-  ],
-});
-```
-
-You can also use this approach in SDK version 11 and later. An explicitly added WebVitals integration takes precedence over BrowserTracing's Web Vitals settings.
-
 ## Configuration Options
 
 <SdkOption name="ignore" type="Array<'cls' | 'inp' | 'lcp'>" defaultValue="[]">
@@ -55,14 +42,86 @@ Web Vitals to skip. By default, all supported Web Vitals are collected.
 
 </SdkOption>
 
-<SdkOption name="softNavigations" type="boolean" defaultValue="true">
+<SdkOption name="softNavigations" type="boolean" defaultValue="true" availableSince="11.0.0">
 
-Collect LCP, CLS, and INP for each soft navigation detected by the browser's Soft Navigations API. Requires <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">stream mode</PlatformLink> and a browser that supports this API. Set to `false` to collect one set of vitals for the page lifetime.
+Collect LCP, CLS, and INP for each soft navigation detected by the browser's Soft Navigations API. Requires <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">stream mode</PlatformLink> and Chromium 151 or later. Set to `false` to collect one set of vitals for the page lifetime. See [Soft Navigations](#soft-navigations) for details.
+
+</SdkOption>
+
+<SdkOption name="bfcacheNavigations" type="boolean" defaultValue="true" availableSince="11.0.0">
+
+Collect LCP, CLS, and INP when a page is restored from the back/forward cache. Requires stream mode and BrowserTracing with `instrumentBfcacheRestore` enabled. Set to `false` to disable Web Vitals collection for restores. See [Back/Forward Cache Restores](#backforward-cache-restores) for details.
 
 </SdkOption>
 
-<SdkOption name="bfcacheNavigations" type="boolean" defaultValue="true">
+## Soft Navigations
 
-Collect LCP, CLS, and INP when a page is restored from the back/forward cache. Requires stream mode and BrowserTracing with `instrumentBfcacheRestore` enabled. Set to `false` to disable Web Vitals collection for restores.
+<AvailableSince version="11.0.0" />
 
-</SdkOption>
+A soft navigation is a route change in a single-page application that updates the URL and the page content without loading a new document. In stream mode, the SDK reports a separate LCP, CLS, and INP for each soft navigation and attaches them to that route's `navigation` span. You don't need to configure anything beyond BrowserTracing.
+
+The browser decides what counts as a soft navigation, not your router. Chromium reports one when a user interaction (a click or key press) changes the URL and leads to a visible paint. Route changes that don't meet these criteria still get a `navigation` span, but no Web Vitals. This includes programmatic navigations, navigations that never paint, and browser back or forward button presses.
+
+Soft navigation vitals differ from page load vitals in a few ways:
+
+- LCP is measured from the interaction that triggered the navigation until the new route's largest content paints.
+- CLS and INP cover only the time spent on that route. They are sent when the next soft navigation starts or when the page is hidden.
+- The page load's own LCP, CLS, and INP are finalized at the first soft navigation instead of accumulating over the page lifetime.
+- TTFB, FP, and FCP are only reported for page loads.
+
+Every Web Vital span carries a `browser.navigation.type` attribute that tells you what it was measured on:
+
+| Value                                           | Measured On                          |
+| ----------------------------------------------- | ------------------------------------ |
+| `navigate`, `reload`, `back-forward`, `restore` | Page loads                           |
+| `soft-navigation`                               | Soft navigations                     |
+| `back-forward-cache`                            | Restores from the back/forward cache |
+| `prerender`                                     | Prerendered page loads               |
+
+Soft navigation Web Vital spans and their `navigation` span also carry `browser.navigation.id`, the ID the browser assigned to that soft navigation.
+
+Soft navigation values aren't comparable to page load values, so filter by `browser.navigation.type` in your own queries, dashboards, and alerts. The [Web Vitals dashboard](/product/dashboards/sentry-dashboards/frontend/web-vitals/#measured-on) has a built-in filter for this.
+
+To report one set of vitals for the whole page lifetime instead, disable the option:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      webVitals: {
+        softNavigations: false,
+      },
+    }),
+  ],
+});
+```
+
+## Back/Forward Cache Restores
+
+<AvailableSince version="11.0.0" />
+
+When a user navigates back or forward, the browser can restore the page instantly from its [back/forward cache (bfcache)](https://web.dev/articles/bfcache) instead of loading it again. No document loads, so a restore would otherwise report no Web Vitals. In stream mode, the SDK reports a separate LCP, CLS, and INP for each restore and attaches them to the `navigation` span that BrowserTracing starts for it.
+
+Restore vitals differ from page load vitals in a few ways:
+
+- LCP is measured from the restore until the page paints again, so it's close to zero.
+- CLS and INP start over at the restore and cover the time until the page is hidden again.
+- TTFB, FP, and FCP are only reported for page loads.
+
+Restore Web Vital spans carry `browser.navigation.type: back-forward-cache`. Restores are near-instant, so they lower your p75 values when combined with page loads. Filter by this attribute in your own queries, dashboards, and alerts, or use the [**Measured on** filter](/product/dashboards/sentry-dashboards/frontend/web-vitals/#measured-on) in the Web Vitals dashboard.
+
+To stop collecting Web Vitals for restores, disable the option:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      webVitals: {
+        bfcacheNavigations: false,
+      },
+    }),
+  ],
+});
+```
+
+Restores still get a `navigation` span unless you also set `instrumentBfcacheRestore: false` on BrowserTracing. To track how often your pages are restored from the bfcache and why they aren't, see <PlatformLink to="/configuration/integrations/bfcache/">BFCache Metrics</PlatformLink>.

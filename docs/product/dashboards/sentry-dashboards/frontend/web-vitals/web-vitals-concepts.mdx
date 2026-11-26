@@ -71,6 +71,30 @@ As of March 12, 2024, First Input Delay (FID) was replaced as a Core Web Vital b
 
 [First Input Delay (FID)](https://web.dev/fid/) measures response time when a user tries to interact with the viewport by clicking a button, link, or any other custom JavaScript controller. FID data is critical for understanding whether interactions on an application page are successful or not.
 
+## Soft Navigations
+
+A soft navigation is a route change in a single-page application that updates the URL and the page content without loading a new document. No document loads, so browsers used to report Web Vitals only once, for the initial page load.
+
+Starting with JavaScript SDK version 11, Sentry reports a separate LCP, CLS, and INP for each soft navigation on browsers that support the Soft Navigations API (Chromium 151 and later). The vitals are attached to the route's `navigation` span, the same way page load vitals are attached to the `pageload` span.
+
+Soft navigation vitals aren't measured the same way as page load vitals:
+
+- **LCP** is measured from the interaction that triggered the navigation until the new route's largest content paints. Nothing is fetched from scratch, so it's usually much lower than a page load's LCP.
+- **CLS** and **INP** cover only the time spent on that route, instead of the whole time the page is open.
+- The page load's own LCP, CLS, and INP stop at the first soft navigation.
+- **TTFB**, **FP**, and **FCP** are only reported for page loads.
+
+The browser decides what counts as a soft navigation: a user interaction has to change the URL and lead to a visible paint. Route changes that don't qualify, such as programmatic redirects, don't report Web Vitals.
+
+Because the two aren't comparable, the [thresholds](#thresholds) below only apply to page loads, not to soft navigations or bfcache restores. Use the [**Measured on** filter](/product/dashboards/sentry-dashboards/frontend/web-vitals/#measured-on) to look at soft navigations separately, or filter on the `browser.navigation.type:soft-navigation` span attribute in your own queries. To configure or disable collection, see the [WebVitals integration](/platforms/javascript/configuration/integrations/webvitals/#soft-navigations).
+
+## Back/Forward Cache Restores
+
+When a user navigates back or forward, the browser can restore the page instantly from its [back/forward cache (bfcache)](https://web.dev/articles/bfcache) instead of loading it again. Starting with JavaScript SDK version 11, Sentry reports a separate LCP, CLS, and INP for each restore and attaches them to the `navigation` span started for it.
+
+A restore's LCP is measured from the restore until the page paints again, so it's close to zero. CLS and INP start over at the restore. TTFB, FP, and FCP are only reported for page loads.
+
+Restores are near-instant, so they lower your p75 values when combined with page loads. Use the [**Measured on** filter](/product/dashboards/sentry-dashboards/frontend/web-vitals/#measured-on) to look at them separately, or filter on the `browser.navigation.type:back-forward-cache` span attribute in your own queries. To configure or disable collection, see the [WebVitals integration](/platforms/javascript/configuration/integrations/webvitals/#backforward-cache-restores).
 
 ## Thresholds
 
@@ -106,3 +130,5 @@ Not all browsers fully support all web vitals. Sentry uses available web vitals 
 | [Time To First Byte](#time-to-first-byte-ttfb) (TTFB)             | ✓      | ✓    | ✓     | ✓       | ✓      |
 | [First Contentful Paint](#first-contentful-paint-fcp) (FCP)       | ✓      | ✓    | ✓     | ✓       | ✓      |
 | [First Input Delay](#first-input-delay-fid) (FID)                 | ✓      | ✓    | ✓     | ✓       |        |
+
+Web Vitals for [soft navigations](#soft-navigations) are only reported by Chrome, Edge, and Opera, starting with Chromium 151.
