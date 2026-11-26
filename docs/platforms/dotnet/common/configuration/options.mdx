@@ -180,6 +180,131 @@ This option is turned off by default.
 
 If you enable this option, be sure to manually remove what you don't want to send using our features for managing [_Sensitive Data_](../../data-management/sensitive-data/).
 
+Starting with version 7.1.0, <PlatformLink to="/configuration/options/#ConfigureDataCollection">`ConfigureDataCollection`</PlatformLink> controls the same data category by category. Once you call it, `SendDefaultPii` no longer controls the categories it covers.
+
+</SdkOption>
+
+<SdkOption name="ConfigureDataCollection" type="function" availableSince="7.1.0">
+
+Controls which categories of data the SDK's integrations collect automatically. It only affects data the SDK gathers by itself. Data you add explicitly, such as a user you set on the scope, tags, or changes you make in `SetBeforeSend`, is always sent.
+
+<Alert level="warning">
+
+Calling `ConfigureDataCollection` opts you in to Data Collection. Every category you don't set uses the default below, which collects it, including user identity, and `SendDefaultPii` stops controlling those categories. If you haven't set `SendDefaultPii` to `true`, the SDK then starts sending data it didn't send before, such as IP addresses, cookies, and the headers of failed HTTP requests. Turn off the categories you don't need.
+
+</Alert>
+
+```csharp
+options.ConfigureDataCollection(dataCollection =>
+{
+    dataCollection.UserInfo = false;
+    dataCollection.UrlQueryParams = KeyValueCollectionBehavior.Off;
+    dataCollection.HttpHeaders.Request = KeyValueCollectionBehavior.DenyList("forwarded", "-ip", "remote-", "via", "-user");
+});
+```
+
+`ConfigureDataCollection` and its types are experimental and may change in a future release. Calling it produces the `SENTRY0001` compiler diagnostic. Suppress it where you call the method with `#pragma warning disable SENTRY0001`, or for the whole project with `<NoWarn>$(NoWarn);SENTRY0001</NoWarn>`.
+
+| Field                  | Type                         | Default             | Controls                                                                                                                                                                      |
+| ---------------------- | ---------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `UserInfo`             | `bool`                       | `true`              | User identity that integrations set automatically: the user and client IP address from ASP.NET Core and ASP.NET, the operating system user name, and the inferred IP address. |
+| `Cookies`              | `KeyValueCollectionBehavior` | `DenyList()`        | Cookies of incoming requests, and the `Cookie` and `Set-Cookie` headers of failed outgoing HTTP requests.                                                                     |
+| `HttpHeaders.Request`  | `KeyValueCollectionBehavior` | `DenyList()`        | Headers of incoming requests, and the request headers of failed outgoing HTTP requests.                                                                                       |
+| `HttpHeaders.Response` | `KeyValueCollectionBehavior` | `DenyList()`        | The response headers of failed outgoing HTTP requests.                                                                                                                        |
+| `HttpBodies`           | `HttpBodyTypes`              | `HttpBodyTypes.All` | Which HTTP bodies are attached. See below.                                                                                                                                    |
+| `UrlQueryParams`       | `KeyValueCollectionBehavior` | `DenyList()`        | The query string of incoming requests, and the URL, query string, and fragment of failed outgoing HTTP requests.                                                              |
+| `GraphQL.Document`     | `bool`                       | `true`              | The GraphQL document of failed GraphQL client requests.                                                                                                                       |
+| `GraphQL.Variables`    | `bool`                       | `true`              | The variables of failed GraphQL client requests. GraphQL servers can echo variable values in error messages, which this option doesn't filter.                                |
+| `GenAI.Inputs`         | `bool`                       | `true`              | AI inputs recorded by `Sentry.Extensions.AI`: system instructions, prompt messages, tool definitions, and tool call arguments.                                                |
+| `GenAI.Outputs`        | `bool`                       | `true`              | AI outputs recorded by `Sentry.Extensions.AI`: response text and tool call results.                                                                                           |
+
+`HttpBodies` is a set of flags:
+
+- `IncomingRequest`: Bodies of requests your app receives, in ASP.NET Core, ASP.NET, and gRPC. The integration's [`MaxRequestBodySize`](/platforms/dotnet/guides/aspnetcore/configuration/options/#MaxRequestBodySize) still applies, and it defaults to `None`, so set it as well to collect request bodies.
+- `OutgoingRequest`: Bodies of requests your app sends. Only failed GraphQL client requests collect these.
+- `IncomingResponse`: Bodies of responses your app receives. Only failed GraphQL client requests collect these.
+- `OutgoingResponse`: Bodies of responses your app returns. No .NET integration collects these yet.
+
+Combine flags with `|`, or use `HttpBodyTypes.None` to collect no bodies.
+
+`Cookies`, `HttpHeaders.Request`, `HttpHeaders.Response`, and `UrlQueryParams` take a `KeyValueCollectionBehavior`:
+
+- `KeyValueCollectionBehavior.Off`: Don't collect the category.
+- `KeyValueCollectionBehavior.DenyList(...)`: Collect every key and value, but replace the values of sensitive keys with `[Filtered]`. Any terms you pass are added to the built-in list.
+- `KeyValueCollectionBehavior.AllowList(...)`: Collect every key, but send values only for keys that match the terms you pass. All other values are replaced with `[Filtered]`.
+
+You can also assign `true` (the same as `DenyList()`) or `false` (the same as `Off`).
+
+Terms match key names as case-insensitive substrings. The built-in sensitive terms are `auth`, `token`, `secret`, `password`, `passwd`, `pwd`, `key`, `jwt`, `bearer`, `sso`, `saml`, `csrf`, `xsrf`, `credentials`, `session`, `sid`, and `identity`. They always apply, even to keys that match an allow-list term.
+
+The built-in list doesn't match headers that identify an end user, such as `X-Forwarded-For` or `X-Real-IP`. To filter those too, add `forwarded`, `-ip`, `remote-`, `via`, and `-user` to a deny list, as in the example above.
+
+Calling `ConfigureDataCollection` also sanitizes SQL statements on SqlClient, Entity Framework Core, and Entity Framework 6 spans and breadcrumbs, replacing literal values with `?`.
+
+Where an integration has its own option for the same data, that option wins: `MaxRequestBodySize` limits request bodies, and `RecordInputs` and `RecordOutputs` on a chat client override `GenAI.Inputs` and `GenAI.Outputs`.
+
+<PlatformSection supported={["dotnet.aspnetcore", "dotnet.extensions-hosting", "dotnet.blazor-server", "dotnet.blazor-webassembly", "dotnet.aws-lambda", "dotnet.google-cloud-functions"]}>
+
+You can also configure Data Collection in `appsettings.json`, under `Sentry:DataCollection`. The section opts you in just like calling `ConfigureDataCollection`, and it doesn't produce the `SENTRY0001` diagnostic.
+
+```json {filename:appsettings.json}
+{
+  "Sentry": {
+    "Dsn": "___PUBLIC_DSN___",
+    "DataCollection": {
+      "UserInfo": false,
+      "HttpBodies": ["IncomingRequest"],
+      "UrlQueryParams": { "Mode": "Off" },
+      "HttpHeaders": {
+        "Request": {
+          "Mode": "DenyList",
+          "Terms": ["forwarded", "-ip", "remote-", "via", "-user"]
+        }
+      }
+    }
+  }
+}
+```
+
+Key-value categories take a `Mode` (`Off`, `DenyList`, or `AllowList`) and a list of `Terms`. To collect no bodies, use `"HttpBodies": ["None"]`; an empty array is ignored. Environment variables use the usual double-underscore form, for example `Sentry__DataCollection__UserInfo=false`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.android", "dotnet.maui"]}>
+
+On Android, the SDK also passes these settings to the native Android SDK when it initializes. That also turns on the native SDK's file path collection for file I/O spans, which has no .NET option. To turn it off, set the `io.sentry.data-collection.file-paths` metadata in `AndroidManifest.xml` to `false`.
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.apple", "dotnet.maui"]}>
+
+On iOS, macOS, and Mac Catalyst, the SDK passes only `UserInfo` to the native Cocoa SDK, as its `sendDefaultPii` option.
+
+</PlatformSection>
+
+Data Collection doesn't affect Session Replay. Replay masks everything by default and collects only what you unmask, which is the opposite of Data Collection's model, so its masking and network capture are controlled only by the Session Replay options.
+
+### Migrating From `SendDefaultPii`
+
+Until you call `ConfigureDataCollection`, each category keeps the behavior it had before:
+
+| Category                                  | Without `ConfigureDataCollection`                                               |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| User identity and IP address              | Collected only when `SendDefaultPii` is `true`.                                 |
+| Cookies                                   | Collected only when `SendDefaultPii` is `true`, with sensitive values filtered. |
+| Headers of incoming requests              | Always collected, with sensitive values filtered.                               |
+| Headers of failed outgoing HTTP requests  | Collected only when `SendDefaultPii` is `true`, with sensitive values filtered. |
+| Query strings                             | Always collected, with sensitive values filtered.                               |
+| URL fragments of failed outgoing requests | Collected only when `SendDefaultPii` is `true`.                                 |
+| Incoming request bodies                   | Controlled by `MaxRequestBodySize` alone.                                       |
+| GraphQL documents, variables, and bodies  | Collected only when `SendDefaultPii` is `true`.                                 |
+| Generative AI inputs and outputs          | Always collected, unless you turn off `RecordInputs` or `RecordOutputs`.        |
+| SQL statements                            | Sent as the database client issued them, without sanitizing.                    |
+
+If you used `SendDefaultPii = false` and want to keep that behavior, either don't call `ConfigureDataCollection`, or call it and turn off every category you don't want collected. If you used `SendDefaultPii = true`, calling `ConfigureDataCollection` without changing any field collects the same categories, with one difference: SQL statements are sanitized. Keep `SendDefaultPii = true` as well if you rely on what it still controls, described below.
+
+`SendDefaultPii` still controls a few things Data Collection doesn't cover yet: sending the machine name as <PlatformIdentifier name="ServerName" /> outside ASP.NET and ASP.NET Core, and the user that the deprecated `Sentry.OpenTelemetry` integration sets.
+
 </SdkOption>
 
 <SdkOption name="ServerName" type="string">
