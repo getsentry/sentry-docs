@@ -31,6 +31,31 @@ If you don't see any profiling data in [sentry.io](https://sentry.io), you can t
   - Android - currently not supported at all
   - Blazor WebAssembly
 
+### Build error: `Package Sentry.Profiling is not supported on platform`
+
+The `Sentry.Profiling` package stops the build for target frameworks that it doesn't support:
+
+- Android: profiling isn't supported.
+- iOS and Mac Catalyst: the profiler is already part of the `Sentry` package, so `Sentry.Profiling` isn't needed.
+
+If your project targets several platforms, as a .NET MAUI app does, reference `Sentry.Profiling` only for the other target frameworks:
+
+```xml {filename:MyApp.csproj}
+<ItemGroup>
+  <PackageReference Include="Sentry.Profiling" Version="{{@inject packages.version('sentry.dotnet.profiling') }}"
+                    Condition="'$(TargetPlatformIdentifier)' != 'android' and '$(TargetPlatformIdentifier)' != 'ios' and '$(TargetPlatformIdentifier)' != 'maccatalyst'" />
+</ItemGroup>
+```
+
+Then skip `AddProfilingIntegration()` on Android, where it isn't available without the package. On iOS and Mac Catalyst, it comes from the `Sentry` package.
+
+```csharp
+options.ProfilesSampleRate = 1.0;
+#if !ANDROID
+options.AddProfilingIntegration();
+#endif
+```
+
 ### `Unknown` frames
 
 Some frames will show up as `unknown` in the UI. This is because the SDK does not have information about the stack frame.
