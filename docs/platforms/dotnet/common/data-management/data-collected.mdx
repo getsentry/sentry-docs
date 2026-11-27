@@ -6,86 +6,116 @@ sidebar_order: 1
 
 Sentry takes data privacy very seriously and has default settings in place that prioritize data safety, especially when it comes to personally identifiable information (PII) data. When you add the Sentry SDK to your application, you allow it to collect data and send it to Sentry during the runtime of your application.
 
-The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. Here's a list of data categories the Sentry .NET SDK collects:
+The category types and amount of data collected vary, depending on the integrations you've enabled in the Sentry SDK. This page lists the data categories the Sentry .NET SDK collects.
+
+Starting with version 7.1.0, you can control most of these categories with <PlatformLink to="/configuration/options/#ConfigureDataCollection">`ConfigureDataCollection`</PlatformLink>. Until you call it, each category keeps its legacy behavior, which this page describes too, and some of them depend on `SendDefaultPii`. Once you call it, every category you don't set uses its Data Collection default, and `SendDefaultPii` no longer controls it.
+
+Data Collection only affects data the SDK's integrations collect automatically. Data you add yourself, for example through the scope, event processors, or `SetBeforeSend`, is always sent.
+
+Where a category is collected with a deny list, the SDK replaces the values of keys that match a built-in list of sensitive terms, such as `auth`, `token`, or `password`, with `[Filtered]`.
 
 ## HTTP Headers
 
-By default, the Sentry SDK sends HTTP headers to Sentry but redacts any headers that may contain sensitive data. (See the [list of headers](https://github.com/getsentry/sentry-dotnet/blob/main/src/Sentry/Internal/RedactedHeaders.cs#L7) that are redacted).
+The SDK sends the headers of incoming requests, with sensitive values filtered. `HttpHeaders.Request` controls them, and it defaults to a deny list.
+
+When an outgoing HTTP request fails and <PlatformLink to="/configuration/options/#CaptureFailedRequests">`CaptureFailedRequests`</PlatformLink> captures it, `HttpHeaders.Request` and `HttpHeaders.Response` also control the request and response headers of that request. Without `ConfigureDataCollection`, the SDK sends these headers only when `SendDefaultPii` is `true`.
+
+Whatever Data Collection allows, the SDK always replaces the values of the `Authorization` and `Proxy-Authorization` headers with `[Filtered]`, including in headers you set on a request or response yourself.
+
+The built-in deny list doesn't filter headers that identify an end user, such as `X-Forwarded-For` or `X-Real-IP`. To filter those, add terms to the deny list, as shown in the <PlatformLink to="/configuration/options/#ConfigureDataCollection">`ConfigureDataCollection`</PlatformLink> example.
 
 ## Cookies
 
-By default, the Sentry SDK doesn't send cookies.
+`Cookies` controls the cookies of incoming requests and the `Cookie` and `Set-Cookie` headers of failed outgoing HTTP requests. It defaults to a deny list, so the SDK sends cookies with sensitive values filtered.
 
-If you want to send cookies, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
-
-A [data scrubber](/platforms/dotnet/data-management/sensitive-data/) can be used to filter information before sending data to Sentry.
+Without `ConfigureDataCollection`, the SDK sends cookies only when `SendDefaultPii` is `true`, with sensitive values filtered.
 
 Any [sensitive cookies](https://github.com/getsentry/relay/blob/249971e1702991c64cf0f7f89773fb019ffb4a95/relay-pii/src/convert.rs#L235-L263) that the SDK does send will be stripped by Relay before Sentry stores these.
 
 ## Information About Logged-in User
 
-By default, the Sentry SDK doesn't send any information about the logged-in user, such as email address, user ID, or username. Even if enabled, the type of logged-in user information you'll be able to send depends on the integrations you enable in Sentry's SDK. Most integrations won't send any user information. Some will only set the user ID, but there are a few that will set the user ID, username, and email address.
+`UserInfo` controls the user information that integrations set automatically. It defaults to `true`. Without `ConfigureDataCollection`, integrations set it only when `SendDefaultPii` is `true`.
 
-To start sending logged-in user information, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
+Which information you get depends on the integrations you use. ASP.NET Core and ASP.NET read the signed-in user from the request, such as their ID and username. Other apps send the operating system user name, unless you set `IsEnvironmentUser` to `false`.
+
+A user you set yourself, for example with `SentrySdk.ConfigureScope`, is always sent.
 
 ## Users' IP Address
 
-By default, the Sentry SDK doesn't send the user's IP address.
-
-To enable sending the user's IP address, set the option `SendDefaultPii = true` when initializing the Sentry SDK.
-
-Even if enabled, whether you're able to send the user's IP address or not, will depend on the integrations you enable in Sentry's SDK. Most integrations won't set the user's IP address at all.
+`UserInfo` also controls the user's IP address. When it's on, ASP.NET Core and ASP.NET send the client IP address of the request, and the SDK otherwise asks Sentry to infer the IP address from the connection. Without `ConfigureDataCollection`, the SDK does this only when `SendDefaultPii` is `true`.
 
 You can [prevent Sentry from storing IP Addresses](/platforms/native/enriching-events/identify-user/#ip_address) either by configuring this in the ["Security & Privacy"](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/security-and-privacy/) settings of your Sentry project or using [server-side data scrubbing](/security-legal-pii/scrubbing/server-side-scrubbing/).
 
 ## Request URL
 
-By default, the [HttpRequestUrl](https://learn.microsoft.com/en-us/dotnet/api/System.UriComponents) of outgoing and incoming HTTP requests is **always sent to Sentry**. This includes the Scheme, Host, Port, LocalPath, and Query data.
+The URL of incoming and outgoing HTTP requests, without its query string, is **always sent to Sentry**. This includes the scheme, host, port, and path. Depending on your application, this could contain PII data.
 
-If `SendDefaultPii` is set to `true` then the [AbsoluteUri](https://learn.microsoft.com/en-us/dotnet/api/System.UriComponents) of outgoing and incoming HTTP requests will be sent to Sentry (including the Scheme, UserInfo, Host, Port, LocalPath, Query, and Fragment data).
+The SDK never sends credentials embedded in a URL, such as `https://user:password@example.com`.
 
-Depending on your application, this could contain PII data.
+The fragment of a failed outgoing HTTP request follows `UrlQueryParams`. Without `ConfigureDataCollection`, the SDK sends it only when `SendDefaultPii` is `true`.
 
 ## Request Query String
 
-The full request query string of outgoing and incoming HTTP requests is **always sent to Sentry**. Depending on your application, this could contain PII data.
+`UrlQueryParams` controls the query string of incoming requests and of failed outgoing HTTP requests. It defaults to a deny list, so the SDK sends the query string with sensitive values filtered. Without `ConfigureDataCollection`, the SDK also sends it, with sensitive values filtered.
+
+The spans and breadcrumbs of outgoing HTTP requests always filter the query string with the built-in deny list. `ConfigureDataCollection` doesn't change them.
+
+## Request and Response Bodies
+
+`HttpBodies` controls which HTTP bodies the SDK attaches. It defaults to all of them.
 
 <PlatformSection supported={["dotnet.aspnetcore", "dotnet.aspnet"]}>
 
-## Request Body
-
-The <PlatformLink to="/configuration/options/#MaxRequestBodySize">MaxRequestBodySize</PlatformLink> option can be used to configure whether the request body of incoming HTTP requests will be sent to Sentry.
-
-By default this is sent to `RequestSize.None`, which means that the request body is not sent to Sentry.
-
-If you want request bodies to be sent to Sentry then this should be set instead to `RequestSize.Small`, `RequestSize.Medium`, or `RequestSize.Always`.
+The body of an incoming request is also limited by <PlatformLink to="/configuration/options/#MaxRequestBodySize">`MaxRequestBodySize`</PlatformLink>. It defaults to `None`, which means that the request body isn't sent. To send request bodies, set it to `Small`, `Medium`, or `Always`, and keep `IncomingRequest` in `HttpBodies`. Without `ConfigureDataCollection`, `MaxRequestBodySize` alone controls the request body.
 
 </PlatformSection>
 
+The request and response bodies of failed GraphQL client requests follow `HttpBodies` too. Without `ConfigureDataCollection`, the SDK sends them only when `SendDefaultPii` is `true`.
+
+## GraphQL Data
+
+`GraphQL.Document` and `GraphQL.Variables` control the document and variables of failed GraphQL client requests. Both default to `true`. Without `ConfigureDataCollection`, the SDK sends them only when `SendDefaultPii` is `true`.
+
+## Generative AI Inputs and Outputs
+
+`Sentry.Extensions.AI` records the inputs of AI calls, such as prompts, system instructions, and tool call arguments, and their outputs, such as response text and tool call results. `GenAI.Inputs` and `GenAI.Outputs` control them, and both default to `true`. The `RecordInputs` and `RecordOutputs` options of a chat client override them.
+
+Without `ConfigureDataCollection`, the SDK always records them, unless you turn off `RecordInputs` or `RecordOutputs`.
+
 ## SQL Queries
 
-While SQL queries are sent to Sentry, neither the full SQL query (`SELECT * FROM users WHERE email = 'joe@shmoe.com'`), nor the values of its parameters will ever be sent. A parameterized version of the query (`SELECT * FROM users WHERE email = @email`) is sent instead.
+The SDK sends the SQL statements of SqlClient, Entity Framework Core, and Entity Framework 6 on spans and breadcrumbs. It never sends the values of query parameters, so a parameterized query is sent as written (`SELECT * FROM users WHERE email = @email`).
+
+When you call `ConfigureDataCollection`, the SDK also replaces literal values in statements with `?`, so `SELECT * FROM users WHERE email = 'joe@shmoe.com'` is sent as `SELECT * FROM users WHERE email = ?`. Without it, statements are sent as your database client issued them, including any literal values.
 
 ## Machine Name
 
-The Sentry SDK does not send the machine name by default.
+If you assign a value to <PlatformLink to="/configuration/options/#ServerName">`ServerName`</PlatformLink>, the SDK sends it with every event.
 
-If you assign a value to the `ServerName` in the Sentry options then Sentry SDK will send this with any events.
-
-Otherwise, if `SendDefaultPii` is set to true then the Sentry SDK will capture the `Environment.MachineName` automatically and send this with any events.
+Otherwise, ASP.NET Core and ASP.NET apps always send the machine name. Other apps send `Environment.MachineName` only when `SendDefaultPii` is `true`. `ConfigureDataCollection` doesn't control the machine name.
 
 ## General Device Information
 
-The Sentry SDK collects information about the device, such as the version and build of your operating system, CPU and GPU details etc. This information is sent to Sentry by default.
+The Sentry SDK collects information about the device, such as the version and build of your operating system, CPU and GPU details etc. This information is sent to Sentry by default. `ConfigureDataCollection` doesn't control it.
 
-<PlatformSection supported={["dotnet.maui"]}>
+<PlatformSection supported={["dotnet.android", "dotnet.apple", "dotnet.maui"]}>
 
-## Data captured by Mobile SDKs
+## Session Replay
+
+`ConfigureDataCollection` doesn't affect Session Replay. By default, Session Replay masks all text content and images, and its own options control what it records. See the native options for [Android](/platforms/dotnet/guides/android/configuration/native-options/#session-replay) and [iOS](/platforms/dotnet/guides/apple/configuration/native-options/#session-replay).
+
+</PlatformSection>
+
+<PlatformSection supported={["dotnet.android", "dotnet.apple", "dotnet.maui"]}>
+
+## Data Captured by Mobile SDKs
 
 On mobile platforms, the Sentry SDK for .NET can also capture data indirectly via the Android and iOS SDKs. You should refer to the documentation for those SDKs for more information on what data is captured.
 
 - [Android](/platforms/android/data-management/data-collected/)
 - [iOS](/platforms/apple/data-management/data-collected/)
+
+On Android, the SDK passes your `ConfigureDataCollection` settings to the native Android SDK. On iOS, it passes only `UserInfo`.
 
 </PlatformSection>
 
