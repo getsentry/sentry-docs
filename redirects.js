@@ -1299,6 +1299,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/inspect/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/deviera/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1527,6 +1531,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/hookdeck/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/inspect/',
     destination: '/integrations/third-party-integrations/',
   },
   {
