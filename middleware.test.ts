@@ -361,7 +361,7 @@ describe('content negotiation on page URLs', () => {
     expect(res.headers.get('x-middleware-rewrite')).toContain(
       '/platforms/apple/cocoa.md'
     );
-    expect(res.headers.get('Vary')).toBe('Accept');
+    expect(res.headers.get('Vary')).toBe('Accept, User-Agent');
     expect(res.headers.get('Link')).toBe(
       '<https://docs.sentry.io/platforms/apple/cocoa/>; rel="canonical", ' +
         '<https://docs.sentry.io/llms.txt>; rel="describedby"'
@@ -380,26 +380,32 @@ describe('content negotiation on page URLs', () => {
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
   });
 
-  it('serves page data, not Markdown, when an in-app browser follows a link', async () => {
-    const {middleware} = await importMiddleware({});
-    // The headers middleware sees: Next.js strips `RSC` before middleware runs.
-    const res = middleware(
-      pageRequest({
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/136.0.0.0 Safari/537.36',
-        Accept: '*/*',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-      })
-    );
-    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
-  });
+  // The headers middleware sees: Next.js strips `RSC` before middleware runs.
+  it.each([
+    ['opens a page', 'text/html,*/*;q=0.8', 'document', 'navigate'],
+    ['follows a link', '*/*', 'empty', 'cors'],
+  ])(
+    'serves the page, not Markdown, when an in-app browser %s',
+    async (_, accept, dest, mode) => {
+      const {middleware} = await importMiddleware({});
+      const res = middleware(
+        pageRequest({
+          'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/136.0.0.0 Safari/537.36',
+          Accept: accept,
+          'Sec-Fetch-Dest': dest,
+          'Sec-Fetch-Mode': mode,
+        })
+      );
+      expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+    }
+  );
 
-  it('serves HTML to a recognized AI agent that asks for HTML', async () => {
+  it('serves Markdown to a recognized AI agent that asks for HTML', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(
       pageRequest({'User-Agent': 'ChatGPT-User/1.0', Accept: 'text/html,*/*;q=0.8'})
     );
-    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+    expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
   });
 });
