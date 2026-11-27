@@ -10,12 +10,12 @@ sentry_options_add_attachment(options, "/var/server.log");
 
 ### Adding Attachments to the Scope
 
-Adding attachments to the global scope at run-time after SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry. Attaching to a [scope you create](/platforms/native/enriching-events/scopes/#creating-a-scope) instead uploads the file only with the captures that scope is passed to.
+Adding attachments to the isolation scope at run-time after SDK initialization will monitor the file and upload it along with any event or crash that is sent to Sentry. Attaching to a [scope you create](/platforms/native/enriching-events/scopes/#creating-a-scope) instead uploads the file only with the captures that scope is passed to.
 
-Only global scope attachments are included in crash reports. A file attached to a scope you create is uploaded only when you explicitly capture an event with that scope. If you need the file included with a crash, attach it to the global scope or add it to the options instead.
+Only attachments on the isolation scope or in the options are included in crash reports. A file attached to a scope you create is uploaded only when you explicitly capture an event with that scope. If you need the file included with a crash, attach it to the isolation scope or add it to the options instead.
 
 ```c
-// Global Scope
+// Isolation Scope
 sentry_attach_file("/var/global.log");
 
 // Local Scope
@@ -32,7 +32,7 @@ Alternately, use `bytes` to initialize an attachment. When doing so, you also ne
 char *bytes = ...;
 size_t bytes_len = 123;
 
-// Global Scope
+// Isolation Scope
 sentry_attach_bytes(bytes, bytes_len, "global.bin");
 
 // Local Scope
@@ -47,7 +47,7 @@ sentry_scope_capture_event(scope, event, NULL);
 
 ### Removing Scoped Attachments
 
-To remove attachments from the global scope, you can use the `sentry_uuid_t` returned by `sentry_attach_file`. After removing the attachment, the file will no longer be uploaded with any future events or crashes and the UUID becomes invalid.
+To remove attachments from the isolation scope, you can use the `sentry_uuid_t` returned by `sentry_attach_file`. After removing the attachment, the file will no longer be uploaded with any future events or crashes and the UUID becomes invalid.
 
 ```c
 sentry_uuid_t attachment_id = sentry_attach_file("/var/temp.log");

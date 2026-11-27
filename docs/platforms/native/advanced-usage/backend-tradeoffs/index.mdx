@@ -5,48 +5,45 @@ sidebar_order: 1000
 ---
 The Native SDK lets users decide at compile-time between multiple crash backends:
 
+* `native` (default on Windows, macOS, and Linux)
 * `crashpad`
-* `native`
 * `breakpad`
-* `inproc`
+* `inproc` (default on Android)
 
-### Why is `crashpad` the default?
+### When do I choose an out-of-process crash handler?
 
-Currently, `crashpad` is the default on all desktop platforms because it
+`native` and `crashpad` handle crashes out of process. Choose one of them whenever your environment allows it, because an out-of-process crash handler
 
-* has an external `handler` process that allows for external snapshots and sending crash reports immediately (instead of on the next successful start of your application)
-* further, snapshotting, report management, and uploading outside the crashed process are safer because the `crashpad_handler` is not affected by any corruptions that led to a crash
+* has an external process (`sentry-crash` or `crashpad_handler`) that allows for external snapshots and sending crash reports immediately (instead of on the next successful start of your application)
+* further, snapshotting, report management, and uploading outside the crashed process are safer because the handler is not affected by any corruptions that led to a crash
 * supports more error types on [Linux](/platforms/native/advanced-usage/signal-handling/#signals-of-interest) and Windows (`abort()` and other `fast-fail` crashes, handling of heap corruptions)
-* on macOS, the `crashpad_handler` will receive `EXC_CRASH` Mach exceptions, which the kernel generates during process exit if a terminal POSIX signal hasn't been handled. None of the other backends will catch this exception.
-* is more maintained upstream (although most changes affect new platforms like Fuchsia)
-* is the primary target for Sentry-developed extensions to the upstream implementation of backend handlers (most of which aren't a particular upside vs. the other backends, but changes to reach parity), including
-  * client-side stack traces (this is currently not available on `breakpad`)
-  * attachment handling
-  * retry mechanism for failed report uploads
-  * HTTP proxy support
-  * GCC and MinGW support
-  * `FirstChanceHandler` on Windows and extension of its synchronization to support Sentry hooks
-  * cooperation with Epic's Easy Anti-Cheat
-  * CMake build scripts (some users use our backend handler forks solely because of this reason)
 
-<Alert>
-When your deployment scenario should wait for the `crashpad_handler` to finish its work before a shutdown-after-crash (systemd, Docker), in Linux environments since SDK version [0.8.3](https://github.com/getsentry/sentry-native/releases/tag/0.8.3), and Windows environments since SDK version [0.9.0](https://github.com/getsentry/sentry-native/releases/tag/0.9.0), you can enable the [option `crashpad_wait_for_upload`](/platforms/native/configuration/options/#crashpad-wait-for-upload) to delay application shutdown until the upload of the crash report is completed.
-</Alert>
-### When shouldn't I use the `crashpad` backend?
+### When shouldn't I use an out-of-process crash handler?
 
-Sentry decided on `crashpad` as the default on all platforms because it offers numerous advantages. However, there are use cases where `crashpad` cannot be used or makes distribution or deployment much harder. We provide other backends for situations when
+There are use cases where an out-of-process crash handler cannot be used or makes distribution or deployment much harder. We provide `breakpad` and `inproc`, which handle crashes in-process, for situations when
 
-* you cannot package or deploy an additional executable (the `crashpad_handler`)
+* you cannot package or deploy an additional executable (`sentry-crash` or `crashpad_handler`)
 * you cannot allow a secondary process to connect via `ptrace` to your application (AWS Lambda, Flatpak-, Snap-Sandboxes)
-* IPC between your process and the `crashpad_handler` is inhibited by security settings or not available in your deployment target
-* you want to distribute your application via the macOS App Store
-* you want to define crash hooks on macOS because there, error handling happens entirely in the `crashpad_handler`, whereas on Linux and Windows, at least the initial handling happens in your process, after which `crashpad_handler` takes over and snapshots the process to send a crash report
+* IPC between your process and the handler is inhibited by security settings or not available in your deployment target
 
-In the above cases, if you cannot loosen the requirements of your environment, you have to choose another backend (meaning either `native`, `breakpad`, or `inproc`).
+### How do I decide between `native` and `crashpad`?
 
-### How do I decide between `native`, `breakpad`, and `inproc`?
+Since SDK version 1.0.0, `native` is the default on Windows, macOS, and Linux because it
 
-`native` is the closest alternative to `crashpad` because it keeps crash handling out of process. If your constraints rule out an additional executable, the remaining options are `breakpad` and `inproc`, which are comparable in how they differ from `crashpad` and `native`. However, there are also considerable differences between the two:
+* is implemented as part of the Native SDK and built on the SDK's own event, envelope, transport, attachment, options, and hook infrastructure, so there's no external crash-handler dependency
+* sends client-side stack traces by default and can [report an event, a minidump, or both](/platforms/native/configuration/backends/native/#crash-reporting-modes)
+* uploads crash reports with the SDK's HTTP transport, so options such as `ca_certs` and `transfer_timeout` apply to them
+* calls crash hooks on all desktop platforms, provides crash metadata to `on_crash`, and supports `before_screenshot`
+* returns control to [Windows Error Reporting](/platforms/native/advanced-usage/windows-error-reporting/) after capturing a crash
+* runs inside the macOS App Sandbox
+* is fully compatible with TSAN and ASAN builds
+* is written in C, so it does not rely on a C++ runtime library
+
+Choose `crashpad` instead if you need `EXC_CRASH` Mach exceptions on macOS, which the kernel generates during process exit if a terminal POSIX signal hasn't been handled. The `crashpad_handler` receives these exceptions, whereas none of the other backends will catch them.
+
+### How do I decide between `breakpad` and `inproc`?
+
+`breakpad` and `inproc` are comparable in how they differ from `crashpad` and `native`. However, there are also considerable differences between the two:
 
 * `inproc` only provides the backtrace of the crashing thread. `breakpad` records all threads in the minidump.
 * similar to `crashpad`, `breakpad` uses the lowest level error handling mechanism on each platform (macOS: mach exception ports, Windows: `UnhandledExceptionFilter`, Linux: signal handlers), it does cover a smaller range of errors, though, as mentioned above.
@@ -56,14 +53,6 @@ In the above cases, if you cannot loosen the requirements of your environment, y
 * on macOS, the handler thread uses a frame-pointer-based stack walker for arm64 and x86-64, which avoids the limitations that previously made `inproc` unusable on recent macOS versions.
 * `inproc` is exceptionally lightweight and written entirely in C, meaning it does not rely on a weighty C++ runtime library, which is also more often affected by ABI incompatibilities
 * `breakpad` generates minidumps (like `crashpad` and `native` by default), whereas `inproc` follows the Sentry event structure and primarily defers to the OS-provided unwinder and symbolication capabilities. Sentry processing infrastructure can extract more information from the provided minidump than from just a stack trace and registers. However, it also means that the crash context inside the minidump will remain opaque until it is processed in the backend. In contrast, if required, a local `relay` instance (or another application-level proxy) could process an entire `inproc` event with only JSON parsing capabilities.
-
-### So when do I choose `native`?
-
-Since SDK version [0.13.2](https://github.com/getsentry/sentry-native/releases/tag/0.13.2), the Native SDK comes with an out-of-process backend called `native`. It is implemented as part of the Native SDK and built on the SDK's own event, envelope, transport, attachment, options, and hook infrastructure.
-
-The main advantages are tighter integration with the Native SDK and no external crash-handler dependency. As an out-of-process backend, `native` runs crash handling in the lightweight `sentry-crash` daemon and can send crash reports at crash time, similar to `crashpad`. Because crash collection is implemented in the SDK, `native` can call SDK-level hooks such as `before_screenshot`, and can [report an event, a minidump, or both](/platforms/native/configuration/backends/native/). The backend is also fully compatible with TSAN and ASAN builds.
-
-Consider `native` when you want out-of-process crash handling with SDK-managed crash collection, when you need sanitizer compatibility, or when `crashpad` does not fit your deployment model.
 
 ### So when do I choose `inproc`?
 
@@ -84,24 +73,23 @@ If you dive into the details, you will find many trade-offs in the selection of 
 
 Sentry suggests the following sequence for your backend evaluations:
 
-* `crashpad` (default on Windows, macOS, and Linux), or `native`
-* `breakpad`
-* `inproc` (default on Android)
+* `native` (default on Windows, macOS, and Linux), or `crashpad`
+* `breakpad`, or `inproc` (default on Android)
 
 from most feature-complete to least, where a step down should only be triggered by environmental inhibitors, as summarized in the following table:
 
-| Feature | `crashpad` | `native` | `breakpad` | `inproc` |
-| ------- | ---------- | -------- | ---------- | -------- |
+| Feature | `native` | `crashpad` | `breakpad` | `inproc` |
+| ------- | -------- | ---------- | ---------- | -------- |
 | Deployment | Library <sup>1</sup> + executable | Library <sup>1</sup> + executable | Library <sup>1</sup> | Library <sup>1</sup> |
 | Crash handler | Out-of-process | Out-of-process | In-process | In-process |
 | Crash upload | At crash time | At crash time | Next restart | Next restart |
-| Crash report | Minidump | Event/minidump/both | Minidump | Event |
-| Screenshots | Windows <sup>2</sup> | Windows | Windows | Windows |
-| Stack walking | Server-side<br />+ client-side build option | Client-side<br />+ server-side minidump mode | Server-side | Client-side |
+| Crash report | Event/minidump/both | Minidump | Minidump | Event |
+| Screenshots | Windows | Windows <sup>2</sup> | Windows | Windows |
+| Stack walking | Client-side<br />+ server-side minidump mode | Server-side<br />+ client-side build option | Server-side | Client-side |
 | Captured threads | All | All | All | Crashing |
-| Crash hooks | ✅ Windows/Linux<br />❌ macOS | ✅ | ✅ Windows/macOS<br />⚠️ Linux (no context) | ✅ |
+| Crash hooks | ✅ | ✅ Windows/Linux<br />❌ macOS | ✅ Windows/macOS<br />⚠️ Linux (no context) | ✅ |
 | Windows WER / fast-fail | ✅ | ✅ | ❌ | ❌ |
-| macOS App Sandbox | ❌ | ✅ | ✅ | ✅ |
+| macOS App Sandbox | ✅ | ❌ | ✅ | ✅ |
 
 * <sup>1</sup> The library supports shared and static builds.
 * <sup>2</sup> The `before_screenshot` hook is not supported with `crashpad`.
