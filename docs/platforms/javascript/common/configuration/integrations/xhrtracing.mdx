@@ -1,0 +1,78 @@
+---
+title: XhrTracing
+description: "Create spans for outgoing XHR requests in the browser and attach trace propagation headers to them."
+notSupportedCategories:
+  - server-only
+  - mobile
+---
+
+<Alert>
+
+This integration only works inside a browser environment. It requires JavaScript SDK version 11.14.0 or later.
+
+</Alert>
+
+_Import name: `Sentry.xhrTracingIntegration`_
+
+The XhrTracing integration creates spans for outgoing `XMLHttpRequest` (XHR) requests and attaches trace propagation headers to them.
+
+The <PlatformLink to="/configuration/integrations/browsertracing/">BrowserTracing</PlatformLink> integration adds this integration automatically, so you don't need to add it yourself. Configure it through BrowserTracing's request options, or set `traceXHR: false` to turn it off. These options also apply to <PlatformLink to="/configuration/integrations/fetchtracing/">FetchTracing</PlatformLink>.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      shouldCreateSpanForRequest: (url) => !url.includes("/health"),
+    }),
+  ],
+});
+```
+
+To set its options directly, add the integration yourself. An explicitly added XhrTracing integration takes precedence over BrowserTracing's settings.
+
+<PlatformSection supported={["javascript"]}>
+
+## Use With BrowserTracingCore
+
+To ship less code, replace `browserTracingIntegration` with <PlatformLink to="/configuration/integrations/browsertracing/#reduce-bundle-size">`browserTracingCoreIntegration`</PlatformLink>, which doesn't add this integration, and add it only if you need it:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingCoreIntegration(),
+    Sentry.xhrTracingIntegration({
+      shouldCreateSpanForRequest: (url) => !url.includes("/health"),
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+## Configuration Options
+
+<SdkOption name="shouldCreateSpanForRequest" type="(url: string) => boolean">
+
+Return `false` to skip creating a span for the request to the given URL. By default, spans are created for all requests.
+
+</SdkOption>
+
+<SdkOption name="enableHTTPTimings" type="boolean" defaultValue="true">
+
+Add HTTP timing data, such as DNS lookup and TLS handshake durations, to request spans using the Resource Timing API.
+
+</SdkOption>
+
+<SdkOption name="onRequestSpanStart" type="(span: Span, requestInformation: { headers?: WebFetchHeaders }) => void">
+
+Called right after a request span starts. Use it to set span attributes based on the request headers.
+
+</SdkOption>
+
+<SdkOption name="onRequestSpanEnd" type="(span: Span, responseInformation: { headers?: WebFetchHeaders, error?: unknown }) => void">
+
+Called when a request span ends. Use it to set span attributes based on the response headers or the request error.
+
+</SdkOption>
+
+Trace propagation headers are only attached to requests that match the top-level <PlatformLink to="/configuration/options/#tracePropagationTargets">`tracePropagationTargets`</PlatformLink> option.

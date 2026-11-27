@@ -1,0 +1,58 @@
+---
+title: Resources
+description: "Capture the scripts, stylesheets, images, and other resources a page loads as browser spans."
+notSupportedCategories:
+  - server-only
+  - mobile
+---
+
+<Alert>
+
+This integration only works inside a browser environment. It requires JavaScript SDK version 11.14.0 or later.
+
+</Alert>
+
+_Import name: `Sentry.resourcesIntegration`_
+
+The Resources integration adds `resource.*` spans for the scripts, stylesheets, images, and other resources loaded during a pageload or navigation. The spans are added when the pageload or navigation span ends.
+
+The <PlatformLink to="/configuration/integrations/browsertracing/">BrowserTracing</PlatformLink> integration adds this integration automatically, so you don't need to add it yourself. Configure it through BrowserTracing's `ignoreResourceSpans` option.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      ignoreResourceSpans: ["resource.css", "resource.script"],
+    }),
+  ],
+});
+```
+
+To set its options directly, add the integration yourself. An explicitly added Resources integration takes precedence over BrowserTracing's settings.
+
+<PlatformSection supported={["javascript"]}>
+
+## Use With BrowserTracingCore
+
+To ship less code, replace `browserTracingIntegration` with <PlatformLink to="/configuration/integrations/browsertracing/#reduce-bundle-size">`browserTracingCoreIntegration`</PlatformLink>, which doesn't add this integration, and add it only if you need it:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingCoreIntegration(),
+    Sentry.resourcesIntegration({
+      ignoreResourceSpans: ["resource.css"],
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+## Configuration Options
+
+<SdkOption name="ignoreResourceSpans" type="Array<string>" defaultValue="[]">
+
+Skip resource spans whose `op` matches a string in this array, for example `resource.script`, `resource.css`, `resource.img`, or `resource.other`.
+
+</SdkOption>
