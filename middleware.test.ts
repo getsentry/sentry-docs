@@ -401,10 +401,23 @@ describe('content negotiation on page URLs', () => {
     }
   );
 
-  it('serves Markdown to a recognized AI agent that asks for HTML', async () => {
+  it.each([
+    [
+      'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot',
+      {},
+    ],
+    [
+      'Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
+      {'Sec-Fetch-Dest': 'document', 'Sec-Fetch-Mode': 'navigate'},
+    ],
+  ])('serves Markdown to %s when it asks for HTML', async (userAgent, secFetch) => {
     const {middleware} = await importMiddleware({});
     const res = middleware(
-      pageRequest({'User-Agent': 'ChatGPT-User/1.0', Accept: 'text/html,*/*;q=0.8'})
+      pageRequest({
+        'User-Agent': userAgent,
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        ...secFetch,
+      })
     );
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
   });

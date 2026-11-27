@@ -288,6 +288,9 @@ function mdToCanonicalPath(mdPathname: string): string {
  * Serves a page URL as HTML or Markdown (content negotiation), and advertises
  * the other representation on each response.
  */
+/** The Claude and Cursor desktop apps (Electron) and the Gemini iOS app. */
+const IN_APP_BROWSER_PATTERN = /\b(?:Claude|Cursor)\/[\d.]+ Chrome\/|\bGeminiiOS\//;
+
 const handleAIClientRedirect = (
   request: NextRequest,
   classification: TrafficClassification
@@ -298,11 +301,14 @@ const handleAIClientRedirect = (
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
   // In-app browsers name the app in their user agent (Claude, Cursor, Gemini), so
-  // they match AI_AGENT_PATTERN. A browser marks its page loads `Sec-Fetch-Dest:
-  // document` and the router's background fetch for the next page `empty` (Next.js
-  // strips the `RSC` header before middleware runs). Agents don't send the header.
+  // they match AI_AGENT_PATTERN but must get the normal page. Any browser also marks
+  // the router's background fetch for the next page `Sec-Fetch-Dest: empty` (Next.js
+  // strips the `RSC` header before middleware runs). `document` isn't enough: some
+  // crawlers, such as PerplexityBot, send it on every request.
   const secFetchDest = request.headers.get('sec-fetch-dest');
-  const isBrowserRequest = secFetchDest === 'document' || secFetchDest === 'empty';
+  const isBrowserRequest =
+    secFetchDest === 'empty' ||
+    IN_APP_BROWSER_PATTERN.test(request.headers.get('user-agent') || '');
   const clientWantsMarkdown = shouldServeMarkdown(
     acceptHeader,
     classification.trafficType === 'ai_agent' && !isBrowserRequest
