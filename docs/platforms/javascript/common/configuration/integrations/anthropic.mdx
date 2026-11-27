@@ -27,7 +27,7 @@ Sentry.init({
 });
 ```
 
-To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+The integration sets a conversation ID for [Conversations](/product/agents/conversations/) only for session tool runners. See [Conversation IDs](#conversation-ids) for when you need to call `Sentry.setConversationId()` yourself. To show who started each chat, also call `Sentry.setUser()` in every request that makes AI calls.
 
 ## Supported Operations
 
@@ -39,6 +39,12 @@ By default, tracing support is added to the following Anthropic SDK calls:
 - `beta.messages.create()` - Beta messages API
 
 Streaming and non-streaming requests are automatically detected and handled appropriately.
+
+## Conversation IDs
+
+The integration sets `gen_ai.conversation.id` automatically only for session tool runners created with `client.beta.sessions.events.toolRunner()`. It uses the runner's session ID. This requires SDK version `11.12.0` or higher.
+
+For all other calls, such as `messages.create()`, `messages.stream()`, and `beta.messages.toolRunner()`, call `Sentry.setConversationId()` with your app's chat ID before the first AI call of each request. An ID you set with `Sentry.setConversationId()` replaces the session ID. See <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
 
 ## Supported Versions
 

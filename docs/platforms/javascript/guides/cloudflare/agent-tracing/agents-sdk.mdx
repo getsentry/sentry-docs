@@ -14,7 +14,7 @@ If you deploy with `wrangler` directly, wrap each class yourself with `instrumen
 Agents are Durable Objects under the hood, so the agent instrumentation applies everything <PlatformLink to="/features/durableobject/">Durable Object instrumentation</PlatformLink> does (request transactions, alarms, WebSocket handlers, RPC trace propagation), plus agent-specific telemetry:
 
 - **Callable RPC spans**: a span for each `@callable()` method invoked over WebSocket, carrying the agent class and instance name as attributes.
-- **Automatic conversation IDs**: the SDK sets the conversation ID on every chat turn (`onChatMessage`) and every callable RPC call, so `gen_ai` spans group in <Link to="/product/agents/conversations/">Conversations</Link> without any `setConversationId` call.
+- **Automatic conversation IDs**: the SDK sets the conversation ID on every chat turn (`onChatMessage`), every callable RPC call, and every `onRequest` call, so `gen_ai` spans group in <Link to="/product/agents/conversations/">Conversations</Link> without any `setConversationId` call.
 
 ```typescript
 import { Agent, callable } from "agents";
@@ -32,9 +32,11 @@ To continue a trace that a Worker sends to the agent over RPC, see <PlatformLink
 
 ## Conversation IDs
 
-The automatic conversation ID defaults to the **agent instance name**, which is correct when one agent instance is one chat session (for example `useAgent({ name: chatSessionId })`). When the chat is cleared (`clearHistory()` from `useAgentChat`, or anything that emits the [`message:clear` observability event](https://developers.cloudflare.com/agents/runtime/operations/observability/#channels)), the SDK rotates to a fresh conversation ID, so a reset chat groups as a new conversation.
+The SDK creates a random conversation ID the first time an agent instance handles work, and stores it in the Durable Object's storage. The ID survives hibernation and restarts, so every turn handled by that instance groups into one conversation. The SDK doesn't use the instance name as the ID (SDK versions earlier than `10.70.0` did). This is correct when one agent instance is one chat session (for example `useAgent({ name: chatSessionId })`).
 
-If your instances are per-user or a shared singleton like `"default"`, the default would group unrelated chats into one conversation. Override it with your own chat session ID at the start of `onChatMessage`, before any model or tool calls:
+When the chat is cleared (`clearHistory()` from `useAgentChat`, or anything that emits the [`message:clear` observability event](https://developers.cloudflare.com/agents/runtime/operations/observability/#channels)), the SDK rotates to a fresh conversation ID, so a reset chat groups as a new conversation.
+
+If your instances are per-user or a shared singleton like `"default"`, one instance handles many chats, so the automatic ID groups unrelated chats into one conversation. Override it with your own chat session ID at the start of `onChatMessage` (or the callable method or `onRequest` handler), before any model or tool calls. An ID you set with `setConversationId()` always takes precedence over the automatic one:
 
 ```typescript
 import * as Sentry from "@sentry/cloudflare";

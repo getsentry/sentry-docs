@@ -27,7 +27,7 @@ Sentry.init({
 });
 ```
 
-To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+The integration sets a conversation ID for [Conversations](/product/agents/conversations/) when you pass a thread or session ID in the invoke config. See [Conversation IDs](#conversation-ids) for when you need to call `Sentry.setConversationId()` yourself. To show who started each chat, also call `Sentry.setUser()` in every request that makes AI calls.
 
 ## Supported Operations
 
@@ -68,6 +68,20 @@ await graph.invoke({ ticket: "My payouts have been failing for 3 days." });
 ```
 
 The evaluation state, questions, and answers follow the LangChain integration's `recordInputs` and `recordOutputs` options.
+
+## Conversation IDs
+
+The integration reads the conversation ID from `configurable` in the config you pass to `invoke()` or `stream()`. It looks for these keys, in this order: `thread_id`, `session_id`, `sessionId`. The first one it finds becomes `gen_ai.conversation.id`. `thread_id` is the same thread ID that LangGraph checkpointers use, so graphs with memory usually already pass it:
+
+```javascript
+// Reuse the same thread_id for every turn of the chat
+await graph.invoke(
+  { messages: [{ role: "user", content: "Hello!" }] },
+  { configurable: { thread_id: chatId } }
+);
+```
+
+If you don't pass any of these keys, call `Sentry.setConversationId()` with your app's chat ID before the first AI call of each request. An ID you set with `Sentry.setConversationId()` replaces the one from the config. See <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
 
 ## Supported Versions
 

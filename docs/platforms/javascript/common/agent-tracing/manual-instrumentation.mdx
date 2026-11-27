@@ -42,11 +42,43 @@ Use the span names shown in the examples: `invoke_agent {agent name}`, `chat {re
 
 Run the agent span in the caller's active trace context. For calls between services, follow the <PlatformLink to="/tracing/distributed-tracing/">Distributed Tracing</PlatformLink> guide so the agent run stays connected to the rest of the trace.
 
-To group turns into a [Conversation](/product/agents/conversations/), call `setConversationId()` with the application's existing chat or session ID. Reuse that ID across turns and traces. If there is no conversation ID, omit it instead of deriving one from a trace or request ID.
-
 Complex values (messages, tool definitions, arrays) must be **JSON strings** — span attributes only accept primitives.
 
 For manual spans, prompt, response, and tool content is whatever you set on the span. Omit those attributes, or gate them yourself, when you do not want to capture content.
+
+## Group Spans Into a Conversation
+
+Manual spans don't get a conversation ID unless you set one. Without it, each turn of a chat shows up on its own, and the chat doesn't appear in [Conversations](/product/agents/conversations/).
+
+Call `setConversationId()` with your app's existing chat or session ID at the start of each request or job, before you start the first AI span. Sentry then adds `gen_ai.conversation.id` to every span that starts afterwards in that scope and whose `op` starts with `gen_ai.`, so you don't need to set the attribute on each span:
+
+```javascript
+async function handleChatTurn(chatId, userMessage) {
+  // Reuse the same chatId for every turn of this chat
+  Sentry.setConversationId(chatId);
+
+  return Sentry.startSpan(
+    {
+      op: "gen_ai.invoke_agent",
+      name: "invoke_agent Weather Agent",
+      attributes: {
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "Weather Agent",
+      },
+    },
+    // Model and tool spans created inside also get the conversation ID
+    () => runWeatherAgent(userMessage)
+  );
+}
+```
+
+Keep these in mind:
+
+- Use the `gen_ai.*` span ops shown on this page. Spans with other ops don't get the conversation ID.
+- Reuse the same ID across turns and traces. If your app has no chat ID, omit it instead of deriving one from a trace or request ID, which would split every turn into its own conversation.
+- If you can't set the ID on the scope, for example because the span starts outside the request, set `gen_ai.conversation.id` on each span with `span.setAttribute()` instead.
+
+For background jobs and requests that handle several conversations, see <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
 
 ## AI Request Span
 

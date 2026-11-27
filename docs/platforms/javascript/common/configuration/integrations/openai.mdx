@@ -27,7 +27,7 @@ Sentry.init({
 });
 ```
 
-To group multi-turn chats in [Conversations](/product/agents/conversations/) and show who started them, set a conversation ID and user in every request that makes AI calls. See <PlatformLink to="/agent-tracing/#tracking-conversations">Tracking Conversations</PlatformLink>.
+The integration sets a conversation ID for [Conversations](/product/agents/conversations/) only when you use the OpenAI Conversations API. See [Conversation IDs](#conversation-ids) for when you need to call `Sentry.setConversationId()` yourself. To show who started each chat, also call `Sentry.setUser()` in every request that makes AI calls.
 
 ## Supported Operations
 
@@ -44,6 +44,29 @@ Streaming and non-streaming requests are automatically detected and handled appr
 ### Trace Decisions
 
 With Sentry SDK `11.8.0` or higher and `openai` `7.30.0` or higher, each `decisions.create()` call creates a `gen_ai.decide` span named `decide <model>`, with model, latency, and token usage. When recording is enabled, Sentry captures `input` and `questions` as input messages and `answers` as output messages.
+
+## Conversation IDs
+
+The integration sets `gen_ai.conversation.id` automatically only when a request passes a [Conversations API](https://platform.openai.com/docs/guides/conversation-state) ID as the `conversation` parameter:
+
+```javascript
+const conversation = await client.conversations.create();
+
+// Reuse conversation.id for every turn of the chat
+const response = await client.responses.create({
+  model: "gpt-4o",
+  conversation: conversation.id,
+  input: "Hello!",
+});
+```
+
+In every other case, call `Sentry.setConversationId()` with your app's chat ID before the first AI call of each request:
+
+- `chat.completions.create()` calls
+- `responses.create()` calls without `conversation`
+- `responses.create()` calls chained with `previous_response_id`. Sentry doesn't use `previous_response_id`, because it changes on every turn.
+
+An ID you set with `Sentry.setConversationId()` replaces the `conversation` parameter. See <PlatformLink to="/agent-tracing/#set-the-conversation-id-yourself">Set the Conversation ID Yourself</PlatformLink>.
 
 ## Supported Versions
 
