@@ -5,7 +5,6 @@ import {Arcade} from './components/arcade';
 import {AvailableSince} from './components/availableSince';
 import {Break} from './components/break';
 import {Card} from './components/card';
-import {CliChecksumTable} from './components/cliChecksumTable';
 import {CodeBlock} from './components/codeBlock';
 import {CodeTabs} from './components/codeTabs';
 import {CommunitySupportedPlatforms} from './components/communitySupportedPlatforms';
@@ -82,7 +81,6 @@ export function mdxComponents(
     AvailableSince,
     Break,
     Card,
-    CliChecksumTable,
     CommunitySupportedPlatforms,
     ContentSeparator,
     ConventionAttributes,

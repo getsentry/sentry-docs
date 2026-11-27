@@ -2157,19 +2157,15 @@ const USER_DOCS_REDIRECTS: Redirect[] = [
   },
   {
     from: '/learn/cli/configuration/',
-    to: '/cli/configuration/',
+    to: 'https://cli.sentry.dev/configuration/',
   },
   {
     from: '/learn/cli/',
-    to: '/cli/',
+    to: 'https://cli.sentry.dev/',
   },
   {
     from: '/learn/cli/releases/',
-    to: '/cli/releases/',
-  },
-  {
-    from: '/cli/metrics/',
-    to: '/cli/send-event/',
+    to: 'https://cli.sentry.dev/commands/release/',
   },
   {
     from: '/workflow/alerts-notifications/',

@@ -60,15 +60,12 @@ export async function SidebarNavigation({path}: {path: string[]}) {
     );
   }
 
-  // Concepts & Reference (includes CLI which is part of Concepts)
-  if (path[0] === 'concepts' || path[0] === 'cli') {
+  // Concepts & Reference
+  if (path[0] === 'concepts') {
     return (
       <ProductSidebar
         rootNode={rootNode}
-        items={[
-          {title: 'Concepts & Reference', root: 'concepts'},
-          {title: 'Sentry CLI', root: 'cli'},
-        ]}
+        items={[{title: 'Concepts & Reference', root: 'concepts'}]}
       />
     );
   }
