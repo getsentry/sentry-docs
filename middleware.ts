@@ -297,10 +297,14 @@ const handleAIClientRedirect = (
 
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
-  const clientWantsMarkdown = shouldServeMarkdown(
-    acceptHeader,
-    classification.trafficType === 'ai_agent'
-  );
+  // When a reader clicks a link, the page fetches the next page's data in the
+  // background with `RSC: 1` and `Accept: */*`. In-app browsers whose user agent
+  // names the app (Claude, Cursor, Gemini) match AI_AGENT_PATTERN, so without this
+  // check that fetch got Markdown instead of page data.
+  const isPageDataRequest = request.headers.get('rsc') === '1';
+  const clientWantsMarkdown =
+    !isPageDataRequest &&
+    shouldServeMarkdown(acceptHeader, classification.trafficType === 'ai_agent');
   const willServeMarkdown =
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
 

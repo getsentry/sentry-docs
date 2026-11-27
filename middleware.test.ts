@@ -380,6 +380,19 @@ describe('content negotiation on page URLs', () => {
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
   });
 
+  it('serves page data, not Markdown, when an in-app browser follows a link', async () => {
+    const {middleware} = await importMiddleware({});
+    const res = middleware(
+      pageRequest({
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/136.0.0.0 Safari/537.36',
+        Accept: '*/*',
+        RSC: '1',
+      })
+    );
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull();
+  });
+
   it('serves HTML to a recognized AI agent that asks for HTML', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(
