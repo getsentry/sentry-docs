@@ -1,17 +1,18 @@
 ---
-title: Heroku Telemetry Drains
+title: Heroku Drains
 sidebar_title: Heroku
 sidebar_order: 30
-description: Learn how to set up Heroku Telemetry Drains to forward logs and traces data to Sentry.
+description: Learn how to set up Heroku drains to forward logs and traces data to Sentry.
 ---
 
-Heroku Telemetry supports [exporting OpenTelemetry (OTEL)-compliant data](https://devcenter.heroku.com/articles/heroku-telemetry) to send logs and traces to Sentry. Sending metrics is not supported yet.
+Heroku drains let you forward logs and traces from applications running on Heroku to Sentry without changing your application code. Which data you can send depends on your app's [generation](https://devcenter.heroku.com/articles/generations).
 
-<Alert level="warning">
+| Generation                                                       | Drain type                                      | Logs | Traces |
+| ---------------------------------------------------------------- | ----------------------------------------------- | :--: | :----: |
+| [Fir](https://devcenter.heroku.com/articles/generations#fir)     | [Telemetry drain (OTLP)](#fir-telemetry-drains) |  ✅  |   ✅   |
+| [Cedar](https://devcenter.heroku.com/articles/generations#cedar) | [Log drain (Logplex)](#cedar-log-drains)        |  ✅  |   ❌   |
 
-Heroku telemetry drains are only available to [Fir](https://devcenter.heroku.com/articles/generations#fir)-generation apps and spaces. We are tracking support for Cedar-generation apps and spaces in [this issue](https://github.com/getsentry/sentry/issues/91727).
-
-</Alert>
+Sending metrics is not supported yet.
 
 ## Prerequisites
 
@@ -20,11 +21,15 @@ Before you begin, ensure you have:
 - A Heroku app that you want to monitor
 - A Sentry project you want to send data to
 
-## Adding a Telemetry Drain
+## Fir Telemetry Drains
+
+Heroku Telemetry supports [exporting OpenTelemetry (OTEL)-compliant data](https://devcenter.heroku.com/articles/heroku-telemetry) to send logs and traces to Sentry. Telemetry drains are only available to Fir-generation apps and spaces.
+
+### Adding a Telemetry Drain
 
 To add a telemetry drain to an app or space, use the `heroku telemetry:add` command. For more details, see the [Heroku Telemetry documentation](https://devcenter.heroku.com/articles/working-with-heroku-telemetry-drains#add-a-telemetry-drain).
 
-When using the `heroku telemetry:add` command, you'll need to provide your Sentry project's OTLP endpoint URL and a `x-sentry-auth` header with the public key. This can be found in your Sentry Project Settings under [**Client Keys (DSN)**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/) > **OpenTelemetry (OTLP)**.
+When using the `heroku telemetry:add` command, you'll need to provide your Sentry project's OTLP endpoint URL and a `x-sentry-auth` header with the public key. You can find both in your Sentry Project Settings under [**Client Keys (DSN)**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/) > **OpenTelemetry (OTLP)**. The same URL is also listed under **Heroku Drains**.
 
 ```bash
 heroku telemetry:add ___OTLP_URL___ --app myapp --signals logs,traces --transport http --headers '{"x-sentry-auth":"sentry sentry_key=___PUBLIC_KEY___"}'
@@ -43,3 +48,79 @@ You can use the `--signals` flag to specify the signals you want to send to Sent
 Sentry only supports the `http` `--transport` flag.
 
 </Alert>
+
+## Cedar Log Drains
+
+Cedar-generation apps can forward their logs to Sentry with a [Heroku HTTPS log drain](https://devcenter.heroku.com/articles/log-drains#https-drains). Logplex sends your application's output, along with logs from the Heroku router and platform, to Sentry as [logs](/product/logs/). Log drains don't carry traces or metrics.
+
+### Adding a Log Drain
+
+To set up a log drain, follow these steps. Heroku log drains can't send custom headers, so the public key goes in the `sentry_key` query parameter of the drain URL.
+
+1. Copy the Heroku Log Drain URL from your Sentry Project Settings under [**Client Keys (DSN)**](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/keys/) > **Heroku Drains**.
+
+```bash
+https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/integration/heroku/logs?sentry_key=___PUBLIC_KEY___
+```
+
+2. Add the drain to your app with the `heroku drains:add` command. Keep the quotes around the URL so your shell doesn't interpret the `?`.
+
+```bash
+heroku drains:add "https://___ORG_INGEST_DOMAIN___/api/___PROJECT_ID___/integration/heroku/logs?sentry_key=___PUBLIC_KEY___" -a myapp
+```
+
+3. To check that the drain was added, run `heroku drains -a myapp`.
+
+Then you should get logs in your Sentry project.
+
+### Log Attributes
+
+Sentry parses each Logplex message and adds these attributes, which can be used for filtering and grouping in [Explore](/product/explore/):
+
+| Attribute                    | Description                                                                                               |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `cloud.provider`             | Always `heroku`.                                                                                          |
+| `sentry.origin`              | Always `auto.log_drain.heroku`.                                                                           |
+| `heroku.source`              | Where the log came from: `app` for your application's output, `heroku` for logs from the Heroku platform. |
+| `heroku.dyno.name`           | The dyno that emitted the log or that served the request, such as `web.1`.                                |
+| `heroku.logplex.drain_token` | The token of the log drain that delivered the log.                                                        |
+| `heroku.error.code`          | The [Heroku error code](https://devcenter.heroku.com/articles/error-codes), such as `H12` or `R14`.       |
+| `heroku.error.description`   | The description of the error code, such as `Request timeout`.                                             |
+
+Heroku platform logs that report an error code, such as `Error R14 (Memory quota exceeded)`, are stored with the `error` log level.
+
+#### Router Logs
+
+For [Heroku router logs](https://devcenter.heroku.com/articles/http-routing#heroku-router-log-format), Sentry also extracts the request fields. The log level follows the router's `at` field.
+
+| Attribute                   | Router field  | Description                                                |
+| --------------------------- | ------------- | ---------------------------------------------------------- |
+| `http.request.method`       | `method`      | The HTTP request method.                                   |
+| `url.path`                  | `path`        | The request path, without the query string.                |
+| `url.query`                 | `path`        | The query string of the request, if any.                   |
+| `url.scheme`                | `tls`         | `https` or `http`.                                         |
+| `server.address`            | `host`        | The requested host.                                        |
+| `server.port`               | `host`        | The requested port, if the host includes one.              |
+| `client.address`            | `fwd`         | The client IP address the Heroku router appended to `fwd`. |
+| `http.response.status_code` | `status`      | The HTTP response status code.                             |
+| `network.protocol.name`     | `protocol`    | Always `http`.                                             |
+| `network.protocol.version`  | `protocol`    | The HTTP version, such as `1.1` or `2`.                    |
+| `tls.protocol.name`         | `tls_version` | Always `tls`.                                              |
+| `tls.protocol.version`      | `tls_version` | The TLS version, such as `1.3`.                            |
+| `heroku.router.request_id`  | `request_id`  | The Heroku request ID.                                     |
+| `heroku.router.connect`     | `connect`     | Time in milliseconds to connect to the dyno.               |
+| `heroku.router.service`     | `service`     | Time in milliseconds the dyno took to process the request. |
+| `heroku.dyno.name`          | `dyno`        | The dyno that served the request.                          |
+| `heroku.error.code`         | `code`        | The Heroku error code, such as `H12`.                      |
+| `heroku.error.description`  | `desc`        | The description of the error code.                         |
+
+### Search and Alert on Heroku Errors
+
+Use `heroku.error.code` to find platform errors in the [Logs](/product/logs/) explorer. For example:
+
+- `heroku.error.code:H12`: Request timeouts
+- `heroku.error.code:R14`: Dynos that exceeded their memory quota
+- `heroku.error.code:H*`: All H-series (HTTP) errors
+- `heroku.source:heroku heroku.dyno.name:web.1`: All platform logs for one dyno
+
+To get notified when these errors happen, run the search and use **Save as** to create a [monitor](/product/monitors-and-alerts/monitors/). See [Save Log Queries](/product/logs/#save-log-queries).
