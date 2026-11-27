@@ -1299,7 +1299,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/deviera/',
+    source: '/organization/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1347,7 +1347,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/stackstitch/',
+    source: '/organization/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1355,7 +1355,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/applied-edge/',
+    source: '/organization/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1558,7 +1558,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/deviera/',
+    source: '/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1606,7 +1606,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/stackstitch/',
+    source: '/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1614,7 +1614,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/applied-edge/',
+    source: '/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
