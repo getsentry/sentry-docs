@@ -74,8 +74,82 @@ Sentry.init({
 - Browser timing and paint data on the pageload span
 - Marking the active span as errored when an uncaught error happens
 
-It accepts the <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/">options</PlatformLink> that configure these spans: `instrumentPageLoad`, `instrumentNavigation`, `instrumentBfcacheRestore`, `beforeStartSpan`, `idleTimeout`, `finalTimeout`, `childSpanTimeout`, `markBackgroundSpan`, `detectRedirects`, and `enableReportPageLoaded`. The options listed in the table above move to their own integration.
+It accepts the options that configure these spans, listed under [Configuration Options](#configuration-options). The options listed in the table above move to their own integration.
 
 The CDN bundles that include tracing export `browserTracingCoreIntegration` and the standalone integrations too.
 
 </PlatformSection>
+
+## Configuration Options
+
+These options configure pageload and navigation spans.
+
+<SdkOption name="instrumentPageLoad" type="boolean" defaultValue="true">
+
+Enable/disable automatic `pageload` span creation on initial page load.
+
+</SdkOption>
+
+<SdkOption name="instrumentNavigation" type="boolean" defaultValue="true">
+
+Enable/disable automatic `navigation` span creation on history changes.
+
+</SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+<SdkOption name="instrumentBfcacheRestore" type="boolean" defaultValue="true" availableSince="11.0.0">
+
+Start a navigation span when the page is restored from the back/forward cache. This starts a new trace for activity after the restore. It is independent of `instrumentNavigation`.
+
+Web Vitals for restored pages are collected by default in stream mode. Set `webVitals: { bfcacheNavigations: false }` to disable this collection. See <PlatformLink to="/configuration/integrations/webvitals/#bfcachenavigations">WebVitals</PlatformLink> for requirements.
+
+</SdkOption>
+
+</PlatformSection>
+</PlatformCategorySection>
+
+<SdkOption name="detectRedirects" type="boolean" defaultValue="true">
+
+Detect redirects and avoid creating separate `navigation` spans for them. Set to `false` to create a span for every navigation.
+
+</SdkOption>
+
+<SdkOption name="beforeStartSpan" type="(options: StartSpanOptions) => StartSpanOptions">
+
+Modify span data before it's captured. Useful for adding context or normalizing URLs with dynamic segments:
+
+<PlatformContent includePath="performance/beforeNavigate-example" />
+
+</SdkOption>
+
+<SdkOption name="idleTimeout" type="number" defaultValue="1000">
+
+Time in ms to wait before finishing a pageload/navigation span when no unfinished child spans remain.
+
+</SdkOption>
+
+<SdkOption name="finalTimeout" type="number" defaultValue="30000">
+
+Maximum duration in ms for pageload/navigation spans. Spans exceeding this are automatically finished.
+
+</SdkOption>
+
+<SdkOption name="childSpanTimeout" type="number" defaultValue="15000">
+
+Maximum time in ms a child span can run before the parent pageload/navigation span is finished.
+
+</SdkOption>
+
+<SdkOption name="markBackgroundSpan" type="boolean" defaultValue="true">
+
+Mark pageload/navigation spans as "cancelled" when the tab moves to background. Recommended to keep enabled for accurate measurements.
+
+</SdkOption>
+
+<SdkOption name="enableReportPageLoaded" type="boolean" defaultValue="false" availableSince="10.13.0">
+
+Enable the <PlatformLink to="/apis/#reportPageLoaded">`Sentry.reportPageLoaded()` function</PlatformLink>.
+
+</SdkOption>
