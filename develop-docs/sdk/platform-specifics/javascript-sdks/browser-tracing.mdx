@@ -82,7 +82,7 @@ By default, in `@sentry/browser` the SDK listens to the browser's `History` API 
 
 Like a pageload span, navigation spans are idle spans and end themselves after a certain time of inactivity or after a maximum duration.
 
-In contrast to pageload spans, navigation spans do not contain web vital measurements. Read more about the reason [here](#web-vitals).
+Since version 11, navigation spans get their own LCP, CLS and INP web vital spans when the browser reports the navigation through the Soft Navigations API. See [Soft Navigation Web Vitals](#soft-navigation-web-vitals).
 
 ### Router Instrumentations and Route Parameterization
 
@@ -119,6 +119,23 @@ it leads to discrepancies for vitals that are still changing after the pageload 
 The Interaction To Next Paint (INP) web vital is treated a bit differently.
 It's not attached to the pageload span.
 Instead, we listen to when the browser emits INP events (that is on page hide, for example when switching tabs) and capture them as standalone spans.
+
+### Soft Navigation Web Vitals
+
+Since version 11, the `WebVitals` integration reports LCP, CLS and INP for each soft navigation (`softNavigations`, enabled by default).
+This requires span streaming and a browser that supports the Soft Navigations API (Chromium 151+), because a soft navigation's vitals are finalized at the next soft navigation or on `pagehide`, long after its navigation span has ended.
+
+The navigation span is started synchronously on the history change, but the browser only emits the `soft-navigation` performance entry once the navigation was confirmed by a paint.
+The SDK joins the two through the `interactionId` of the interaction that triggered the navigation.
+Vitals that can't be correlated to a navigation span are dropped rather than attributed to the wrong route.
+
+Web vital spans carry `browser.navigation.type` (`soft-navigation`, `back-forward-cache`, or the browser's navigation type for page loads). Soft navigation vitals and their navigation span also carry `browser.navigation.id`.
+Enabling this also changes pageload vitals: they are finalized at the first soft navigation instead of accumulating over the page lifetime.
+
+### Back/Forward Cache Restore Web Vitals
+
+Since version 11, `browserTracingIntegration` starts a navigation span when a page is restored from the back/forward cache (`instrumentBfcacheRestore`), and the `WebVitals` integration reports LCP, CLS and INP for the restore (`bfcacheNavigations`, enabled by default, requires span streaming).
+These vitals are attached to the restore's navigation span rather than the pageload span, which belongs to the page view from before the page was frozen. They carry `browser.navigation.type: back-forward-cache`.
 
 ## Tracing Model
 
