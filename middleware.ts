@@ -297,14 +297,16 @@ const handleAIClientRedirect = (
 
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
-  // When a reader clicks a link, the page fetches the next page's data in the
-  // background with `RSC: 1` and `Accept: */*`. In-app browsers whose user agent
-  // names the app (Claude, Cursor, Gemini) match AI_AGENT_PATTERN, so without this
-  // check that fetch got Markdown instead of page data.
-  const isPageDataRequest = request.headers.get('rsc') === '1';
-  const clientWantsMarkdown =
-    !isPageDataRequest &&
-    shouldServeMarkdown(acceptHeader, classification.trafficType === 'ai_agent');
+  // In-app browsers name the app in their user agent (Claude, Cursor, Gemini), so
+  // they match AI_AGENT_PATTERN. When a reader clicks a link, the page fetches the
+  // next page's data with `Accept: */*`; Next.js strips the `RSC` header before
+  // middleware runs, but the browser still marks the fetch `Sec-Fetch-Dest: empty`.
+  // Agents don't send that header.
+  const isBrowserFetch = request.headers.get('sec-fetch-dest') === 'empty';
+  const clientWantsMarkdown = shouldServeMarkdown(
+    acceptHeader,
+    classification.trafficType === 'ai_agent' && !isBrowserFetch
+  );
   const willServeMarkdown =
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
 

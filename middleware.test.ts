@@ -382,12 +382,14 @@ describe('content negotiation on page URLs', () => {
 
   it('serves page data, not Markdown, when an in-app browser follows a link', async () => {
     const {middleware} = await importMiddleware({});
+    // The headers middleware sees: Next.js strips `RSC` before middleware runs.
     const res = middleware(
       pageRequest({
         'User-Agent':
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/136.0.0.0 Safari/537.36',
         Accept: '*/*',
-        RSC: '1',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
       })
     );
     expect(res.headers.get('x-middleware-rewrite')).toBeNull();

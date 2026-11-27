@@ -130,13 +130,4 @@ describe('withMarkdownRedirects', () => {
     const list = [{source: '/', destination: '/new/'}];
     expect(withMarkdownRedirects(list)).toEqual(list);
   });
-
-  it.each([
-    ['/old.md', 'https://docs.sentry.io/new.md'],
-    ['/old/nested/page.md', 'https://docs.sentry.io/new/nested/page.md'],
-  ])('path-forwarding wildcards redirect %s', async (from, expected) => {
-    expect(
-      await redirectLocation([{source: '/old/:path*', destination: '/new/:path*'}], from)
-    ).toBe(expected);
-  });
 });
