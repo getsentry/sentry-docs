@@ -12,13 +12,11 @@ The masking options below only apply when using the default `PixelCopy` strategy
 
 </Alert>
 
-<Alert level="warning">
+<Include name="session-replay-mobile-masking-warning.mdx" />
 
-Before enabling Session Replay in production, verify your masking configuration to ensure no sensitive data is captured. Our default settings aggressively mask potentially sensitive data, but if you modify these settings or update UI frameworks or system SDKs, you must thoroughly test your application. If you find any masking issues or sensitive data that should be masked but isn't, please [create a GitHub issue](https://github.com/getsentry/sentry-java/issues/new/choose) and avoid deploying to production with Session Replay enabled until the issue is resolved.
+If your app handles sensitive data, such as identity documents or payment details, use the [Canvas screenshot strategy](/platforms/android/session-replay/#screenshot-strategy), which masks all text and images it draws. Report masking issues with supported components in [getsentry/sentry-java](https://github.com/getsentry/sentry-java/issues/new/choose).
 
-</Alert>
-
-By default, our Session Replay SDK masks all text content, images, webviews, and user input. This helps ensure that no sensitive data is exposed. You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
+By default, our Session Replay SDK masks the components listed in [Supported Components](#supported-components). You can also manually choose which parts of your app's data you want to mask by using the different options listed below.
 
 To disable the default masking behavior (not to be used on applications with sensitive data):
 
@@ -38,6 +36,21 @@ options.sessionReplay.maskAllImages = false
 
 
 _Make sure your Sentry Android SDK version is at least 7.20.0._
+
+## Supported Components
+
+With the default `PixelCopy` strategy and default settings, the SDK masks these components:
+
+| Component | Masked when |
+| --- | --- |
+| `TextView` and its subclasses, such as `EditText`, `Button`, and `CheckBox` | `maskAllText` is `true` (default) |
+| `ImageView` and its subclasses | `maskAllImages` is `true` (default). Vector, color, gradient, and inset drawables, and bitmaps 10px or smaller in width or height, aren't masked |
+| `WebView`, `VideoView`, CameraX `PreviewView`, Media3 `PlayerView`, ExoPlayer `PlayerView` and `StyledPlayerView` | Always, unless you unmask them |
+| Compose `Text` and `BasicText` | `maskAllText` is `true` (default) |
+| Compose text fields, such as `TextField` and `BasicTextField` | `maskAllText` is `true` (default) |
+| Compose `Image`, `Icon`, and other painter-based composables | `maskAllImages` is `true` (default). Vector, color, and brush painters aren't masked |
+
+The SDK doesn't automatically mask any other component. This includes content inside `AndroidView`, even a `WebView`, and maps, charts, and custom views that draw on a `Canvas`. Mask them with [`addMaskViewClass`](#mask-by-view-class), [`sentryReplayMask()`](#mask-by-view-instance), or [`Modifier.sentryReplayMask()`](#jetpack-compose).
 
 ## Mask by View Class
 
@@ -113,6 +126,8 @@ view.sentryReplayUnmask()
 ## Jetpack Compose
 
 We only support masking specific composables in Jetpack Compose. Since composables are functions, not classes, masking by view class isn't possible.
+
+Compose masking is best effort. The SDK identifies text and images from their modifiers and semantics, and image loading libraries can change these internals between versions. If you load images with an image loading library, such as Coil or Glide, add `Modifier.sentryReplayMask()` to those image composables.
 
 In the example below, we want the "Hello" message to be captured in the replay, but not the custom composable. (By default, all text composables are masked.)
 
