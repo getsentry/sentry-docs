@@ -1311,6 +1311,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/leroy-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/logbrew/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1327,6 +1331,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1336,6 +1344,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ellipsis-beta/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1570,6 +1582,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/leroy-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/logbrew/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1586,6 +1602,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1595,6 +1615,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/ellipsis/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ellipsis-beta/',
     destination: '/integrations/third-party-integrations/',
   },
   {
