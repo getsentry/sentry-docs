@@ -32,22 +32,22 @@ If you'd rather configure source maps manually, follow the steps below.
 First, install Sentry CLI as a dev dependency:
 
 ```bash {tabTitle:npm}
-npm install --save-dev @sentry/cli
+npm install --save-dev sentry
 ```
 
 ```bash {tabTitle:yarn}
-yarn add --dev @sentry/cli
+yarn add --dev sentry
 ```
 
 ```bash {tabTitle:pnpm}
-pnpm add --save-dev @sentry/cli
+pnpm add --save-dev sentry
 ```
 
 ### 2. Configure Sentry CLI
 
-For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
+For more info on Sentry CLI configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
 
-Make sure `sentry-cli` is configured for your project. For that you can use environment variables:
+Make sure the Sentry CLI is configured for your project. For that you can use environment variables:
 
 ```bash {filename:.env.local}
 SENTRY_ORG=example-org
@@ -62,7 +62,7 @@ Update your Wrangler deploy script in `package.json` to include the necessary fl
 ```json {filename:package.json}
 {
   "scripts": {
-    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)"
+    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry release propose-version)"
   }
 }
 ```
@@ -71,7 +71,7 @@ The key flags are:
 
 - `--outdir dist`: Specifies the output directory where source maps will be generated
 - `--upload-source-maps`: Forces Wrangler to generate source maps
-- `--var SENTRY_RELEASE:$(sentry-cli releases propose-version)`: Injects the release version as an environment variable
+- `--var SENTRY_RELEASE:$(sentry release propose-version)`: Injects the release version as an environment variable
 
 ### 4. Create a Source Map Upload Script
 
@@ -80,7 +80,7 @@ Add a script to upload source maps to Sentry in your `package.json`:
 ```json {filename:package.json}
 {
   "scripts": {
-    "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry-cli releases propose-version) && sentry-cli releases new $_SENTRY_RELEASE --org=your-org --project=your-project && sentry-cli sourcemaps upload --org=your-org --project=your-project --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist"
+    "sentry:sourcemaps": "_SENTRY_RELEASE=$(sentry release propose-version) && sentry release create $_SENTRY_RELEASE --org=your-org --project=your-project && sentry sourcemap upload --org=your-org --project=your-project --release=$_SENTRY_RELEASE --strip-prefix 'dist/..' dist"
   }
 }
 ```
@@ -94,7 +94,7 @@ Create a post-deploy script that automatically uploads source maps after deploym
 ```json {filename:package.json}
 {
   "scripts": {
-    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry-cli releases propose-version)",
+    "deploy": "wrangler deploy --outdir dist --upload-source-maps --var SENTRY_RELEASE:$(sentry release propose-version)",
     "postdeploy": "npm run sentry:sourcemaps"
   }
 }
@@ -169,4 +169,4 @@ If you encounter build errors when adding source map flags:
 
 - [Cloudflare Wrangler Documentation](https://developers.cloudflare.com/workers/wrangler/)
 - [Cloudflare Vite Plugin](https://developers.cloudflare.com/workers/vite-plugin/get-started/)
-- [Using sentry-cli to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)
+- [Using the Sentry CLI to Upload Source Maps](/cli/releases/#sentry-cli-sourcemaps)

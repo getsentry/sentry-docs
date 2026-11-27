@@ -64,15 +64,15 @@ pipeline {
             }
             steps {
                 // Install Sentry CLI
-                sh 'command -v sentry-cli || curl -sL https://sentry.io/get-cli/ | bash'
+                sh 'command -v sentry || npm install -g sentry'
 
                 sh '''
-                    export SENTRY_RELEASE=$(sentry-cli releases propose-version)
-                    sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-                    sentry-cli releases set-commits $SENTRY_RELEASE --auto
-                    sentry-cli sourcemaps upload --release $SENTRY_RELEASE /path/to/sourcemaps
-                    sentry-cli releases finalize $SENTRY_RELEASE
-                    sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+                    export SENTRY_RELEASE=$(sentry release propose-version)
+                    sentry release create -p $SENTRY_PROJECT $SENTRY_RELEASE
+                    sentry release set-commits $SENTRY_RELEASE --auto
+                    sentry sourcemap upload --release $SENTRY_RELEASE /path/to/sourcemaps
+                    sentry release finalize $SENTRY_RELEASE
+                    sentry release deploy $SENTRY_RELEASE $SENTRY_ENVIRONMENT
                 '''
             }
         }
@@ -82,10 +82,10 @@ pipeline {
 
 **Notes**:
 
-- If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemaps upload` line.
+- If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemap upload` line.
 - If you can’t install a repository integration, send commit metadata using the [create release endpoint](/product/releases/associate-commits/#using-the-api) or omit the `set-commits` line.
 - `credentials('sentry-auth-token')` refers to the ID of the credentials just added to Jenkins.
-- `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
+- `sentry release propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
 
 ### Freestyle Project
 
@@ -100,22 +100,22 @@ If you're using Freestyle projects, you need to add another build step after dep
    ![View of jenkins freestyle shell.](./img/jenkins-freestyle-shell.png)
 
    ```bash
-   curl -sL https://sentry.io/get-cli/ | bash || true
+   npm install -g sentry || true
 
    export SENTRY_ORG=sample-organization-slug
    export SENTRY_PROJECT=sample-project-slug
    export SENTRY_ENVIRONMENT=production
-   export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+   export SENTRY_RELEASE=$(sentry release propose-version)
 
-   sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
-   sentry-cli releases set-commits $SENTRY_RELEASE --auto
-   sentry-cli sourcemaps upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
-   sentry-cli releases finalize $SENTRY_RELEASE
-   sentry-cli deploys new -e $SENTRY_ENVIRONMENT
+   sentry release create -p $SENTRY_PROJECT $SENTRY_RELEASE
+   sentry release set-commits $SENTRY_RELEASE --auto
+   sentry sourcemap upload --release $SENTRY_RELEASE path-to-sourcemaps-if-applicable
+   sentry release finalize $SENTRY_RELEASE
+   sentry release deploy $SENTRY_RELEASE $SENTRY_ENVIRONMENT
    ```
 
    **Notes**:
 
-   - If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemaps upload` line.
+   - If you’re not deploying a project that requires source maps or you've sent source maps to Sentry using another method, omit the `sourcemap upload` line.
    - If you can’t install a repository integration, send commit metadata using the [create release endpoint](/product/releases/associate-commits/#using-the-api) or omit the `set-commits` line.
-   - `sentry-cli releases propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.
+   - `sentry release propose-version` defaults to the commit SHA of the commit being deployed. To set this to a different version, modify `SENTRY_RELEASE` to the preferred version.

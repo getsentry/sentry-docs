@@ -4,7 +4,7 @@ Every solution requires a **Sentry Auth Token**. You can create tokens on the [O
 
 To view uploaded dSYMs in your project, select an existing project from the "Projects" page, then go to **[Settings > Debug Files](https://sentry.io/orgredirect/organizations/:orgslug/settings/projects/:projectId/debug-symbols/)**. You can upload dSYMs using:
 
-- [sentry-cli](#sentry-cli)
+- [Sentry CLI](#sentry-cli)
 - [Sentry Fastlane Plugin](#sentry-fastlane-plugin)
 - [Xcode Build Phase](#xcode-build-phase)
 
@@ -15,11 +15,11 @@ If this is your situation, see Apple's guide to [managing your app's information
 
 </Alert>
 
-## Sentry-cli
+## Sentry CLI
 
-Use the `sentry-cli debug-files upload` command to upload dSYMs to Sentry. The command will recursively scan the provided folders or ZIP archives. Files that have already been uploaded will be skipped automatically.
+Use the `sentry debug-files upload` command to upload dSYMs to Sentry. The command will recursively scan the provided folders or ZIP archives. Files that have already been uploaded will be skipped automatically.
 
-Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, the Sentry CLI will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds.
 
@@ -32,7 +32,7 @@ You can also upload your code for source context. This feature allows Sentry to 
 />
 
 ```bash
-sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ sentry debug-files upload \
   # ___PRODUCT_OPTION_START___ source-context
   --include-sources \
   # ___PRODUCT_OPTION_END___ source-context
@@ -45,7 +45,7 @@ sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
 
 You can find installation instructions for Sentry CLI https://docs.sentry.io/cli/installation/.
 
-For more info on `sentry-cli` configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
+For more info on Sentry CLI configuration visit the [Sentry CLI configuration docs](/cli/configuration/).
 
 </Alert>
 
@@ -91,9 +91,9 @@ Your project's dSYM can be uploaded during Xcode's build phase as a _Run Script_
 
 Follow these steps to upload the debug symbols:
 
-1.  Download and install [sentry-cli](/cli/installation/).
+1.  Download and install the [Sentry CLI](/cli/installation/).
 2.  Copy the script below into a new _Run Script_ and set your _AUTH_TOKEN_, _ORG_SLUG_, and _PROJECT_SLUG_.
-Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+Sentry can display snippets of your code next to the event stack traces. This feature is called <PlatformLink to="/data-management/debug-files/source-context/">source context</PlatformLink>. When setting the `--include-sources` option, the Sentry CLI will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 For this to work, your project settings for `DEBUG_INFORMATION_FORMAT` must be set to `DWARF with dSYM File`, which is the default for release builds but not for debug builds. If you don't want Sentry to upload your source code, remove the `--include-sources` argument from the copied script.
 
@@ -112,20 +112,20 @@ if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
 
-if which sentry-cli >/dev/null; then
+if which sentry >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload \
+ERROR=$(sentry debug-files upload \
 # ___PRODUCT_OPTION_START___ source-context
 --include-sources \
 # ___PRODUCT_OPTION_END___ source-context
 "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
-echo "warning: sentry-cli - $ERROR"
+echo "warning: sentry - $ERROR"
 fi
 else
-echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+echo "warning: sentry not installed, see https://cli.sentry.dev/getting-started/"
 fi
 ```
 
@@ -134,25 +134,22 @@ if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
 
-if which sentry-cli >/dev/null; then
+if which sentry >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload \
+ERROR=$(sentry debug-files upload \
 # ___PRODUCT_OPTION_START___ source-context
 --include-sources \
 # ___PRODUCT_OPTION_END___ source-context
-"$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
+"$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
-echo "error: sentry-cli - $ERROR"
+echo "error: sentry - $ERROR"
 fi
 else
-echo "error: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+echo "error: sentry not installed, see https://cli.sentry.dev/getting-started/"
 fi
 ```
-<Alert>
-You can add `--force-foreground` argument to sentry-cli to help you debug any error that could happen during the upload process.
-</Alert>
 
 3.  You also need to add the following line to the _Input Files_ section in the _Run Script_ from step 2:
 
@@ -169,7 +166,7 @@ ${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${EXE
 
 <Alert title="Self Hosted">
 
-By default sentry-cli will connect to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
+By default the Sentry CLI connects to sentry.io. For on-prem you need to export the _SENTRY_URL_ environment variable to instruct the tool to connect to your server:
 
 ```bash
 export SENTRY_URL=https://mysentry.invalid/

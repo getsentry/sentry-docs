@@ -149,17 +149,17 @@ Debug information files on Apple platforms are called dSYMs. The SDK adds a buil
 
 The SDK adds its ProGuard rules, `proguard-sentry-unity.pro`, to the Gradle project. If you enable **Minify** in **Player Settings > Publishing Settings**, the Gradle build also uploads the ProGuard mapping file, so Sentry can deobfuscate Java stack traces. With [Unity as a Library](/platforms/unity/native-support/unity-as-a-library/), the app that embeds the game minifies the code, so upload the mapping file from that app's build.
 
-### Manual Upload Using sentry-cli
+### Manual Upload Using the Sentry CLI
 
-If you don't want to rely on the automated upload for desktop and console builds, you can run `sentry-cli` from the command line. Use the executables in the SDK package, or follow the [sentry-cli documentation](/cli/installation/) to install it globally. To upload your game's debug symbols, run:
+If you don't want to rely on the automated upload for desktop and console builds, you can run the Sentry CLI from the command line. Follow the [Sentry CLI documentation](/cli/installation/) to install it. To upload your game's debug symbols, run:
 
 <OrgAuthTokenNote />
 
 ```bash
-sentry-cli --auth-token ___ORG_AUTH_TOKEN___ debug-files upload --il2cpp-mapping --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_BUILD_OUTPUT
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ sentry debug-files upload --il2cpp-mapping --org ___ORG_SLUG___ --project ___PROJECT_SLUG___ PATH_TO_BUILD_OUTPUT
 ```
 
-`sentry-cli` scans `PATH_TO_BUILD_OUTPUT` recursively. Point it at the folder that contains your build and the `<Product>_BackUpThisFolder_ButDontShipItWithYourGame` and `<Product>_BurstDebugInformation_DoNotShip` folders that Unity creates next to it. These folders hold the IL2CPP output and the Burst debug information.
+The Sentry CLI scans `PATH_TO_BUILD_OUTPUT` recursively. Point it at the folder that contains your build and the `<Product>_BackUpThisFolder_ButDontShipItWithYourGame` and `<Product>_BurstDebugInformation_DoNotShip` folders that Unity creates next to it. These folders hold the IL2CPP output and the Burst debug information.
 
 - `--il2cpp-mapping` uploads the line mapping that Sentry needs for [C# line numbers in IL2CPP builds](/platforms/unity/configuration/il2cpp/). Leave it out for Mono builds.
 - `--include-sources` is optional. It uploads your source code so Sentry can show [source context](/platforms/unity/data-management/debug-files/source-context/).

@@ -4,12 +4,12 @@ There are three options for setting up source context:
 
 ### 1. Manually upload with the Sentry CLI
 
-If you add the `--include-sources` flag to the sentry-cli `debug-files upload` command, sentry-cli will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
+If you add the `--include-sources` flag to the `sentry debug-files upload` command, the Sentry CLI will scan your debug files to find references to the source code files, resolve them in the local file system, bundle them up, and upload them to Sentry.
 
 <OrgAuthTokenNote />
 
 ```bash
-sentry-cli debug-files upload --auth-token ___ORG_AUTH_TOKEN___ \
+SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___ sentry debug-files upload \
   --include-sources \
   --org ___ORG_SLUG___ \
   --project ___PROJECT_SLUG___ \
@@ -40,7 +40,7 @@ The Sentry Fastlane plugin version 2.0.0 includes breaking changes due to the se
 
 ### 3. Xcode Build Phase
 
-You can upload your sources to Sentry after every build through Xcode. To do this, add the `--include-sources` flag to the sentry-cli `debug-files upload` command in the [Upload Debug Symbols](#xcode-build-phase) Xcode build phase script.
+You can upload your sources to Sentry after every build through Xcode. To do this, add the `--include-sources` flag to the `sentry debug-files upload` command in the [Upload Debug Symbols](#xcode-build-phase) Xcode build phase script.
 
 <OrgAuthTokenNote />
 
@@ -49,16 +49,16 @@ if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
 
-if which sentry-cli >/dev/null; then
+if which sentry >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
+ERROR=$(sentry debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
-echo "warning: sentry-cli - $ERROR"
+echo "warning: sentry - $ERROR"
 fi
 else
-echo "warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+echo "warning: sentry not installed, see https://cli.sentry.dev/getting-started/"
 fi
 ```
 
@@ -67,15 +67,15 @@ if [[ "$(uname -m)" == arm64 ]]; then
     export PATH="/opt/homebrew/bin:$PATH"
 fi
 
-if which sentry-cli >/dev/null; then
+if which sentry >/dev/null; then
 export SENTRY_ORG=___ORG_SLUG___
 export SENTRY_PROJECT=___PROJECT_SLUG___
 export SENTRY_AUTH_TOKEN=___ORG_AUTH_TOKEN___
-ERROR=$(sentry-cli debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" --force-foreground 2>&1 >/dev/null)
+ERROR=$(sentry debug-files upload --include-sources "$DWARF_DSYM_FOLDER_PATH" 2>&1 >/dev/null)
 if [ ! $? -eq 0 ]; then
-echo "error: sentry-cli - $ERROR"
+echo "error: sentry - $ERROR"
 fi
 else
-echo "error: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases"
+echo "error: sentry not installed, see https://cli.sentry.dev/getting-started/"
 fi
 ```
