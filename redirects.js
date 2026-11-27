@@ -1418,6 +1418,18 @@ const userDocsRedirects = [
     source: '/organization/integrations/motir/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/stacklink/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1647,6 +1659,18 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/stacklink/',
     destination: '/integrations/third-party-integrations/',
   },
   {
