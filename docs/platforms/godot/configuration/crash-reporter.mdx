@@ -1,0 +1,69 @@
+---
+title: Crash Reporter
+description: "Let players review crash reports, add comments, and choose whether to send them with the Sentry Desktop Crash Reporter."
+sidebar_order: 16
+---
+
+<Alert>
+
+Available starting with Sentry Godot SDK version 2.6.0. Supported on Windows and Linux for x86_64 and arm64. x86_32 is not supported.
+
+</Alert>
+
+The Sentry Desktop Crash Reporter displays a dialog after a crash, letting players review the report, add a comment, and choose whether to send it to Sentry. It runs as a separate application and handles submission of the crash report.
+
+<Include name="common-imgs/sentry-desktop-crash-reporter" />
+
+The crash reporter is disabled by default. Headless runs always skip it.
+
+## Enable the Crash Reporter
+
+1. Download `sentry-godot-crash-reporter-<version>.zip` from the [Sentry Godot SDK release](https://github.com/getsentry/sentry-godot/releases) matching your SDK version.
+2. Extract it into your project folder, alongside `project.godot`. This adds the reporter executables under `addons/sentry/crash_reporter/`.
+3. In **Project Settings**, under **Sentry > Crash Reporter**, turn on **Enabled**.
+4. Export your game. The Sentry export plugin copies the reporter for the selected platform and architecture beside the game executable. Distribute it with the rest of your exported game.
+
+Once installed and enabled, the bundled crash reporter needs no additional configuration.
+
+## Customize the Appearance
+
+You can customize the reporter dialog in **Project Settings** under **Sentry > Crash Reporter > Appearance**:
+
+- **Window Title** - Title of the crash reporter window.
+- **Header Text** - Heading at the top of the dialog.
+- **Header Description** - Text below the heading.
+- **Submit Button Label** - Label of the button that sends the report.
+- **Cancel Button Label** - Label of the button that closes the dialog without sending the report.
+- **Accent Color** - Color of buttons and highlights. An alpha of `0` keeps the default color; other values produce an opaque color.
+- **Window Closable** - Enabled by default. Turning it off disables the window's close button and hides the cancel button, requiring submission to close the dialog.
+- **Views** - Tabs to show, in display order. Choose from **Feedback**, **Tags**, **Contexts**, **Additional Data**, **SDK**, **User**, **Attachments**, **Stacktrace**, and **Envelope**. Leave empty to show all tabs in the default order.
+- **Logo Light Theme** / **Logo Dark Theme** - Custom PNG logos for the system's light and dark themes. Export copies the selected files beside the game executable; distribute them with your game. You can use the same image for both themes; separate images must have different filenames.
+
+Empty text and logo settings keep the reporter's defaults. These appearance settings apply to the Sentry Desktop Crash Reporter; custom reporters may ignore them.
+
+## Display Stack Traces
+
+To display stack traces in the crash dialog, use the <PlatformLink to="/configuration/native-backend/">native crash backend</PlatformLink>. Its default configuration includes client-side stack traces.
+
+The native crash handler resolves function names before launching the reporter, using symbols available on the player's machine:
+
+- **Windows**: Place matching `.pdb` files beside the game executable or GDExtension `.dll` they describe.
+- **Linux**: Keep symbols in the executable or `.so`, or place the separate debug file referenced by the binary's `.gnu_debuglink` beside the binary or in its `.debug/` subdirectory.
+
+Symbols uploaded to Sentry improve stack traces in Sentry, not in the local dialog.
+
+## Use a Custom Reporter
+
+To use your own build of [Sentry Desktop Crash Reporter](https://github.com/getsentry/sentry-desktop-crash-reporter), change the path for each target platform and architecture in **Project Settings** under **Sentry > Crash Reporter**. Export paths can be `res://` paths or absolute filesystem paths. Export copies the selected executable beside the game executable.
+
+At runtime, the SDK looks for the configured filename beside the game executable first, then at the configured path. An empty or missing path causes a warning, and crashes are sent without the reporter dialog. Headless runs also use normal crash reporting without the dialog.
+
+For a custom reporter implementation, follow the [external crash reporter protocol](/platforms/native/advanced-usage/external-crash-reporter/): the executable receives the crash report path as its only command-line argument and is responsible for submitting it to Sentry.
+
+## Programmatic Configuration
+
+You can override the settings during initialization through `options.crash_reporter.enabled` and `options.crash_reporter.path` in GDScript, or `options.CrashReporter.Enabled` and `options.CrashReporter.Path` in C#.
+
+Appearance settings are available on the same object, such as `options.crash_reporter.window_title` and `options.crash_reporter.logo_light_theme` in GDScript, or `options.CrashReporter.WindowTitle` and `options.CrashReporter.LogoLightTheme` in C#. If you set logo paths only in code, bundle the PNG files manually.
+
+Enabling the reporter only in code doesn't cause export to include it. Enable it in Project Settings for automatic packaging, or bundle the executable manually. Runtime paths can be absolute, `user://` paths, or relative to the game executable's directory.
