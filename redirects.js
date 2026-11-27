@@ -1438,6 +1438,14 @@ const userDocsRedirects = [
     source: '/organization/integrations/ace-ai/',
     destination: '/integrations/third-party-integrations/',
   },
+  {
+    source: '/organization/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fareeqy/',
+    destination: '/integrations/third-party-integrations/',
+  },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
   {
     source: '/organization/integrations/workos/',
@@ -1687,6 +1695,14 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/ace-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fareeqy/',
     destination: '/integrations/third-party-integrations/',
   },
   {
