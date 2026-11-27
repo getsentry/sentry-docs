@@ -1299,7 +1299,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/deviera/',
+    source: '/organization/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1308,6 +1308,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/leroy-ai/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1327,6 +1331,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1339,6 +1347,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/ellipsis-beta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/phoenix-alerts/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1347,7 +1359,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/stackstitch/',
+    source: '/organization/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1355,7 +1367,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/applied-edge/',
+    source: '/organization/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1416,6 +1428,34 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/stacklink/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/brix/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ace-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fareeqy/',
     destination: '/integrations/third-party-integrations/',
   },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
@@ -1530,7 +1570,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/deviera/',
+    source: '/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1539,6 +1579,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/leroy-ai/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1558,6 +1602,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1570,6 +1618,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/ellipsis-beta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/phoenix-alerts/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1578,7 +1630,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/stackstitch/',
+    source: '/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1586,7 +1638,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/applied-edge/',
+    source: '/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1647,6 +1699,34 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/stacklink/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/brix/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ace-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fareeqy/',
     destination: '/integrations/third-party-integrations/',
   },
   {
