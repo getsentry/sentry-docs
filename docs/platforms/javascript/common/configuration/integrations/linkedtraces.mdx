@@ -1,0 +1,68 @@
+---
+title: LinkedTraces
+description: "Link each new browser trace to the previous one so you can navigate between them in Sentry."
+notSupportedCategories:
+  - server-only
+  - mobile
+---
+
+<Alert>
+
+This integration only works inside a browser environment. It requires JavaScript SDK version 11.14.0 or later.
+
+</Alert>
+
+_Import name: `Sentry.linkedTracesIntegration`_
+
+The LinkedTraces integration links each new trace, such as a navigation, to the previous one, so you can move between the traces of a user journey in Sentry.
+
+The <PlatformLink to="/configuration/integrations/browsertracing/">BrowserTracing</PlatformLink> integration adds this integration automatically, so you don't need to add it yourself. Configure it through BrowserTracing's `linkPreviousTrace` and `consistentTraceSampling` options, or set `linkPreviousTrace: "off"` to turn it off.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingIntegration({
+      linkPreviousTrace: "session-storage",
+      consistentTraceSampling: true,
+    }),
+  ],
+});
+```
+
+To set its options directly, add the integration yourself. An explicitly added LinkedTraces integration takes precedence over BrowserTracing's settings.
+
+<PlatformSection supported={["javascript"]}>
+
+## Use With BrowserTracingCore
+
+To ship less code, replace `browserTracingIntegration` with <PlatformLink to="/configuration/integrations/browsertracing/#reduce-bundle-size">`browserTracingCoreIntegration`</PlatformLink>, which doesn't add this integration, and add it only if you need it:
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingCoreIntegration(),
+    Sentry.linkedTracesIntegration({
+      storage: "session-storage",
+      consistentTraceSampling: true,
+    }),
+  ],
+});
+```
+
+</PlatformSection>
+
+## Configuration Options
+
+<SdkOption name="storage" type="'in-memory' | 'session-storage'" defaultValue="'in-memory'">
+
+Where the previous trace is stored. Use `'in-memory'` for single-page applications. Use `'session-storage'` for multi-page applications, which makes the SDK write to the browser's `sessionStorage`.
+
+This is the `linkPreviousTrace` option of BrowserTracing.
+
+</SdkOption>
+
+<SdkOption name="consistentTraceSampling" type="boolean" defaultValue="false">
+
+Sample subsequent traces with the sampling decision of the initial trace. If the pageload trace was sampled, the navigations that follow are sampled too, and the other way around. Without it, your `tracesSampleRate` or `tracesSampler` decides how often linked traces are both sampled.
+
+</SdkOption>

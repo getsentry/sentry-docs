@@ -25,4 +25,131 @@ Sentry.init({
 });
 ```
 
-See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#configuration-options">Configuration Options</PlatformLink> for a full list of available options for `browserTracingIntegration` 
+See <PlatformLink to="/tracing/instrumentation/automatic-instrumentation/#configuration-options">Configuration Options</PlatformLink> for a full list of available options for `browserTracingIntegration`
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+## Included Integrations
+
+BrowserTracing creates pageload and navigation spans itself. Since SDK version 11.14.0, it sets up the rest of its features by adding these integrations for you:
+
+| Integration                                                                              | What it captures                                  | BrowserTracing options                                                                                    |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| <PlatformLink to="/configuration/integrations/webvitals/">WebVitals</PlatformLink>       | LCP, CLS, and INP                                 | `webVitals`                                                                                               |
+| <PlatformLink to="/configuration/integrations/fetchtracing/">FetchTracing</PlatformLink> | Spans and trace headers for `fetch` requests      | `traceFetch`, `shouldCreateSpanForRequest`, `enableHTTPTimings`, `onRequestSpanStart`, `onRequestSpanEnd` |
+| <PlatformLink to="/configuration/integrations/xhrtracing/">XhrTracing</PlatformLink>     | Spans and trace headers for XHR requests          | `traceXHR`, `shouldCreateSpanForRequest`, `enableHTTPTimings`, `onRequestSpanStart`, `onRequestSpanEnd`   |
+| <PlatformLink to="/configuration/integrations/linkedtraces/">LinkedTraces</PlatformLink> | Links from each trace to the previous one         | `linkPreviousTrace`, `consistentTraceSampling`                                                            |
+| <PlatformLink to="/configuration/integrations/longtasks/">LongTasks</PlatformLink>       | Long animation frames and long tasks              | `enableLongTask`, `enableLongAnimationFrame`                                                              |
+| <PlatformLink to="/configuration/integrations/resources/">Resources</PlatformLink>       | Scripts, stylesheets, images, and other resources | `ignoreResourceSpans`                                                                                     |
+
+You don't need to change anything: the options above still work on `browserTracingIntegration`. If you add one of these integrations yourself, your instance takes precedence over the one BrowserTracing would add.
+
+</PlatformSection>
+</PlatformCategorySection>
+
+<PlatformSection supported={["javascript"]}>
+
+## Reduce Bundle Size
+
+_Import name: `Sentry.browserTracingCoreIntegration`_
+
+Because `browserTracingIntegration` adds all of the integrations above, your bundler can't remove the ones you don't use. To ship less code, use `browserTracingCoreIntegration` instead and add only the integrations you need. Requires SDK version 11.14.0 or later.
+
+```javascript
+Sentry.init({
+  integrations: [
+    Sentry.browserTracingCoreIntegration(),
+    // Add only what you need:
+    Sentry.webVitalsIntegration(),
+    Sentry.fetchTracingIntegration(),
+  ],
+});
+```
+
+`browserTracingCoreIntegration` keeps:
+
+- Pageload, navigation, and back/forward cache restore spans, including redirect detection
+- Trace continuation from the `sentry-trace` and `baggage` meta tags or `Server-Timing` headers
+- Browser timing and paint data on the pageload span
+- Marking the active span as errored when an uncaught error happens
+
+It accepts the options that configure these spans, listed under [Configuration Options](#configuration-options). The options listed in the table above move to their own integration.
+
+The CDN bundles that include tracing export `browserTracingCoreIntegration` and the standalone integrations too.
+
+</PlatformSection>
+
+## Configuration Options
+
+These options configure pageload and navigation spans.
+
+<SdkOption name="instrumentPageLoad" type="boolean" defaultValue="true">
+
+Enable/disable automatic `pageload` span creation on initial page load.
+
+</SdkOption>
+
+<SdkOption name="instrumentNavigation" type="boolean" defaultValue="true">
+
+Enable/disable automatic `navigation` span creation on history changes.
+
+</SdkOption>
+
+<PlatformCategorySection supported={['browser']}>
+<PlatformSection notSupported={['javascript.capacitor', 'javascript.electron']}>
+
+<SdkOption name="instrumentBfcacheRestore" type="boolean" defaultValue="true" availableSince="11.0.0">
+
+Start a navigation span when the page is restored from the back/forward cache. This starts a new trace for activity after the restore. It is independent of `instrumentNavigation`.
+
+Web Vitals for restored pages are collected by default in stream mode. Set `webVitals: { bfcacheNavigations: false }` to disable this collection. See <PlatformLink to="/configuration/integrations/webvitals/#bfcachenavigations">WebVitals</PlatformLink> for requirements.
+
+</SdkOption>
+
+</PlatformSection>
+</PlatformCategorySection>
+
+<SdkOption name="detectRedirects" type="boolean" defaultValue="true">
+
+Detect redirects and avoid creating separate `navigation` spans for them. Set to `false` to create a span for every navigation.
+
+</SdkOption>
+
+<SdkOption name="beforeStartSpan" type="(options: StartSpanOptions) => StartSpanOptions">
+
+Modify span data before it's captured. Useful for adding context or normalizing URLs with dynamic segments:
+
+<PlatformContent includePath="performance/beforeNavigate-example" />
+
+</SdkOption>
+
+<SdkOption name="idleTimeout" type="number" defaultValue="1000">
+
+Time in ms to wait before finishing a pageload/navigation span when no unfinished child spans remain.
+
+</SdkOption>
+
+<SdkOption name="finalTimeout" type="number" defaultValue="30000">
+
+Maximum duration in ms for pageload/navigation spans. Spans exceeding this are automatically finished.
+
+</SdkOption>
+
+<SdkOption name="childSpanTimeout" type="number" defaultValue="15000">
+
+Maximum time in ms a child span can run before the parent pageload/navigation span is finished.
+
+</SdkOption>
+
+<SdkOption name="markBackgroundSpan" type="boolean" defaultValue="true">
+
+Mark pageload/navigation spans as "cancelled" when the tab moves to background. Recommended to keep enabled for accurate measurements.
+
+</SdkOption>
+
+<SdkOption name="enableReportPageLoaded" type="boolean" defaultValue="false" availableSince="10.13.0">
+
+Enable the <PlatformLink to="/apis/#reportPageLoaded">`Sentry.reportPageLoaded()` function</PlatformLink>.
+
+</SdkOption>
