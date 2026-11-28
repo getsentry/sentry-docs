@@ -1,0 +1,26 @@
+---
+title: Out-of-Process Native Crash Handling
+description: "Learn how to send native crash reports from a separate process on Linux and Windows."
+sidebar_order: 90
+---
+
+On Linux and Windows, the Flutter SDK uses [Sentry Native](/platforms/native/) to capture native crashes. By default, it uses Sentry Native's Breakpad backend, which handles crashes inside the crashed application and sends the crash reports on the next launch of the application.
+
+Alternatively, you can enable the out-of-process [`native` backend](/platforms/native/configuration/backends/native/). Its `sentry-crash` daemon handles crashes outside the crashed application and sends the crash reports at crash time, instead of on the next launch. On Windows, it can also capture [fast-fail crashes](/platforms/native/advanced-usage/windows-error-reporting/#wer-compatibility), which terminate the application immediately and can only be captured from outside the process.
+
+## Configuration
+
+Set the `SENTRY_NATIVE_BACKEND` environment variable to `native` in your local build environment and CI before building the application:
+
+```bash {tabTitle:Linux} {mdExpandTabs}
+SENTRY_NATIVE_BACKEND=native flutter build linux
+```
+
+```powershell {tabTitle:Windows}
+$env:SENTRY_NATIVE_BACKEND = "native"
+flutter build windows
+```
+
+This is a build-time setting, not a Dart SDK initialization option.
+
+The build output then includes `sentry-crash` (`sentry-crash.exe` on Windows) and, on Windows, `sentry-wer.dll`. Deploy them in the same directory as your application.
