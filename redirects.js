@@ -2207,6 +2207,14 @@ const userDocsRedirects = [
     destination: '/platforms/apple/integrations/:integration/',
   },
   {
+    source: '/platforms/apple/configuration/metric-kit/',
+    destination: '/platforms/apple/metric-kit/',
+  },
+  {
+    source: '/platforms/apple/guides/:guide/configuration/metric-kit/',
+    destination: '/platforms/apple/guides/:guide/metric-kit/',
+  },
+  {
     source: '/platforms/apple/guides/:guide/configuration/integrations/',
     destination: '/platforms/apple/guides/:guide/integrations/',
   },

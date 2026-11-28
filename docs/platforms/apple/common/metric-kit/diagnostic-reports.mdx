@@ -1,0 +1,211 @@
+---
+title: App Hangs and Other Diagnostic Reports
+sidebar_title: Diagnostic Reports
+sidebar_order: 10
+description: "Capture MetricKit diagnostics, such as app hangs, CPU and disk write exceptions, as Sentry errors and investigate app hangs with symbolicated flame graph attachments."
+---
+
+The <PlatformLink to="/metric-kit/">MetricKit</PlatformLink> integration captures the diagnostic reports of [MetricKit](https://developer.apple.com/documentation/metrickit), such as app hangs, CPU and disk write exceptions, or slow app launches, as Sentry error events.
+
+This integration is available in SDK version 8.14.0 and later on iOS 15 and later, macOS 12 and later, and visionOS.
+
+MetricKit controls the stack traces included in each diagnostic. Some contain only a few frames. To discard reports that aren't useful to you, filter them in <PlatformLink to="/configuration/filtering/#filtering-error-events">`beforeSend`</PlatformLink>.
+
+Identify MetricKit events by their `mechanism.type`, which is listed for each report in [Choose Diagnostic Reports](#choose-diagnostic-reports).
+
+## Enable MetricKit
+
+Enable the integration by setting the `enableMetricKit` option to `true`. It captures [HangDiagnostic](https://developer.apple.com/documentation/metrickit/hangdiagnostic), [DiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/diskwriteexceptiondiagnostic) and [CPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/cpuexceptiondiagnostic):
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+}];
+```
+
+## Hang Diagnostics
+
+MetricKit reports periods when your app is unresponsive. Each hang diagnostic includes a hang duration and a sampled call stack tree, which can contain multiple execution paths rather than a single stack trace. Apple controls which hangs are reported and how much detail they contain, so not every hang produces a diagnostic.
+
+We recommend MetricKit for system-provided hang diagnostics. Disabling or pausing <PlatformLink to="/configuration/app-hangs/">App Hang tracking</PlatformLink> does not stop MetricKit reports, and `appHangTimeoutInterval` does not change MetricKit's detection threshold.
+
+### Enable Flame Graph Attachments
+
+By default, the SDK stores the sampled call tree in the event's stack trace. Large trees are subject to stack trace limits, which can leave the flame graph incomplete. Starting with SDK version 9.31.0, send the tree as a separate attachment to preserve it independently of those limits.
+
+<Alert>
+
+Flame graph attachment reporting is available for public testing. The configuration option is experimental and may change in a future release.
+
+</Alert>
+
+Set `hangReportingMode` to `.flamegraphAttachment` when configuring the SDK. This option affects hang diagnostics only:
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+    options.experimental.metrickit.hangReportingMode = .flamegraphAttachment
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+    options.experimental.metrickit.hangReportingMode =
+        SentryObjCMetricKitHangReportingModeFlamegraphAttachment;
+}];
+```
+
+The SDK sends a `flamegraph.json` attachment with each hang event. Upload your app's <PlatformLink to="/dsym/">debug information files</PlatformLink> so Sentry can symbolicate the flame graph using the same debug symbols as error events. Profiling does not need to be enabled.
+
+To capture only hang diagnostics with MetricKit in Swift, replace `options.enableMetricKit = true` with `options.experimental.metrickit.enabledDiagnosticReports = [.hang]`. This requires SDK version 9.32.0 or later.
+
+To return to default reporting, set `hangReportingMode` to `.legacy` (`SentryObjCMetricKitHangReportingModeLegacy` in Objective-C).
+
+### Investigate a Hang
+
+Open a MetricKit hang event in Sentry to view its stack trace and flame graph. Sentry selects a representative stack trace from the sampled call trees for issue grouping, considering sample counts, stack depth, and in-app frames. Use this stack as a starting point for investigation, not proof of the hang's cause.
+
+![Representative stack trace selected from a MetricKit hang diagnostic](./img/metrickit-hang-stack-trace.png)
+
+The **Flamegraph** section shows the sampled call paths, including branches outside the representative stack trace. If the diagnostic contains multiple call trees, use the tree selector to inspect them individually.
+
+![MetricKit hang flame graph with application and system functions and the flamegraph.json attachment](./img/metrickit-hang-flamegraph.png)
+
+When reading the graph:
+
+- **Width represents sample count**, including samples in a frame's descendants. Wider paths were observed more often.
+- Horizontal position does not represent execution order, and frame width is not an exact duration. MetricKit provides aggregate observations, not timestamped samples.
+- Some call trees aggregate samples across threads. Do not assume every tree represents a single thread or the main thread.
+
+### Attachment Limits
+
+Flame graph attachments are subject to these limits. The size and symbolication limits come from the [flame graph attachment specification](https://develop.sentry.dev/sdk/telemetry/attachments/#flame-graph-validation-and-limits):
+
+- Attachments count toward your attachment quota, and the associated hang events count toward your error-event quota. No profiling quota is consumed. Attachment retention and access permissions apply.
+- Each attachment is limited to 10 MiB. If the SDK cannot create it, for example because sample counts are invalid or the payload exceeds this limit, it falls back to storing the tree in the event's stack trace.
+- Sentry symbolicates at most the first 2,500 frame entries in an attachment. Additional frames remain in the graph but may be unresolved. Missing debug information can also leave frames unresolved.
+
+## Choose Diagnostic Reports
+
+<Alert level="warning" title="Experimental">
+
+This option is experimental and may change in future releases. It's available on Cocoa 9.32.0 and up.
+
+</Alert>
+
+Use `options.experimental.metrickit.enabledDiagnosticReports` to choose which diagnostic reports the SDK captures. A non-empty set enables the integration and captures exactly these reports, regardless of `enableMetricKit`. When the set is empty, which is the default, `enableMetricKit` decides whether the integration captures hangs, CPU exceptions and disk write exceptions.
+
+| Report                | MetricKit diagnostic                                                                                             | `mechanism.type`           | Availability                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------- |
+| `.hang`               | [HangDiagnostic](https://developer.apple.com/documentation/metrickit/hangdiagnostic)                             | `mx_hang_diagnostic`       | All                                                           |
+| `.cpuException`       | [CPUExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/cpuexceptiondiagnostic)             | `mx_cpu_exception`         | All                                                           |
+| `.diskWriteException` | [DiskWriteExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/diskwriteexceptiondiagnostic) | `mx_disk_write_exception`  | All                                                           |
+| `.appLaunch`          | [AppLaunchDiagnostic](https://developer.apple.com/documentation/metrickit/applaunchdiagnostic)                   | `mx_app_launch_diagnostic` | iOS 16 and later, visionOS 26 and earlier, macOS 27 and later |
+| `.crash`              | [CrashDiagnostic](https://developer.apple.com/documentation/metrickit/crashdiagnostic)                           | `MXCrashDiagnostic`        | All                                                           |
+| `.memoryException`    | [MemoryExceptionDiagnostic](https://developer.apple.com/documentation/metrickit/memoryexceptiondiagnostic)       | `mx_memory_exception`      | iOS 27 and later                                              |
+
+```swift {tabTitle:Swift}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.experimental.metrickit.enabledDiagnosticReports = [.hang, .cpuException, .diskWriteException, .appLaunch]
+}
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.experimental.metrickit.enabledDiagnosticReports =
+        SentryObjCMetricKitDiagnosticReportHang
+        | SentryObjCMetricKitDiagnosticReportCPUException
+        | SentryObjCMetricKitDiagnosticReportDiskWriteException
+        | SentryObjCMetricKitDiagnosticReportAppLaunch;
+}];
+```
+
+The option is available from Swift and through the <PlatformLink to="/install/swift-package-manager/#sentryobjc-objective-c">SentryObjC</PlatformLink> SDK. Objective-C apps that import `Sentry` can only use `enableMetricKit`.
+
+On iOS, macOS and visionOS 27 and later, apps built with Xcode 27 or later receive diagnostics through MetricKit's [`MetricManager`](https://developer.apple.com/documentation/metrickit/metricmanager). The SDK creates the same events as on earlier OS versions.
+
+<Alert level="warning" title="Duplicate events">
+
+MetricKit can report a crash or a termination that the SDK already reported itself. The SDK's crash handler reports crashes, which `.crash` reports as well, and its <PlatformLink to="/configuration/watchdog-terminations/">watchdog termination tracking</PlatformLink> reports out-of-memory terminations, which `.memoryException` reports as well.
+
+The SDK tries to deduplicate these events, but it can't match every MetricKit diagnostic to the event it already sent, so some crashes and terminations can show up twice in Sentry.
+
+</Alert>
+
+## Attach the Raw Diagnostic Payload
+
+Starting with SDK version 8.29.0, enable `enableMetricKitRawPayload` to attach the original MetricKit diagnostic payload as JSON to the event. The attachment is named `MXDiagnosticPayload.json`. On iOS, macOS and visionOS 27 and later, in apps built with Xcode 27 or later, it's named `DiagnosticReport.json`.
+
+The raw payload is separate from `flamegraph.json` and is not required for the flame graph viewer. Enabling both options sends both attachments and consumes additional attachment quota.
+
+```swift {tabTitle:Swift} {mdExpandTabs}
+import Sentry
+
+SentrySDK.start { options in
+    options.dsn = "___PUBLIC_DSN___"
+    options.enableMetricKit = true
+    options.enableMetricKitRawPayload = true
+}
+```
+
+```objc {tabTitle:Objective-C}
+@import Sentry;
+
+[SentrySDK startWithConfigureOptions:^(SentryOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+    options.enableMetricKitRawPayload = YES;
+}];
+```
+
+```objc {tabTitle:Objective-C (SentryObjC)}
+#import <SentryObjC/SentryObjC.h>
+
+[SentryObjCSDK startWithConfigureOptions:^(SentryObjCOptions *options) {
+    options.dsn = @"___PUBLIC_DSN___";
+    options.enableMetricKit = YES;
+    options.enableMetricKitRawPayload = YES;
+}];
+```
+
+## Delayed Data
+
+MetricKit reports data after it was recorded. It can deliver a diagnostic report while the app that recorded it is still running, or on a later launch, so reports can describe both the current and earlier runs of the app. Learn more in Apple's description of the [MetricKit reporting model](https://developer.apple.com/documentation/metrickit/monitoring-app-performance-with-metrickit#Understand-the-reporting-model).
+
+Diagnostic reports from an earlier run of the app carry the app and OS versions they were recorded with, instead of the versions running when MetricKit delivered them. Since Cocoa 9.31.0, the SDK doesn't apply the current scope to these events, so they don't get the breadcrumbs, user, tags, extras or attachments of the running app. Diagnostic reports recorded by the running process keep the scope data.
+
+Since Cocoa 9.35.0, events from an earlier run also report the low power mode and the TestFlight state MetricKit recorded with the diagnostic, as `device.low_power_mode` and an `app.build_type` of `test`. MetricKit reports these from iOS 17 and macOS 14.
