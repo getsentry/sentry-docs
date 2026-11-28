@@ -3867,7 +3867,8 @@ const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
  * Where possible this is folded into the same rule through `:mdSuffix`, so the route
  * count does not grow. Destinations ending in a param or pointing to the root need a
  * separate `.md` rule. Wildcards with fixed destinations get a `.md` rule before the
- * catch-all; wildcards forwarding `:path*` already preserve the requested extension.
+ * catch-all; wildcards forwarding `:path*` already preserve the requested extension of
+ * the pages under them, and get a `.md` rule for the section page itself.
  *
  * @template {{source: string, destination: string}} R
  * @param {R[]} list
@@ -3883,8 +3884,25 @@ function withMarkdownRedirects(list) {
       /^https?:\/\//.test(r.destination) ||
       r.destination.includes('?') ||
       r.destination === '/platform-redirect/';
-    if (isWildcard && (keepDestination || r.destination.includes(':path*'))) {
+    if (isWildcard && keepDestination) {
       return [r];
+    }
+    if (isWildcard && r.destination.includes(':path*')) {
+      // `/old/:path*` forwards `/old/page.md` but can't match `/old.md`, the `.md`
+      // URL of the section page itself, so that one gets its own rule.
+      const sourceBase = r.source.slice(0, -'/:path*'.length);
+      if (!r.destination.endsWith('/:path*') || sourceBase === '') {
+        return [r];
+      }
+      const destinationBase = r.destination.slice(0, -'/:path*'.length);
+      return [
+        {
+          ...r,
+          source: `${sourceBase}.md`,
+          destination: `${destinationBase || '/index'}.md`,
+        },
+        r,
+      ];
     }
     const source = isWildcard ? r.source : r.source.slice(0, -1);
     const [path, hash] = r.destination.split('#');

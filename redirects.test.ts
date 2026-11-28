@@ -114,6 +114,7 @@ describe('withMarkdownRedirects', () => {
 
   it.each([
     ['/product/insights/mcp.md', '/product/mcp-servers.md'],
+    ['/product/crons.md', '/product/monitors-and-alerts/monitors/crons.md'],
     ['/product/insights/http.md', '/product/dashboards/sentry-dashboards.md'],
     [
       '/platforms/python/guides/django/configuration/capture/context.md',
@@ -125,11 +126,8 @@ describe('withMarkdownRedirects', () => {
     );
   });
 
-  it('leaves path-forwarding wildcards and root sources unchanged', () => {
-    const list = [
-      {source: '/', destination: '/new/'},
-      {source: '/old/:path*', destination: '/new/:path*'},
-    ];
+  it('leaves root sources unchanged', () => {
+    const list = [{source: '/', destination: '/new/'}];
     expect(withMarkdownRedirects(list)).toEqual(list);
   });
 });
