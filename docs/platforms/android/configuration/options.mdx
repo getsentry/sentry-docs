@@ -524,13 +524,41 @@ AndroidManifest.xml key: `io.sentry.ndk.app-hang.timeout-interval-millis`.
 
 <SdkOption name="anrProfilingSampleRate" type="float" defaultValue="null" availableSince="8.35.0">
 
-A number between `0` and `1`, controlling the percentage chance a profile will be collected for each detected foreground ANR. (`0` represents 0% while `1` represents 100%.) The default is null (disabled). When set, the SDK captures a stack profile of the main thread at the time of ANR detection and attaches it to the ANR event on the next app start.
+A number between `0` and `1`, controlling the percentage chance a profile will be collected for each detected foreground ANR. (`0` represents 0% while `1` represents 100%.) The default is null (disabled). When set, the SDK captures a stack profile of the main thread at the time of ANR detection and attaches it to the ANR event on the next app start. Starting in SDK version `<NEXT_VERSION>`, the profile starts when the main thread has been blocked for 300 ms instead of 1 second.
+
+AndroidManifest.xml key: `io.sentry.anr.profiling.sample-rate`.
+
+</SdkOption>
+
+<SdkOption name="nonFatalAnrSampleRate" type="float" defaultValue="null" availableSince="<NEXT_VERSION>">
+
+A number between `0` and `1`, controlling the percentage chance that the SDK reports a main thread hang as a non-fatal ANR. The SDK makes the decision for each hang. (`0` represents 0% while `1` represents 100%.) The default is null (disabled). Non-fatal ANRs are main thread hangs in the foreground that last at least <PlatformIdentifier name="nonFatalAnrThresholdMs" />. Requires Android 11 (API level 30) or higher. See <PlatformLink to="/configuration/app-not-respond/#non-fatal-anrs">Non-Fatal ANRs</PlatformLink>.
+
+AndroidManifest.xml key: `io.sentry.anr.non-fatal.sample-rate`.
+
+</SdkOption>
+
+<SdkOption name="nonFatalAnrThresholdMs" type="long" defaultValue="700" defaultNote="milliseconds" availableSince="<NEXT_VERSION>">
+
+The minimum duration in milliseconds that a main thread hang must last to be reported as a non-fatal ANR. The SDK starts to measure a hang after 300 ms, so a lower value works like 300 ms. The SDK measures a hang for a maximum of 8,000 ms, so a higher value never reports a hang. Negative values are ignored.
+
+Only takes effect when <PlatformIdentifier name="nonFatalAnrSampleRate" /> is set.
+
+AndroidManifest.xml key: `io.sentry.anr.non-fatal.threshold-ms`.
+
+</SdkOption>
+
+<SdkOption name="anrReportInDebug" type="bool" defaultValue="false">
+
+Reports ANRs while a debugger is attached. Only the Watchdog-based ANR detection (Android 10 and lower) uses this option. Non-fatal ANR reporting and ANR profiling always ignore hangs while a debugger is attached.
+
+AndroidManifest.xml key: `io.sentry.anr.report-debug`.
 
 </SdkOption>
 
 <SdkOption name="enableAnrFingerprinting" type="bool" defaultValue="true" availableSince="8.35.0">
 
-When enabled, the SDK assigns a static fingerprint to ANR events whose stack traces contain only system frames. This groups noisy system-frame-only ANRs into a single issue, reducing noise. Foreground and background system-frame-only ANRs are grouped separately.
+When enabled, the SDK assigns a static fingerprint to ANR events whose stack traces contain only system frames. This groups noisy system-frame-only ANRs into a single issue, reducing noise. Foreground and background system-frame-only ANRs are grouped separately. Also applies to non-fatal ANRs.
 
 </SdkOption>
 

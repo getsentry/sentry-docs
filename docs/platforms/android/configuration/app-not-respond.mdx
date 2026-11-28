@@ -1,7 +1,7 @@
 ---
 title: Application Not Responding (ANR)
 sidebar_order: 4
-description: Learn how to turn off or configure ANR detection, profiling, and fingerprinting.
+description: Learn how to turn off or configure ANR detection, non-fatal ANR reporting, profiling, and fingerprinting.
 og_image: /og-images/platforms-android-configuration-app-not-respond.png
 ---
 
@@ -40,7 +40,7 @@ The integration reports ANR events with `mechanism:ANR`.
 
 <Alert>
 
-Sentry does not report the ANR if the application is in debug mode.
+Sentry does not report the ANR while a debugger is attached. To report it anyway, set `io.sentry.anr.report-debug` to `true` (<PlatformIdentifier name="anrReportInDebug" />). This option only applies to the Watchdog (v1).
 
 </Alert>
 
@@ -105,11 +105,164 @@ SentryAndroid.init(context) { options ->
 
 ![ANR Thread Dump](./img/app-not-respond-thread-dump.png)
 
+## Non-Fatal ANRs
+
+<Alert>
+
+Non-fatal ANR reporting is available starting in SDK version `<NEXT_VERSION>`, on Android 11 (API level 30) and higher.
+
+</Alert>
+
+The SDK reports a fatal ANR only after Android kills your app. Many hangs are shorter: the main thread is blocked for a second or two, the user notices that the app does not respond, and then the app recovers. These hangs never show up as fatal ANRs.
+
+With non-fatal ANR reporting, the SDK reports a main thread hang in the foreground when the hang ends. The event contains the stack trace that the main thread was in most of the time during the hang, so you can find the code that blocks the main thread.
+
+```mermaid
+flowchart LR
+    A[Main thread<br>blocked > 300 ms] --> B[Sample main thread stack<br>every ~66 ms]
+    B --> C{Main thread<br>recovers?}
+    C -->|yes| D[Send non-fatal ANR event<br>if duration >= threshold]
+    C -->|still blocked after 8 s| E[Send non-fatal ANR event<br>with 8 s duration]
+```
+
+To enable non-fatal ANR reporting, set `nonFatalAnrSampleRate` to a value between `0.0` and `1.0`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.non-fatal.sample-rate" android:value="1.0" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.nonFatalAnrSampleRate = 1.0
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setNonFatalAnrSampleRate(1.0);
+});
+```
+
+The SDK makes the sampling decision for each hang. For example, with a sample rate of `0.1`, the SDK reports about 10% of the hangs as non-fatal ANRs. The SDK samples the main thread stack only for hangs that non-fatal ANR reporting or [ANR profiling](#anr-profiling) selected, so hangs that neither feature selected cost no stack captures.
+
+If you set `io.sentry.anr.enable` to `false`, the SDK also does not report non-fatal ANRs.
+
+### Threshold
+
+By default, the SDK reports hangs that last at least 700 ms. To change this, set `nonFatalAnrThresholdMs`:
+
+```xml {filename:AndroidManifest.xml}
+<application>
+    <meta-data android:name="io.sentry.anr.non-fatal.sample-rate" android:value="1.0" />
+    <meta-data android:name="io.sentry.anr.non-fatal.threshold-ms" android:value="1000" />
+</application>
+```
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.nonFatalAnrSampleRate = 1.0
+    options.nonFatalAnrThresholdMs = 1000
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setNonFatalAnrSampleRate(1.0);
+    options.setNonFatalAnrThresholdMs(1000);
+});
+```
+
+The SDK starts to measure a hang when the main thread has been blocked for 300 ms, and it measures a hang for a maximum of 8 seconds. Thus, a threshold below 300 ms works like 300 ms, and a threshold above 8,000 ms never reports a hang.
+
+### What a Non-Fatal ANR Event Contains
+
+- An `ApplicationNotResponding` exception with the mechanism `NonFatalANR`. The exception is marked as handled.
+- The culprit stack trace: during the hang, the SDK samples the main thread stack about every 66 ms, and uses the stack that it saw most often. If no stack samples are available, the exception has the value "Non-fatal ANR" and no stack trace.
+- The main thread with its thread state (for example, `BLOCKED`).
+- A `non_fatal_anr` context with `duration_ms` (the measured duration of the hang) and `sample_count` (the number of stack samples).
+- A breadcrumb with the category `anr` and the message "Non-fatal ANR".
+- A screenshot and the view hierarchy, if you enabled them. The SDK captures them after the main thread recovers, so they show the screen after the hang. If the main thread is still blocked after 8 seconds, the SDK does not capture them.
+
+Non-fatal ANR events do not end the session as crashed or abnormal, and they do not change the crash-free rate.
+
+Sentry groups non-fatal ANRs separately from fatal ANRs and from other errors with the same stack trace. If [ANR fingerprinting](#anr-fingerprinting) is enabled, Sentry groups all non-fatal ANRs whose stack traces contain only system frames into a single issue.
+
+To find non-fatal ANR issues, search your issue stream for:
+
+```
+mechanism:NonFatalANR
+```
+
+### Fatal and Non-Fatal ANRs
+
+A hang can become a fatal ANR after the SDK has already reported it as a non-fatal ANR. To prevent duplicate events, the SDK does not send a fatal ANR event on the next app start if all of these conditions are true:
+
+- The non-fatal ANR lasted at least 5 seconds, or the main thread was still blocked after 8 seconds.
+- Android killed the app with an ANR less than 30 seconds after the end of the reported hang.
+- The SDK stored the non-fatal ANR event. If the hang was not sampled for non-fatal ANRs, or `beforeSend` drops the non-fatal ANR event, the SDK reports the fatal ANR as usual.
+
+The session of that app run still ends as an ANR, so the [ANR rate](#anr-rate) stays correct.
+
+<Alert level="info">
+
+When the SDK does not send the fatal ANR event, the ANR shows only as a non-fatal ANR event in Sentry. This event does not contain the system thread dump of the fatal ANR.
+
+</Alert>
+
+### Filtering Non-Fatal ANRs
+
+To drop or change non-fatal ANR events, use `beforeSend`. This example drops non-fatal ANRs from debug builds:
+
+```kotlin
+SentryAndroid.init(context) { options ->
+    options.nonFatalAnrSampleRate = 1.0
+    options.setBeforeSend { event, _ ->
+        val isNonFatalAnr = event.exceptions?.any { it.mechanism?.type == "NonFatalANR" } == true
+        if (isNonFatalAnr && BuildConfig.DEBUG) {
+            null
+        } else {
+            event
+        }
+    }
+}
+```
+
+```java
+SentryAndroid.init(context, options -> {
+    options.setNonFatalAnrSampleRate(1.0);
+    options.setBeforeSend((event, hint) -> {
+        final List<SentryException> exceptions = event.getExceptions();
+        if (BuildConfig.DEBUG && exceptions != null) {
+            for (final SentryException exception : exceptions) {
+                final Mechanism mechanism = exception.getMechanism();
+                if (mechanism != null && "NonFatalANR".equals(mechanism.getType())) {
+                    return null;
+                }
+            }
+        }
+        return event;
+    });
+});
+```
+
+To report only longer hangs, use the [threshold](#threshold) instead of `beforeSend`.
+
+If you drop a non-fatal ANR event, the SDK still reports a fatal ANR for the same hang. See [Fatal and Non-Fatal ANRs](#fatal-and-non-fatal-anrs).
+
+### Limitations
+
+- Only available on Android 11 (API level 30) and higher. On lower Android versions, the [Watchdog (v1)](#watchdog-v1) reports hangs.
+- Only hangs in the foreground are reported.
+- Hangs while a debugger is attached are ignored, also when `anrReportInDebug` is `true`.
+- The SDK measures a hang for a maximum of 8 seconds.
+
 ## ANR Profiling
 
 <Alert>
 
-ANR Profiling is available starting in SDK version `8.35.0`.
+ANR Profiling is available starting in SDK version `8.35.0`. Starting in SDK version `<NEXT_VERSION>`, the profile starts when the main thread has been blocked for 300 ms instead of 1 second, so it also shows the beginning of the hang.
 
 </Alert>
 
@@ -126,11 +279,11 @@ The SDK can capture stack profiles for foreground ANRs of the main thread when a
 ```mermaid
 flowchart LR
     A[App start] --> B
-    B[Main thread<br>blocked > 1s] --> C[Collect and store ANR profile to disk]
+    B[Main thread<br>blocked > 300 ms] --> C[Collect and store ANR profile to disk]
     E[Next app start] --> F[Read<br>ApplicationExitInfo] --> G[Match stored<br>ANR profile] --> H[Attach ANR profile<br>to ANR event]
 ```
 
-To enable ANR profiling, set the `anrProfilingSampleRate` to a value between `0.0` and `1.0`. This controls the probability of collecting a profile for each detected foreground ANR:
+To enable ANR profiling, set the `anrProfilingSampleRate` to a value between `0.0` and `1.0`. This controls the probability of collecting a profile for each detected foreground ANR. The profile starts when the main thread has been blocked for 300 ms:
 
 ```xml {filename:AndroidManifest.xml}
 <application>
@@ -149,6 +302,7 @@ SentryAndroid.init(context, options -> {
     options.setAnrProfilingSampleRate(1.0);
 });
 ```
+ANR profiling and [non-fatal ANRs](#non-fatal-anrs) use the same main thread sampling, so you can enable both. If both features select the same hang, the SDK samples the main thread only one time.
 
 Once enabled, ANR events will include a profile section on the issue details page, showing a flame graph of the main thread activity at the time of the ANR:
 
@@ -219,6 +373,8 @@ ANR rate is the percentage of unique users who have experienced an ANR during th
 <Alert level="info">
 
 Since there's two implementations for ANR detection, Sentry calculates the ANR Rate depending on the implementation. On Android 11 and above Sentry only accounts for **Fatal ANRs** - ANRs that lead to your app being terminated, either by the user or the OS. On Android 10 and below both Fatal and Non-Fatal ANRs contribute to the ANR Rate calculation.
+
+[Non-fatal ANR](#non-fatal-anrs) events do not count toward the ANR rate. If the SDK does not send a fatal ANR event because it already reported the hang as a non-fatal ANR, the fatal ANR still counts, because the session ends as an ANR.
 
 </Alert>
 
