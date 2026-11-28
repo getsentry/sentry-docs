@@ -49,11 +49,11 @@ export function formatPreference(acceptHeader: string): FormatPreference {
 }
 
 /**
- * Whether a page URL returns Markdown. An explicit Accept preference always
- * wins, so a recognized AI agent that asks for `text/html` gets HTML. A
- * recognized AI agent with no preference between the two formats gets Markdown.
+ * Whether a page URL returns Markdown. A recognized AI agent always gets
+ * Markdown, because fetchers such as ChatGPT-User and PerplexityBot send a
+ * browser's Accept header. Any other client gets Markdown when its Accept header
+ * prefers it.
  */
 export function shouldServeMarkdown(acceptHeader: string, isAIAgent: boolean): boolean {
-  const preference = formatPreference(acceptHeader);
-  return preference === 'none' ? isAIAgent : preference === 'markdown';
+  return isAIAgent || formatPreference(acceptHeader) === 'markdown';
 }

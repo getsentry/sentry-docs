@@ -288,6 +288,9 @@ function mdToCanonicalPath(mdPathname: string): string {
  * Serves a page URL as HTML or Markdown (content negotiation), and advertises
  * the other representation on each response.
  */
+/** The Claude and Cursor desktop apps (Electron) and the Gemini iOS app. */
+const IN_APP_BROWSER_PATTERN = /\b(?:Claude|Cursor)\/[\d.]+ Chrome\/|\bGeminiiOS\//;
+
 const handleAIClientRedirect = (
   request: NextRequest,
   classification: TrafficClassification
@@ -298,14 +301,17 @@ const handleAIClientRedirect = (
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
   // In-app browsers name the app in their user agent (Claude, Cursor, Gemini), so
-  // they match AI_AGENT_PATTERN. When a reader clicks a link, the page fetches the
-  // next page's data with `Accept: */*`; Next.js strips the `RSC` header before
-  // middleware runs, but the browser still marks the fetch `Sec-Fetch-Dest: empty`.
-  // Agents don't send that header.
-  const isBrowserFetch = request.headers.get('sec-fetch-dest') === 'empty';
+  // they match AI_AGENT_PATTERN but must get the normal page. Any browser also marks
+  // the router's background fetch for the next page `Sec-Fetch-Dest: empty` (Next.js
+  // strips the `RSC` header before middleware runs). `document` isn't enough: some
+  // crawlers, such as PerplexityBot, send it on every request.
+  const secFetchDest = request.headers.get('sec-fetch-dest');
+  const isBrowserRequest =
+    secFetchDest === 'empty' ||
+    IN_APP_BROWSER_PATTERN.test(request.headers.get('user-agent') || '');
   const clientWantsMarkdown = shouldServeMarkdown(
     acceptHeader,
-    classification.trafficType === 'ai_agent' && !isBrowserFetch
+    classification.trafficType === 'ai_agent' && !isBrowserRequest
   );
   const willServeMarkdown =
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
@@ -327,6 +333,7 @@ const handleAIClientRedirect = (
       urlPath: url.pathname,
       acceptHeader: request.headers.get('accept') || '',
       userAgent: request.headers.get('user-agent') || '',
+      secFetchDest: secFetchDest || '',
       contentType: willServeMarkdown ? 'markdown' : 'html',
       detectionMethod: willServeMarkdown ? detectionMethod : null,
     });
@@ -379,7 +386,11 @@ const handleAIClientRedirect = (
     // Rewrite to serve markdown inline (same URL, different content)
     // The next.config.ts rewrite rule maps *.md to /md-exports/*.md
     const response = rewriteWithClassification(request, newUrl, classification);
-    setMarkdownResponseHeaders(response, canonicalPath(url.pathname));
+    setMarkdownResponseHeaders(
+      response,
+      canonicalPath(url.pathname),
+      'Accept, User-Agent'
+    );
     return response;
   }
 
@@ -398,12 +409,16 @@ const handleAIClientRedirect = (
 };
 
 /**
- * Headers for every Markdown response: `Vary: Accept` so caches keep the HTML
- * and Markdown versions of a URL apart, a canonical link to the HTML page, and
- * a link to llms.txt.
+ * Headers for every Markdown response: `Vary` so caches keep the HTML and
+ * Markdown versions of a URL apart, a canonical link to the HTML page, and a
+ * link to llms.txt. A page URL's format depends on the user agent too.
  */
-function setMarkdownResponseHeaders(response: NextResponse, htmlPath: string): void {
-  response.headers.set('Vary', 'Accept');
+function setMarkdownResponseHeaders(
+  response: NextResponse,
+  htmlPath: string,
+  vary = 'Accept'
+): void {
+  response.headers.set('Vary', vary);
   response.headers.set(
     'Link',
     [`<${DOCS_ORIGIN}${htmlPath}>; rel="canonical"`, LLMS_TXT_LINK].join(', ')

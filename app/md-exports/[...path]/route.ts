@@ -179,6 +179,8 @@ export async function GET(
     status: 200,
     headers: {
       'Content-Type': 'text/markdown; charset=utf-8',
+      // Middleware's `Vary` doesn't survive on this route's response.
+      Vary: 'Accept, User-Agent',
       // page_exists misses are usually transient (deploy windows), so let a fixed
       // export replace the helper quickly.
       'Cache-Control':
