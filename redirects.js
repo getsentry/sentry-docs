@@ -1299,7 +1299,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/deviera/',
+    source: '/organization/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1308,6 +1308,10 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/leroy-ai/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1327,6 +1331,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1339,6 +1347,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/organization/integrations/ellipsis-beta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/organization/integrations/phoenix-alerts/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1347,7 +1359,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/stackstitch/',
+    source: '/organization/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1355,7 +1367,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/organization/integrations/applied-edge/',
+    source: '/organization/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1416,6 +1428,34 @@ const userDocsRedirects = [
   },
   {
     source: '/organization/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/stacklink/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/brix/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/ace-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/organization/integrations/fareeqy/',
     destination: '/integrations/third-party-integrations/',
   },
   // DOCS-2426: WorkOS is an SSO provider; no dedicated page exists
@@ -1530,7 +1570,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/deviera/',
+    source: '/integrations/deviera-official/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1539,6 +1579,10 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/leroy/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/leroy-ai/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1558,6 +1602,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/bugzerodev/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/choji/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1570,6 +1618,10 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
+    source: '/integrations/ellipsis-beta/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
     source: '/integrations/phoenix-alerts/',
     destination: '/integrations/third-party-integrations/',
   },
@@ -1578,7 +1630,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/stackstitch/',
+    source: '/integrations/stackstitch-connector/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1586,7 +1638,7 @@ const userDocsRedirects = [
     destination: '/integrations/third-party-integrations/',
   },
   {
-    source: '/integrations/applied-edge/',
+    source: '/integrations/applied-edge-prod/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -1647,6 +1699,34 @@ const userDocsRedirects = [
   },
   {
     source: '/integrations/motir/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/islo/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/mudeer/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/stacklink/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/brix/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/ace-ai/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/evergreen/',
+    destination: '/integrations/third-party-integrations/',
+  },
+  {
+    source: '/integrations/fareeqy/',
     destination: '/integrations/third-party-integrations/',
   },
   {
@@ -3787,7 +3867,8 @@ const ENDS_WITH_PARAM = /:\w+(\([^)]*\))?[*+?]?$/;
  * Where possible this is folded into the same rule through `:mdSuffix`, so the route
  * count does not grow. Destinations ending in a param or pointing to the root need a
  * separate `.md` rule. Wildcards with fixed destinations get a `.md` rule before the
- * catch-all; wildcards forwarding `:path*` already preserve the requested extension.
+ * catch-all; wildcards forwarding `:path*` already preserve the requested extension of
+ * the pages under them, and get a `.md` rule for the section page itself.
  *
  * @template {{source: string, destination: string}} R
  * @param {R[]} list
@@ -3803,8 +3884,25 @@ function withMarkdownRedirects(list) {
       /^https?:\/\//.test(r.destination) ||
       r.destination.includes('?') ||
       r.destination === '/platform-redirect/';
-    if (isWildcard && (keepDestination || r.destination.includes(':path*'))) {
+    if (isWildcard && keepDestination) {
       return [r];
+    }
+    if (isWildcard && r.destination.includes(':path*')) {
+      // `/old/:path*` forwards `/old/page.md` but can't match `/old.md`, the `.md`
+      // URL of the section page itself, so that one gets its own rule.
+      const sourceBase = r.source.slice(0, -'/:path*'.length);
+      if (!r.destination.endsWith('/:path*') || sourceBase === '') {
+        return [r];
+      }
+      const destinationBase = r.destination.slice(0, -'/:path*'.length);
+      return [
+        {
+          ...r,
+          source: `${sourceBase}.md`,
+          destination: `${destinationBase || '/index'}.md`,
+        },
+        r,
+      ];
     }
     const source = isWildcard ? r.source : r.source.slice(0, -1);
     const [path, hash] = r.destination.split('#');

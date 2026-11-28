@@ -32,8 +32,8 @@ describe('shouldServeMarkdown', () => {
     expect(shouldServeMarkdown('', true)).toBe(true);
   });
 
-  it('serves HTML to a recognized agent that asks for HTML', () => {
-    expect(shouldServeMarkdown('text/html,*/*;q=0.8', true)).toBe(false);
+  it('serves Markdown to a recognized agent that asks for HTML', () => {
+    expect(shouldServeMarkdown('text/html,*/*;q=0.8', true)).toBe(true);
   });
 
   it('serves HTML to other clients with no format preference', () => {
