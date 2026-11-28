@@ -380,7 +380,7 @@ SentryAndroid.init(this) { options ->
 
 Navigation 3 support is available in `sentry-android-navigation3` `8.60.0` and later.
 
-Review [Supported Setups](#supported-setups) and [Limitations](#limitations) before configuring `SentryNavEffect`.
+`SentryNavEffect` tracks the top entry of one back stack. Multiple effects are supported only in certain Activity and Fragment setups. Review [Supported Setups](#supported-setups) and [Limitations](#limitations) before installing.
 
 </Alert>
 
@@ -402,7 +402,7 @@ See [Customize Nav3 Options](#customize-nav3-options) to learn how to modify tho
 
 Install the Android SDK and add the `sentry-android-navigation3` library:
 
-At runtime, this integration requires Compose UI `1.7` or later, or `lifecycle-runtime-compose` `2.8.3` or later.
+Navigation 3 requires Compose `1.8` or later, which already provides `lifecycle-runtime-compose`. You don't need to add a separate lifecycle dependency for this integration.
 
 ```groovy {filename:build.gradle}
 dependencies {
@@ -420,14 +420,17 @@ dependencies {
 
 ### Configure
 
+#### Basic Setup
+
 To use `SentryNavEffect`, add it to the composable that owns your `NavDisplay` and pass your back stack to both:
 
 ```kotlin
-import androidx.navigation3.runtime.NavKey
+import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import io.sentry.compose.navigation3.BackStackEntryMapper
 import io.sentry.compose.navigation3.SentryNavEffect
-import kotlinx.serialization.Serializable
+import io.sentry.compose.navigation3.SentryNavOptions
 
 @Composable
 fun AppNavigation() {
@@ -435,18 +438,13 @@ fun AppNavigation() {
   val backStack = rememberNavBackStack(Home)
 
   // Place SentryNavEffect in the same composable as your NavDisplay and call the
-  // effect first. Provide a BackStackEntryMapper with the values you want to
-  // show up in Sentry. Omit PII and other sensitive info.
+  // effect first.
   SentryNavEffect(
     backStack = backStack,
-    backStackEntryMapper = { entry ->
-      when (entry) {
-        is Home -> SentryBackStackEntry("Home")
-        is ProductDetail ->
-          SentryBackStackEntry("ProductDetail", mapOf("product_id" to entry.productId))
-        ...
-      }
-    }
+    // Choose the BackStackEntryMapper that best fits your needs.
+    backStackEntryMapper = BackStackEntryMapper.SerialName,
+    // Update nav options to match your preferences, or use the default settings.
+    options = SentryNavOptions(),
   )
 
   // Configure your NavDisplay like usual.
@@ -459,15 +457,13 @@ fun AppNavigation() {
 
 **Note:** Be sure to call `SentryNavEffect` before `NavDisplay` so the effect's transaction-creating machinery can be set up before any spans are produced by the initial nav destination. Otherwise, initial destination spans may be lost or parented under the wrong transaction.
 
-Provide a `BackStackEntryMapper` that maps each entry in your back stack to the name and optional arguments you want displayed in Sentry. Keep names stable and arguments lightweight and performant. Avoid using `::class.simpleName` or anything else that R8 will obfuscate.
+If you use `NavDisplay(entries = ...)` or `NavDisplay(sceneState = ...)`, pass `SentryNavEffect` the original back stack used to build the entries. Passing the `NavEntry` list to a built-in mapper records every destination as `/unknown`.
 
-<Alert>
+#### Choose an Appropriate BackStackEntryMapper
 
-Values returned from `BackStackEntryMapper` are **not** scrubbed by the Sentry SDK of PII or other potentially sensitive information before being sent to Sentry. Only return names and arguments known to be safe, or sanitize them yourself in your `BackStackEntryMapper`.
+`BackStackEntryMapper` maps each back stack entry to a screen name and optional arguments. See [Mapping Screen Names and Arguments](#mapping-screen-names-and-arguments) to choose and customize your mapper.
 
-</Alert>
-
-### Customize Nav3 Options
+#### Customize Nav3 Options
 
 Use `SentryNavOptions` to disable breadcrumbs or transactions, or to limit how much of the back stack Sentry stores with captured events.
 
@@ -497,11 +493,11 @@ SentryAndroid.init(this) { options ->
 }
 ```
 
-### Verify
+### Verify Your Setup
 
-The snippet below defines `Home` and `ProductDetail` routes and a composable for displaying them. It adds both routes to an in-memory back stack and captures a message from the `ProductDetail` destination so you can verify the navigation data the Sentry SDK emits.
+You can use the snippet below to help verify your Sentry Nav3 setup. It defines `Home` and `ProductDetail` routes and a composable for displaying them. It adds both routes to an in-memory back stack and captures a message from the `ProductDetail` destination so you can check the navigation data the Sentry SDK emits.
 
-The snippet assumes the default `SentryNavOptions`. Screen names additionally require screen tracking to be enabled.
+This example uses `SerialNameAndProperties` to capture the test product ID. Use this mapper only when all entry properties are safe to send to Sentry. The snippet assumes the default `SentryNavOptions`. Screen names additionally require screen tracking to be enabled.
 
 ```kotlin
 import androidx.compose.material3.Button
@@ -514,13 +510,19 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import io.sentry.Sentry
-import io.sentry.compose.navigation3.SentryBackStackEntry
+import io.sentry.compose.navigation3.BackStackEntryMapper
 import io.sentry.compose.navigation3.SentryNavEffect
 import kotlinx.coroutines.delay
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
+@SerialName("Home")
 data object Home : NavKey
 
-data class ProductDetail(val productId: String) : NavKey
+@Serializable
+@SerialName("ProductDetail")
+data class ProductDetail(@SerialName("product_id") val productId: String) : NavKey
 
 @Composable
 fun AppNavigation() {
@@ -528,16 +530,7 @@ fun AppNavigation() {
 
   SentryNavEffect(
     backStack = backStack,
-    backStackEntryMapper = { entry ->
-      when (entry) {
-        is Home -> SentryBackStackEntry("Home")
-        is ProductDetail -> SentryBackStackEntry(
-          name = "ProductDetail",
-          arguments = mapOf("product_id" to entry.productId),
-        )
-        else -> null
-      }
-    },
+    backStackEntryMapper = BackStackEntryMapper.SerialNameAndProperties,
   )
 
   NavDisplay(
@@ -595,36 +588,182 @@ Tap **Open product detail**, then **Send test message**. In Sentry, open the eve
 
 ![ProductDetail navigation transaction with its child span and product_id argument](./img/nav-transaction.png)
 
-### Using kotlinx.serialization
+### Mapping Screen Names and Arguments
 
-If your Nav3 back stack uses `@Serializable` keys, you can use [Kotlin serialization](https://kotlinlang.org/docs/serialization.html) to produce stable entry names. For performance reasons, don't serialize keys in their entirety as `arguments` if they might be large, deeply nested, or contain PII or other sensitive information.
+Choose a `BackStackEntryMapper` to control the screen names and arguments Sentry records:
+
+| Mapper                                         | What Sentry Records                                                                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `BackStackEntryMapper.SerialName`              | The entry's serial name, without arguments                                                          |
+| `BackStackEntryMapper.SerialNameAndProperties` | Serial name and serialized properties (see [privacy guidance](#choosing-which-arguments-to-send))   |
+| A custom `BackStackEntryMapper`                | The name and arguments you specify                                                                  |
+
+The built-in mappers require non-generic entry classes annotated directly with `@Serializable`. Entries that can't be mapped appear as `/unknown`. See [Troubleshooting kotlinx.serialization Mappers](#troubleshooting-kotlinxserialization-mappers) for more details.
+
+#### Screen Names
+
+The built-in mappers use the [serial name](https://kotlinlang.org/api/kotlinx.serialization/kotlinx-serialization-core/kotlinx.serialization.descriptors/-serial-descriptor/serial-name.html) of your back stack entry class, so consider using explicit `@SerialName` annotations for stable, readable destination names.
+
+For custom mappers, keep names stable and avoid `::class.simpleName`, which R8 obfuscates.
+
+Enum constants share the enum's destination name. Classes using the same custom serializer share its descriptor's serial name, even if they have different `@SerialName` annotations. Use a custom mapper to distinguish these destinations.
+
+#### Choosing Which Arguments to Send
+
+`BackStackEntryMapper.SerialName` records screen names without arguments.
+
+`BackStackEntryMapper.SerialNameAndProperties` uses kotlinx.serialization to convert the properties of each of your back stack entries into Sentry arguments. Values whose serialized property names (`@SerialName`, or the property name if absent) contain a term from [Sentry's sensitive denylist](https://develop.sentry.dev/sdk/foundations/client/data-collection/#sensitive-denylist) are replaced with `"[Filtered]"`. Matching is case-insensitive and can also filter harmless names, such as `keyword`, which contains `key`.
+
+Neither `sendDefaultPii` nor `dataCollection` change what the built-in mappers capture.
+
+<Alert>
+
+`SerialNameAndProperties` filters some secrets, but it leaves personal data unchanged, including email addresses, phone numbers, and other PII. Use it only when the properties it captures are safe to send. Otherwise, use `SerialName` to omit arguments or a custom mapper to select safe values.
+
+</Alert>
+
+For example, given these entry types:
 
 ```kotlin
 import androidx.navigation3.runtime.NavKey
-import io.sentry.compose.navigation3.BackStackEntryMapper
-import io.sentry.compose.navigation3.SentryBackStackEntry
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("Home")
-data class Home(val userName: String) : NavKey
+enum class Source {
+  @SerialName("search") SEARCH,
+  @SerialName("deep_link") DEEP_LINK,
+}
 
 @Serializable
-@SerialName("ProductDetail")
-data class ProductDetail(val userName: String, val productId: String) : NavKey
+@SerialName("Cart")
+data class Cart(
+  val cartId: String,
+  val source: Source,
+  val userEmail: String,
+  val authToken: String,
+) : NavKey
+```
 
-val backStackItemMapper = BackStackEntryMapper<NavKey> { entry ->
+Navigating to `Cart("7382rq", Source.DEEP_LINK, "jane@example.com", "abc123")` records `Cart` as the destination name, with these arguments:
+
+```json
+{
+  "cartId": "7382rq",
+  "source": "deep_link",
+  "userEmail": "jane@example.com",
+  "authToken": "[Filtered]"
+}
+```
+
+`authToken` is filtered because it contains `auth`. `userEmail` is sent unchanged because the denylist targets credentials and secrets, not personal data.
+
+Use a custom mapper to select arguments when entries are large, deeply nested, or contain sensitive information. Keep custom arguments lightweight.
+
+<Alert>
+
+Custom mappers are responsible for scrubbing their own arguments. The SDK does not apply the built-in sensitive-data filtering to those values, and personal data remains unchanged, including email addresses, phone numbers, and other PII. Only return names and arguments known to be safe.
+
+</Alert>
+
+To capture only `Cart`'s `cartId` and `source`, use a custom mapper. Delegate other entries to a built-in mapper only if their properties are safe to send:
+
+```kotlin
+import io.sentry.compose.navigation3.BackStackEntryMapper
+import io.sentry.compose.navigation3.SentryBackStackEntry
+
+val mapper = BackStackEntryMapper<NavKey> { entry ->
   when (entry) {
-    is Home -> SentryBackStackEntry(Home.serializer().descriptor.serialName)
-    is ProductDetail -> SentryBackStackEntry(
-      name = ProductDetail.serializer().descriptor.serialName,
-      arguments = mapOf("product_id" to entry.productId)
+    // Special-case any entries with sensitive info.
+    is Cart -> SentryBackStackEntry(
+      name = Cart.serializer().descriptor.serialName,
+      arguments = mapOf("cartId" to entry.cartId, "source" to entry.source),
     )
-    ...
+
+    // Fall back to a built-in mapper for the rest.
+    else -> BackStackEntryMapper.SerialNameAndProperties.map(entry)
   }
 }
 ```
+
+Custom mapper enum arguments use `Enum.name` (`DEEP_LINK` in this example), rather than the enum constant's `@SerialName` (`deep_link`). Use `BackStackEntryMapper.SerialName.map(entry)` as the fallback to record other entries without their properties.
+
+Alternatively, wrap the built-in mapper and remove properties from the arguments it returns. Arguments use each property's `@SerialName`, or the property name if it has no annotation. For example, to remove `userEmail`:
+
+```kotlin
+val mapper = BackStackEntryMapper<NavKey> { entry ->
+  BackStackEntryMapper.SerialNameAndProperties.map(entry)?.let { mapped ->
+    SentryBackStackEntry(
+      name = mapped.name,
+      arguments = mapped.arguments?.filterKeys { it != "userEmail" },
+    )
+  }
+}
+```
+
+<Alert>
+
+Choosing the properties to send is safer than removing unwanted properties. If you add a property to an entry class later, this filtering approach sends it unless you also remove it.
+
+</Alert>
+
+#### Troubleshooting kotlinx.serialization Mappers
+
+The built-in mappers record entries as `/unknown` when they can't determine a name. Enable the SDK's [`debug`](/platforms/android/configuration/options/#debug) option to see the reason. The first entry of each class that can't be named logs a warning.
+
+**The entry class isn't `@Serializable` or is generic**
+
+The built-in mappers only check for `@Serializable` on the entry class. **To fix:** Annotate the class itself with `@Serializable`, or name it with a custom `BackStackEntryMapper`.
+
+The built-in mappers don't name classes made serializable through a custom annotation marked [`@MetaSerializable`](https://kotlinlang.org/api/kotlinx.serialization/kotlinx-serialization-core/kotlinx.serialization/-meta-serializable/). **To fix:** Use a custom mapper that takes the name from the serializer, such as `MyRoute.serializer().descriptor.serialName`.
+
+Generic classes, such as `SettingsScreen<T>`, need serializer type arguments that can't be recovered at runtime. **To fix:** Use a custom mapper that names these entries explicitly.
+
+**The entry's serializer throws**
+
+If a custom serializer's initializer or `descriptor` throws, or a class the serializer needs can't be found, only entries of that class are affected. The warning includes the error.
+
+**To fix:** Use the logged error to correct the serializer or restore a missing dependency. Alternatively, use a custom mapper that supplies names and arguments without calling the failing serializer.
+
+If `SerialNameAndProperties` can determine a name but can't encode the properties, it keeps the name and replaces the arguments with `{"dropped_by_sentry": "encoding_failed"}`. Enable `debug` to see the warning, logged once per entry type.
+
+Arguments that are cyclic, too deeply nested, too large, or contain map keys that stringify to the same value are also dropped. The `dropped_by_sentry` field identifies the reason, such as `duplicate_key`. These limits apply to built-in and custom mappers.
+
+**To fix:** Use a custom mapper to return fewer or smaller arguments, reduce nesting, remove cycles, or ensure map keys have distinct string representations, depending on the reported drop reason.
+
+**The entry class has a named companion object, and the app uses R8**
+
+With kotlinx.serialization older than `1.10.0`, R8 can remove information needed to look up serializers for entry classes with named companion objects, such as `companion object Factory`.
+
+**To fix:** Upgrade kotlinx.serialization to `1.10.0` or later, or add its [named-companion rules](https://github.com/Kotlin/kotlinx.serialization#android) to `proguard-rules.pro`. Replace the example class names with your serializable classes that have named companions:
+
+```proguard {filename:proguard-rules.pro}
+-keepattributes InnerClasses
+
+-if @kotlinx.serialization.Serializable class
+com.example.HasNamedCompanion,
+com.example.HasNamedCompanion2
+{
+    static **$* *;
+}
+-keepnames class <1>$$serializer {
+    static <1>$$serializer INSTANCE;
+}
+
+# R8 full mode also needs this rule.
+-keepclasseswithmembers, allowshrinking, allowobfuscation, allowaccessmodification class
+com.example.HasNamedCompanion,
+com.example.HasNamedCompanion2
+{
+    *;
+}
+```
+
+**The app's kotlinx.serialization version is incompatible**
+
+The built-in mappers require kotlinx.serialization `1.7.3` or later. If the SDK cannot initialize name lookup with the app's version, it logs a warning and records destinations as `/unknown`. If only argument encoding is incompatible, `SerialNameAndProperties` preserves destination names and replaces arguments with `{"dropped_by_sentry": "encoding_failed"}`.
+
+**To fix:** Upgrade kotlinx.serialization to at least `1.7.3`. If your app already meets that minimum, upgrade the Sentry SDK. If you're already on the latest Sentry SDK, [open an issue](https://github.com/getsentry/sentry-java/issues/new/choose). As a workaround, use a custom `BackStackEntryMapper` until the incompatibility is resolved.
 
 ### Supported Setups
 
