@@ -48,9 +48,6 @@ sentryVitePlugin({
   org: "___ORG_SLUG___",
   project: "___PROJECT_SLUG___",
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  sourcemaps: {
-    filesToDeleteAfterUpload: ["./dist/**/*.map"],
-  },
 });
 ```
 
@@ -157,6 +154,62 @@ Completely disables all functionality of the plugin.
 
 Options related to source maps upload and processing.
 
+When your bundler's source map setting isn't set, the plugin turns on hidden source maps, uploads them, and removes them from the build output. It does this only when it can upload, that is, when it has an auth token, an organization, and a project. Source maps that you turn on yourself are uploaded and stay in the build output.
+
+<SdkOption name="sourcemaps.upload" type="boolean" defaultValue="true" availableSince="11.15.0">
+
+Whether the plugin uploads source maps to Sentry.
+
+With `false`, the plugin uploads nothing, but it still injects debug IDs: the bundles get the debug ID snippet and a `//# debugId=` comment, and the emitted source maps get the matching `debug_id` field. This happens inside the bundler's build pipeline, so hashes computed by later build steps (for example, for subresource integrity) include the debug IDs.
+
+Use this to upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`. The files already have their debug IDs, so you don't need an `inject` step.
+
+With `false`, the plugin turns on source maps only when `sourcemaps.delete` is `false`.
+
+```javascript
+sentryVitePlugin({
+  sourcemaps: {
+    // Upload only in CI
+    upload: process.env.CI === "true",
+  },
+});
+```
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.injectDebugIds" type="boolean" defaultValue="true" availableSince="11.15.0">
+
+Whether the plugin injects debug IDs into the bundles and their source maps.
+
+With `false`, the plugin adds no debug IDs and uploads no source maps, because the upload matches files by debug ID. Use this when another tool injects the debug IDs and uploads the source maps, for example the Sentry CLI.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.delete" type="boolean" availableSince="11.15.0">
+
+Whether the plugin removes source maps from the build output.
+
+- Not set: the plugin removes the source maps it turned on itself, that is, when your bundler's source map setting wasn't set. Source maps that you turned on stay.
+- `true`: the plugin removes all source maps of the build, also the ones you turned on, and also the ones of files that `sourcemaps.assets` or `sourcemaps.ignore` keep out of the upload. The plugin switches visible source maps to hidden ones, so that no `sourceMappingURL` comment points to a removed file.
+- `false`: the plugin removes no source maps. When your bundler's source map setting isn't set, the plugin turns on hidden source maps, and they stay in the build output.
+
+`true` and `false` don't depend on an upload. They also apply when the upload is turned off, when it can't run (for example, without an auth token), and when it fails.
+
+With Rollup, Vite, and webpack, the plugin never writes the removed source maps to the output directory. With esbuild, it deletes them after the build.
+
+To keep the source maps for a manual upload later, set `upload: false` and `delete: false`:
+
+```javascript
+sentryVitePlugin({
+  sourcemaps: {
+    upload: false,
+    delete: false,
+  },
+});
+```
+
+</SdkOption>
+
 <SdkOption name="sourcemaps.assets" type="string | string[]">
 
 A glob or an array of globs that specify the build artifacts and source maps that will be uploaded to Sentry.
@@ -203,25 +256,20 @@ Use the `debug` option to print information about source map resolution.
 
 </SdkOption>
 
-<SdkOption name="sourcemaps.filesToDeleteAfterUpload" type="string | string[] | Promise<string | string[] | undefined>">
-
-A glob, an array of globs or a promise resolving a glob or array of globs that specifies the build artifacts that should be deleted after the artifact upload to Sentry has been completed.
-
-Note: If you pass in a Promise that resolves to a string or array, the plugin will await the Promise and use the resolved value globs. This is useful if you need to dynamically determine the files to delete. Some higher-level Sentry SDKs or options use this feature (e.g., SvelteKit).
-
-The globbing patterns must follow the implementation of the [`glob`](https://www.npmjs.com/package/glob#glob-primer) package.
-
-Use the `debug` option to print information about which files end up being deleted.
-
-</SdkOption>
-
 <SdkOption name="sourcemaps.disable" type='boolean | "disable-upload"' defaultValue="false">
+
+Use [`sourcemaps.upload`](#sourcemaps.upload) and [`sourcemaps.injectDebugIds`](#sourcemaps.injectDebugIds) instead:
+
+| `sourcemaps.disable` | Replacement                        |
+| -------------------- | ---------------------------------- |
+| `"disable-upload"`   | `sourcemaps.upload: false`         |
+| `true`               | `sourcemaps.injectDebugIds: false` |
+
+When you set `upload` or `injectDebugIds`, the plugin ignores `disable`.
 
 If this flag is `true`, any functionality related to source maps will be disabled.
 
-If set to `"disable-upload"`, the plugin will not upload source maps to Sentry, but will still inject debug IDs into the build artifacts: the bundles receive the runtime debug ID snippet and a `//# debugId=` comment, and the emitted source maps receive the matching `debug_id` field. This happens inside the bundler's build pipeline, so hashes computed by later build steps (for example, for subresource integrity) include the debug IDs.
-
-This is useful if you want to manually upload source maps to Sentry at a later point in time, for example with `sentry-cli sourcemaps upload`. The artifacts already carry their debug IDs, so no `inject` step is needed.
+If set to `"disable-upload"`, the plugin will not upload source maps to Sentry, but will still inject debug IDs into the build artifacts, like `sourcemaps.upload: false`.
 
 </SdkOption>
 

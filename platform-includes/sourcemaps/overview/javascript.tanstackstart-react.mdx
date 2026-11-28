@@ -40,7 +40,7 @@ export default defineConfig({
 
 ### Source Map Options
 
-The plugin, by default, automatically enables hidden source maps and deletes `.map` files after upload.
+When you don't set `build.sourcemap` in your Vite config, the plugin turns on hidden source maps for the client and server builds, uploads them to Sentry, and removes them from the build output. Source maps that you turn on yourself are uploaded and stay in the build output.
 
 Configure source map behavior using the [plugin options](/platforms/javascript/sourcemaps/uploading/vite/), for example:
 
@@ -60,24 +60,21 @@ export default defineConfig({
       sourcemaps: {
         assets: ["./dist/**/*"],
         ignore: ["**/node_modules/**"],
-        filesToDeleteAfterUpload: [
-          "./**/*.map",
-          ".*/**/public/**/*.map",
-          "./dist/**/client/**/*.map",
-        ],
       },
     }),
   ],
 });
 ```
 
+To remove all source maps from the build output, also the ones you turned on, set [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete) to `true`. To upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`, set `sourcemaps: { upload: false, delete: false }`. The plugin then uploads nothing, but it still injects debug IDs and keeps the source maps in the build output.
+
 <Alert level="warning">
   Generating source maps **may expose them to the public**, potentially causing
-  your source code to be leaked. The `sentryTanstackStart` plugin automatically
-  deletes source map files after upload by default. If you customize this
-  behavior, ensure your server denies access to `.js.map` files, or configure
-  [`sourcemaps.filesToDeleteAfterUpload`](/platforms/javascript/sourcemaps/uploading/vite/)
-  to delete source maps after upload.
+  your source code to be leaked. The `sentryTanstackStart` plugin removes the
+  source maps it turned on, but keeps the ones you turned on. To remove these
+  too, set
+  [`sourcemaps.delete: true`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete),
+  or ensure your server denies access to `.js.map` files.
 </Alert>
 
 ### Troubleshooting

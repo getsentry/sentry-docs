@@ -39,17 +39,27 @@ The plugin reads `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` from yo
 
 During a production build, the plugin injects debug IDs, uploads the source maps, and then deletes the `.map` files it generated from your build output. It skips uploading in development, so `vite dev` doesn't create a new set of artifacts on every restart.
 
-If you don't set `build.sourcemap` yourself, the plugin turns on hidden source maps. If you do set it, the plugin keeps your setting and leaves your source maps in place, so you control whether they're deleted with `sourcemaps.filesToDeleteAfterUpload`.
+If you don't set `build.sourcemap` yourself, the plugin turns on hidden source maps, uploads them, and removes them from the build output. If you do set it, the plugin keeps your setting and leaves your source maps in place. To change this, use [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete): `true` removes all source maps of the build, also the ones you turned on, and `false` keeps all of them.
 
 <Alert level="warning">
   Generating source maps **may expose them to the public**, potentially causing
   your source code to be leaked. If you turn on source maps yourself, prevent
   this by configuring your server to deny access to `.js.map` files, or by
-  setting `sourcemaps.filesToDeleteAfterUpload` to delete them after they've
-  been uploaded to Sentry.
+  setting `sourcemaps.delete` to `true`.
 </Alert>
 
-To turn uploading off, set `sourcemaps.disable` to `true`. To keep the debug IDs and upload the maps yourself, set it to `'disable-upload'`.
+To turn uploading off, set [`sourcemaps.upload`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.upload) to `false`. The plugin still injects debug IDs. To keep the source maps for a manual upload later, also set `sourcemaps.delete` to `false`:
+
+```typescript {filename:vite.config.ts}
+sentryRemixVitePlugin({
+  sourcemaps: {
+    upload: false,
+    delete: false,
+  },
+});
+```
+
+To also turn off the debug ID injection, set [`sourcemaps.injectDebugIds`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.injectDebugIds) to `false`.
 
 ### Using `npx @sentry/remix --upload-sourcemaps`
 

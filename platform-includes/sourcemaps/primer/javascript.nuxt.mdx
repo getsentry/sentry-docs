@@ -28,30 +28,26 @@ To enable client-side source maps, you need to do so explicitly. Nuxt applies de
 
 To enable client-side source map generation, add the following to your Nuxt configuration:
 
-```javascript {filename:nuxt.config.ts} {2,5-12}
+```javascript {filename:nuxt.config.ts} {2,5-7}
 export default defineNuxtConfig({
   sourcemap: { client: "hidden" },
 
   sentry: {
     sourcemaps: {
-      // As you're enabling client source maps, you probably want to delete them after they're uploaded to Sentry.
-      // Set the appropriate glob pattern for your output folder - some glob examples below:
-      filesToDeleteAfterUpload: [
-        "./**/*.map",
-        ".*/**/public/**/*.map",
-        ".output/**/public/**/*.map"
-    ]
-    }
+      delete: true,
+    },
   },
 });
 ```
 
+Sentry uploads the source maps that Nuxt generates and keeps them in the build output. With `sourcemaps.delete: true`, Sentry removes all source maps of the client and server build from the build output.
+
 <Alert level="warning">
   Generating source maps **may expose them to the public**, potentially causing your
   source code to be leaked. You can prevent this by configuring your server to deny access to `.js.map` files, or by
-  using [Sentry Vite Plugin's
-  `sourcemaps.filesToDeleteAfterUpload`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.filesToDeleteAfterUpload)
-  option to delete source maps after they've been uploaded to Sentry.
+  using the
+  [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete)
+  option to delete source maps after the build.
 </Alert>
 
 The `hidden` option functions the same as `true`, by enabling source map generation. However, it also suppresses the source map reference comments that normally appear at the end of each generated file in the build output. This option keeps the source maps available without exposing their references in the files.

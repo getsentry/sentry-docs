@@ -58,9 +58,65 @@ These options can be set on the root level of the `sentrySvelteKit` configuratio
 
 ## Source Maps Options
 
-<SdkOption name="autoUploadSourceMaps" type="boolean">
+When you don't set `build.sourcemap` in your Vite config, the SDK turns on hidden source maps for the client and server builds. After the adapter ran, the SDK uploads the source maps to Sentry and removes them from the build output. When you turn on source maps yourself, the SDK uploads them and they stay.
+
+<SdkOption name="autoUploadSourceMaps" type="boolean" defaultValue="true">
 
 Disable automatic source maps upload by setting `autoUploadSourceMaps` to `false`.
+
+With `false`, the SDK also doesn't turn on source maps or inject debug IDs. To upload the source maps yourself later, set [`sourcemaps.upload`](#sourcemaps.upload) to `false` instead.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.upload" type="boolean" defaultValue="true" availableSince="11.15.0">
+
+Whether the SDK uploads source maps to Sentry.
+
+With `false`, the SDK uploads nothing, but it still injects debug IDs into the bundles and their source maps. Use this to upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`. The files already have their debug IDs, so you don't need an `inject` step.
+
+With `false`, the SDK turns on source maps only when [`sourcemaps.delete`](#sourcemaps.delete) is `false`.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.injectDebugIds" type="boolean" defaultValue="true" availableSince="11.15.0">
+
+Whether the SDK injects debug IDs into the bundles and their source maps.
+
+With `false`, the SDK adds no debug IDs and uploads no source maps, because the upload matches files by debug ID. Use this when another tool injects the debug IDs and uploads the source maps, for example the Sentry CLI.
+
+</SdkOption>
+
+<SdkOption name="sourcemaps.delete" type="boolean" availableSince="11.15.0">
+
+Whether the SDK removes source maps from the build output.
+
+- Not set: the SDK removes the source maps it turned on itself, that is, when `build.sourcemap` isn't set in your Vite config. Source maps that you turned on stay.
+- `true`: the SDK removes all source maps of the build, also the ones you turned on. The SDK switches `build.sourcemap: true` to `"hidden"`, so that no `sourceMappingURL` comment points to a removed file.
+- `false`: the SDK removes no source maps. When `build.sourcemap` isn't set, the SDK turns on hidden source maps, and they stay in the build output.
+
+`true` and `false` don't depend on an upload. They also apply when the upload is turned off, when it can't run (for example, without an auth token), and when it fails.
+
+The SDK removes the `.map` files after the adapter ran, from the adapter output folder and from hidden folders such as `.svelte-kit` and `.vercel`.
+
+To keep the source maps for a manual upload later, set `upload: false` and `delete: false`:
+
+```javascript {filename:vite.config.(js|ts)} {7-10}
+import { sveltekit } from "@sveltejs/kit/vite";
+import { sentrySvelteKit } from "@sentry/sveltekit/vite";
+
+export default {
+  plugins: [
+    sentrySvelteKit({
+      sourcemaps: {
+        upload: false,
+        delete: false,
+      },
+    }),
+    sveltekit(),
+  ],
+  // ... rest of your Vite config
+};
+```
 
 </SdkOption>
 

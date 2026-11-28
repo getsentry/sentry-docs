@@ -43,6 +43,8 @@ export default defineConfig(
 
 #### 2. Source Map Options
 
+When you don't set `build.sourcemap` in your Vite config, the SDK turns on hidden source maps, uploads them to Sentry, and removes them from the build output. On SolidStart 2, the SDK does the same for the server build when you don't set `sourcemap` in your Nitro config. Source maps that you turn on yourself are uploaded and stay in the build output.
+
 Configure source map behavior in your SolidStart config:
 
 ```javascript {filename:app.config.ts}
@@ -58,16 +60,17 @@ export default defineConfig(
       sourcemaps: {
         assets: ["./dist/**/*"],
         ignore: ["**/node_modules/**"],
-        filesToDeleteAfterUpload: ["./**/*.map", "./dist/**/*.map"],
       },
     },
   ),
 );
 ```
 
+To remove all source maps from the build output, also the ones you turned on, set [`sourcemaps.delete`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.delete) to `true`. With `false`, the SDK removes no source maps.
+
 ### Disable Source Maps Upload
 
-You can disable automatic source maps upload in your SolidStart configuration:
+To turn off the upload, set [`sourcemaps.upload`](/platforms/javascript/sourcemaps/uploading/bundler-plugin-options/#sourcemaps.upload) to `false`. The SDK still injects debug IDs, so you can upload the source maps yourself later, for example with `sentry-cli sourcemaps upload`. To keep the source maps in the build output for this upload, also set `sourcemaps.delete` to `false`:
 
 ```javascript {filename:app.config.ts}
 export default defineConfig(
@@ -76,7 +79,10 @@ export default defineConfig(
       /* Your SolidStart config */
     },
     {
-      disable: true,
+      sourcemaps: {
+        upload: false,
+        delete: false,
+      },
     },
   ),
 );
