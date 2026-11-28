@@ -3,9 +3,10 @@ import type {NextRequest} from 'next/server';
 // Profound's Custom Log Integration: https://docs.tryprofound.com/agent-analytics/custom
 const PROFOUND_LOGS_URL = 'https://artemis.api.tryprofound.com/v1/logs/custom';
 
-// Images, fonts and scripts a crawler loads along with a page.
+// Files loaded along with a page aren't visits. A direct `.md` URL and `/llms.txt`
+// are how agents read docs, so they stay in.
 const ASSET_PATH =
-  /\.(?:js|css|map|png|jpe?g|gif|webp|avif|svg|ico|woff2?|ttf|otf|mp4|webm|zip)$/i;
+  /\.(?:m?js|json|css|map|png|jpe?g|gif|webp|avif|svg|ico|pdf|woff2?|ttf|otf|eot|mp4|webm|zip)$/i;
 
 const clip = (value: string, max: number) => value.slice(0, max);
 

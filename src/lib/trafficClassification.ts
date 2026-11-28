@@ -17,6 +17,14 @@ export const AI_AGENT_PATTERN =
   /claude|anthropic|gptbot|chatgpt|openai|cursor|codex|copilot|perplexity|cohere|gemini/i;
 
 /**
+ * AI crawlers and assistants that AI_AGENT_PATTERN doesn't cover, from the list
+ * sentry.io and the changelog use. Docs serves them HTML, but middleware still
+ * reports their visits to Profound.
+ */
+export const OTHER_AI_BOT_PATTERN =
+  /bytespider|ccbot|applebot-extended|meta-external(?:agent|fetcher)|facebookbot|youbot|diffbot|ai2bot|amazonbot|amazon-user|mistralai-user|deepseek|duckassistbot|google-(?:agent|notebooklm|cloudvertexbot|extended)|openclaw/i;
+
+/**
  * Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors).
  * Used as fallback when Next.js isBot detection isn't available.
  */

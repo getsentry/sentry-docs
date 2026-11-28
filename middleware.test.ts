@@ -1,3 +1,4 @@
+import {unstable_doesMiddlewareMatch} from 'next/experimental/testing/server';
 import {type NextFetchEvent, NextRequest} from 'next/server';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
@@ -432,15 +433,22 @@ describe('reporting AI agent visits to Profound', () => {
   const CHATGPT_USER =
     'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot';
 
-  async function visit(userAgent: string) {
+  async function visit(
+    userAgent: string,
+    {
+      path = '/platforms/apple/cocoa/',
+      env = {VERCEL_ENV: 'production', PROFOUND_LOG_TOKEN: 'test-token'},
+    }: {env?: Record<string, string>; path?: string} = {}
+  ) {
     const {middleware} = await importMiddleware({});
-    vi.stubEnv('VERCEL_ENV', 'production');
-    vi.stubEnv('PROFOUND_LOG_TOKEN', 'test-token');
+    for (const [key, value] of Object.entries(env)) {
+      vi.stubEnv(key, value);
+    }
     const fetchMock = vi.fn().mockResolvedValue(Response.json({}));
     vi.stubGlobal('fetch', fetchMock);
     const waitUntil = vi.fn();
     middleware(
-      new NextRequest('https://docs.sentry.io/platforms/apple/cocoa/', {
+      new NextRequest(`https://docs.sentry.io${path}`, {
         headers: {'User-Agent': userAgent, 'x-real-ip': '203.0.113.7'},
       }),
       {waitUntil} as unknown as NextFetchEvent
@@ -448,7 +456,7 @@ describe('reporting AI agent visits to Profound', () => {
     return {fetchMock, waitUntil};
   }
 
-  it('reports an AI agent visit without delaying the response', async () => {
+  it('reports an AI agent visit as background work', async () => {
     const {fetchMock, waitUntil} = await visit(CHATGPT_USER);
 
     expect(waitUntil).toHaveBeenCalledOnce();
@@ -469,20 +477,56 @@ describe('reporting AI agent visits to Profound', () => {
   });
 
   it.each([
+    ['an API reference page', CHATGPT_USER, '/api/auth/'],
+    ['a direct .md URL', CHATGPT_USER, '/platforms/apple/cocoa.md'],
+    ['llms.txt', CHATGPT_USER, '/llms.txt'],
+    [
+      'an AI crawler that gets HTML',
+      'Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)',
+      '/platforms/apple/cocoa/',
+    ],
+  ])('reports %s', async (_name, userAgent, path) => {
+    const {fetchMock} = await visit(userAgent, {path});
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)[0].path).toBe(path);
+  });
+
+  it.each([
     [
       'a person in Chrome',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      {},
     ],
     [
       'the Claude desktop app',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/131.0.0.0 Electron/33.0.0 Safari/537.36',
+      {},
     ],
     [
       'Googlebot',
       'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      {},
     ],
-  ])('reports nothing for %s', async (_name, userAgent) => {
-    const {fetchMock} = await visit(userAgent);
+    ['a data file', CHATGPT_USER, {path: '/_platforms/javascript.json'}],
+    [
+      'a preview deployment',
+      CHATGPT_USER,
+      {env: {VERCEL_ENV: 'preview', PROFOUND_LOG_TOKEN: 'test-token'}},
+    ],
+    ['a deployment without a token', CHATGPT_USER, {env: {VERCEL_ENV: 'production'}}],
+  ])('reports nothing for %s', async (_name, userAgent, options) => {
+    const {fetchMock} = await visit(userAgent, options);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('middleware matcher', () => {
+  it.each([
+    ['/api/auth/', true],
+    ['/api/ip-ranges', false],
+  ])('%s runs the middleware: %s', async (path, expected) => {
+    const {config} = await importMiddleware({});
+    expect(
+      unstable_doesMiddlewareMatch({config, url: `https://docs.sentry.io${path}`})
+    ).toBe(expected);
   });
 });

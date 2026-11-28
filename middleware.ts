@@ -8,6 +8,7 @@ import {reportToProfound} from 'sentry-docs/lib/profound';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
+  OTHER_AI_BOT_PATTERN,
   type TrafficType,
 } from 'sentry-docs/lib/trafficClassification';
 
@@ -33,11 +34,12 @@ export const config = {
   // learn more: https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
   matcher: [
     // Match all request paths except for the ones starting with:
-    // - api (API routes)
+    // - the API route handlers. Name each one: `/api/...` is also the API reference
+    //   docs, which are pages like any other.
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico|sentry-tunnel).*)',
+    '/((?!api/(?:ip-ranges|source-map|platform-content|aws-lambda-layers)|_next/static|_next/image|favicon.ico|sentry-tunnel).*)',
   ],
 };
 
@@ -65,7 +67,10 @@ export function middleware(request: NextRequest, event?: NextFetchEvent) {
 
   annotateMiddlewareSpan(request, classification, response);
 
-  if (classification.trafficType === 'ai_agent' && !isBrowserRequest(request)) {
+  const isAIVisitor =
+    classification.trafficType === 'ai_agent' ||
+    OTHER_AI_BOT_PATTERN.test(request.headers.get('user-agent') ?? '');
+  if (isAIVisitor && !isBrowserRequest(request)) {
     const report = reportToProfound(request, response.status);
     if (report) {
       event?.waitUntil(report);
