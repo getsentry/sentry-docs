@@ -1,0 +1,60 @@
+---
+title: Linting
+description: Why Sentry enforces coding conventions mechanically, how linting steers AI agents and human contributors, and what runs on frontend code.
+sidebar_order: 72
+---
+
+Our guiding rule for code conventions is simple: **if a stylistic preference is not mechanically enforceable, it might as well not exist.**
+
+Conventions that live only in documentation, Slack threads, or pull request comments decay over time. Reviewers miss them, authors copy older patterns from nearby files, and code reviews get bogged down in style debates instead of focusing on correctness, architecture, and product risk. When a preference cannot be checked automatically, we treat it as optional rather than spending review cycles on it.
+
+## Why Mechanical Enforcement Matters Even More With Agents
+
+AI coding agents have made mechanical enforcement more important, not less.
+
+Agents learn how to write code in a repository primarily by reading nearby files and reacting to tool output. In a large, long-lived codebase like [`getsentry/sentry`](https://github.com/getsentry/sentry), older files inevitably contain deprecated helpers, legacy state libraries, and raw HTML where design-system primitives now exist. Without a deterministic check, an agent will copy those legacy patterns into new code.
+
+Context files such as `AGENTS.md` help set direction, but prompt instructions are probabilistic and compete for attention as a session grows. Linters turn conventions into a fast, deterministic feedback loop: when an agent runs `pnpm run lint` or triggers a `prek` hook, an error tells it what failed and what to write instead before a human ever reviews the pull request.
+
+## Principles for Good Lint Rules
+
+When adding or updating a lint rule, optimize for fast comprehension and low false positives:
+
+- **Enforce as errors, never permanent warnings**: Warnings get ignored by both humans and agents. Every active rule fails the build. When pre-existing violations prevent turning a rule on all at once, enroll it in the [Lint Incubator](/frontend/linting/lint-incubator/) instead of leaving it at `warn`.
+- **Write actionable error messages**: Say what is wrong and name the preferred replacement directly in the diagnostic message (for example, pointing to `resolveHostname()`, a `@sentry/scraps` primitive, or the allowed import path). Good error messages let contributors and agents fix violations without hunting through docs.
+- **Autofix only when unambiguous**: Implement `--fix` when there is a single safe, behavior-preserving rewrite, such as rewriting an import path. Leave fixes manual when picking the right semantic token, component prop, or HTML behavior requires judgment.
+- **Keep checks fast and uniform**: Local CLI runs, `prek` git hooks, and CI run the same checks so contributors get identical results inside their local inner loop.
+
+## Frontend Linting Stack
+
+Frontend checks in `getsentry/sentry` split responsibility across five tools:
+
+- **Oxlint (`pnpm run lint:js`)**: Runs JavaScript and TypeScript rules, including type-aware checks, module boundary rules, and custom plugins for Sentry conventions (`static/oxlint/eslintPluginSentry`) and Scraps design-system usage (`static/oxlint/eslintPluginScraps`).
+- **Oxfmt (`pnpm run lint:format`)**: Formats code consistently across the repository so layout and whitespace are never debated in review.
+- **Stylelint (`pnpm run lint:css`)**: Checks Emotion CSS-in-JS styles.
+- **Knip (`pnpm run knip`, `pnpm run knip:prod`, `pnpm run knip:cycles`)**: Detects unused files, unused exports, unlisted or unused dependencies, production dead code (exports only referenced by tests or stories), and circular module imports. This is especially useful after refactors, where orphaned helpers and dead exports are otherwise easy to leave behind.
+- **Dependency linting (`pnpm run lint:deps`)**: Verifies dependency consistency across `pnpm` workspace packages.
+
+Use these commands during local development:
+
+```bash
+# Run dependency, formatting, JS/TS, and CSS checks
+pnpm run lint
+
+# Lint specific JS/TS files in their owning workspace
+pnpm run lint:js static/app/views/example.tsx
+
+# Check for unused files/exports, production dead code, and import cycles
+pnpm run knip
+pnpm run knip:prod
+pnpm run knip:cycles
+
+# Apply formatting and safe Oxlint autofixes
+pnpm run fix
+```
+
+## Guides
+
+Explore how we roll out new lint rules incrementally across existing frontend code:
+
+<PageGrid />
