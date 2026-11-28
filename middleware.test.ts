@@ -1,4 +1,4 @@
-import {NextRequest} from 'next/server';
+import {type NextFetchEvent, NextRequest} from 'next/server';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 // Helper to import the middleware module fresh with given env vars.
@@ -420,5 +420,69 @@ describe('content negotiation on page URLs', () => {
       })
     );
     expect(res.headers.get('x-middleware-rewrite')).toContain('.md');
+  });
+});
+
+describe('reporting AI agent visits to Profound', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  const CHATGPT_USER =
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot';
+
+  async function visit(userAgent: string) {
+    const {middleware} = await importMiddleware({});
+    vi.stubEnv('VERCEL_ENV', 'production');
+    vi.stubEnv('PROFOUND_LOG_TOKEN', 'test-token');
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({}));
+    vi.stubGlobal('fetch', fetchMock);
+    const waitUntil = vi.fn();
+    middleware(
+      new NextRequest('https://docs.sentry.io/platforms/apple/cocoa/', {
+        headers: {'User-Agent': userAgent, 'x-real-ip': '203.0.113.7'},
+      }),
+      {waitUntil} as unknown as NextFetchEvent
+    );
+    return {fetchMock, waitUntil};
+  }
+
+  it('reports an AI agent visit without delaying the response', async () => {
+    const {fetchMock, waitUntil} = await visit(CHATGPT_USER);
+
+    expect(waitUntil).toHaveBeenCalledOnce();
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://artemis.api.tryprofound.com/v1/logs/custom');
+    expect(init.headers['x-api-key']).toBe('test-token');
+    expect(JSON.parse(init.body)).toEqual([
+      {
+        timestamp: expect.any(String),
+        method: 'GET',
+        host: 'docs.sentry.io',
+        path: '/platforms/apple/cocoa/',
+        status_code: 200,
+        ip: '203.0.113.7',
+        user_agent: CHATGPT_USER,
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      'a person in Chrome',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    ],
+    [
+      'the Claude desktop app',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Claude/1.5.0 Chrome/131.0.0.0 Electron/33.0.0 Safari/537.36',
+    ],
+    [
+      'Googlebot',
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    ],
+  ])('reports nothing for %s', async (_name, userAgent) => {
+    const {fetchMock} = await visit(userAgent);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

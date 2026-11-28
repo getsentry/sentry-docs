@@ -27,6 +27,10 @@ Markdown files are pre-generated at build time and served from `public/md-export
 - Every export ends with a footer that links `/sitemap.md` and `/llms.txt`.
 - `/sitemap.md` lists every visible page, nested like the sidebar, with its description. `scripts/generate-llms-txt.mjs` generates it.
 
+### Agent Analytics
+
+In production, the middleware reports every request from a recognized AI agent to [Profound Agent Analytics](https://docs.tryprofound.com/agent-analytics/custom), whether it served Markdown, HTML, a `.md` file or `/llms.txt`. Search crawlers, people, in-app browsers and static assets are not reported. Docs sends Profound no Vercel log drain, so `src/lib/profound.ts` is the only source; turning a drain back on would count each visit twice. Requests that `next.config.ts` redirects (a missing trailing slash, `redirects.js`) never reach the middleware and are not reported. Needs `PROFOUND_LOG_TOKEN`.
+
 ## How Markdown Pages Differ from HTML
 
 Markdown exports are not just raw dumps of HTML content. They are adapted for LLM consumption:

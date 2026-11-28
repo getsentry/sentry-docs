@@ -1,9 +1,10 @@
 import * as Sentry from '@sentry/nextjs';
-import type {NextRequest} from 'next/server';
+import type {NextFetchEvent, NextRequest} from 'next/server';
 import {NextResponse, userAgent} from 'next/server';
 import {canonicalPath, markdownExportPath} from 'sentry-docs/canonical';
 import {DOCS_ORIGIN, isDeveloperDocs} from 'sentry-docs/docsSite.mjs';
 import {formatPreference, shouldServeMarkdown} from 'sentry-docs/lib/contentNegotiation';
+import {reportToProfound} from 'sentry-docs/lib/profound';
 import {
   AI_AGENT_PATTERN,
   matchPattern,
@@ -41,7 +42,7 @@ export const config = {
 };
 
 // This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
+export function middleware(request: NextRequest, event?: NextFetchEvent) {
   const buildUrlRedirect = redirectProductionBuildUrlToCanonical(request);
   if (buildUrlRedirect) {
     return buildUrlRedirect;
@@ -63,6 +64,13 @@ export function middleware(request: NextRequest) {
   );
 
   annotateMiddlewareSpan(request, classification, response);
+
+  if (classification.trafficType === 'ai_agent' && !isBrowserRequest(request)) {
+    const report = reportToProfound(request, response.status);
+    if (report) {
+      event?.waitUntil(report);
+    }
+  }
 
   return response;
 }
@@ -284,13 +292,27 @@ function mdToCanonicalPath(mdPathname: string): string {
   return canonicalPath(withoutExt);
 }
 
+/** The Claude and Cursor desktop apps (Electron) and the Gemini iOS app. */
+const IN_APP_BROWSER_PATTERN = /\b(?:Claude|Cursor)\/[\d.]+ Chrome\/|\bGeminiiOS\//;
+
+/**
+ * In-app browsers name the app in their user agent (Claude, Cursor, Gemini), so
+ * they match AI_AGENT_PATTERN but are people reading the normal page. Any browser
+ * also marks the router's background fetch for the next page `Sec-Fetch-Dest: empty`
+ * (Next.js strips the `RSC` header before middleware runs). `document` isn't enough:
+ * some crawlers, such as PerplexityBot, send it on every request.
+ */
+function isBrowserRequest(request: NextRequest): boolean {
+  return (
+    request.headers.get('sec-fetch-dest') === 'empty' ||
+    IN_APP_BROWSER_PATTERN.test(request.headers.get('user-agent') || '')
+  );
+}
+
 /**
  * Serves a page URL as HTML or Markdown (content negotiation), and advertises
  * the other representation on each response.
  */
-/** The Claude and Cursor desktop apps (Electron) and the Gemini iOS app. */
-const IN_APP_BROWSER_PATTERN = /\b(?:Claude|Cursor)\/[\d.]+ Chrome\/|\bGeminiiOS\//;
-
 const handleAIClientRedirect = (
   request: NextRequest,
   classification: TrafficClassification
@@ -300,18 +322,9 @@ const handleAIClientRedirect = (
 
   // Determine if this will be served as markdown
   const forceMarkdown = url.searchParams.get('format') === 'md';
-  // In-app browsers name the app in their user agent (Claude, Cursor, Gemini), so
-  // they match AI_AGENT_PATTERN but must get the normal page. Any browser also marks
-  // the router's background fetch for the next page `Sec-Fetch-Dest: empty` (Next.js
-  // strips the `RSC` header before middleware runs). `document` isn't enough: some
-  // crawlers, such as PerplexityBot, send it on every request.
-  const secFetchDest = request.headers.get('sec-fetch-dest');
-  const isBrowserRequest =
-    secFetchDest === 'empty' ||
-    IN_APP_BROWSER_PATTERN.test(request.headers.get('user-agent') || '');
   const clientWantsMarkdown = shouldServeMarkdown(
     acceptHeader,
-    classification.trafficType === 'ai_agent' && !isBrowserRequest
+    classification.trafficType === 'ai_agent' && !isBrowserRequest(request)
   );
   const willServeMarkdown =
     (clientWantsMarkdown || forceMarkdown) && !url.pathname.endsWith('.md');
@@ -333,7 +346,7 @@ const handleAIClientRedirect = (
       urlPath: url.pathname,
       acceptHeader: request.headers.get('accept') || '',
       userAgent: request.headers.get('user-agent') || '',
-      secFetchDest: secFetchDest || '',
+      secFetchDest: request.headers.get('sec-fetch-dest') || '',
       contentType: willServeMarkdown ? 'markdown' : 'html',
       detectionMethod: willServeMarkdown ? detectionMethod : null,
     });
