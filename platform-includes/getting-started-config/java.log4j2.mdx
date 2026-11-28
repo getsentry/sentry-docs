@@ -1,6 +1,7 @@
 Add the `Sentry` appender to your `log4j2.xml`.
 
 Make sure to set the DSN in one place only:
+
 - Use the snippet in the "Without DSN" code box tab if Sentry is already initialized in your application. This is the case if you call [`Sentry.init`](/platforms/java/) in your code, use the [Spring](/platforms/java/guides/spring/) or [Spring Boot](/platforms/java/guides/spring-boot/) integration, or run the [Sentry OpenTelemetry agent](/platforms/java/opentelemetry/setup/agent/).
 - Use the snippet in the "With DSN" code box tab to have the appender initialize Sentry.
 
@@ -20,7 +21,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     <Console name="CONSOLE" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <Sentry name="SENTRY" />
+    <Sentry name="SENTRY" logsEnabled="true" />
   </Appenders>
 
   <Loggers>
@@ -32,6 +33,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Configuration>
 ```
+
 ```xml {tabTitle:With DSN}
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
@@ -40,7 +42,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
     <Console name="CONSOLE" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <Sentry name="SENTRY" dsn="___PUBLIC_DSN___"/>
+    <Sentry name="SENTRY" dsn="___PUBLIC_DSN___" logsEnabled="true" />
   </Appenders>
 
   <Loggers>
@@ -59,7 +61,7 @@ The `ConsoleAppender` is provided only as an example of a non-Sentry appender se
 
 </Alert>
 
-Sentry Logs must be enabled for the appender to send log messages as Logs. If Sentry is initialized elsewhere, make sure Logs are enabled there. If the appender initializes the SDK, the `sentry.properties` file as shown in the "Additional Options" section below enables them.
+The `logsEnabled` appender option above sends Log4j2 records as Sentry Logs.
 
 ### Additional Options If the Appender Initializes Sentry
 
@@ -68,9 +70,6 @@ If the appender initializes the SDK, you can also use Sentry's static API, as sh
 To set other options, such as data collection, add a `sentry.properties` file. The DSN is already in the appender, so it isn't needed there. See the [configuration page](/platforms/java/configuration/) for where the SDK reads this file from.
 
 ```properties {tabTitle:sentry.properties}
-# Enable logs
-logs.enabled=true
-
 # Use Data Collection defaults but don't collect automatic user information.
 # https://docs.sentry.io/platforms/java/guides/log4j2/data-management/data-collected/
 data-collection.user-info=false
@@ -83,7 +82,7 @@ Two log levels are used to configure this integration, as illustrated below in t
 1. Configure the lowest level required for a log message to become an event (`minimumEventLevel`) sent to Sentry.
 2. Configure the lowest level a message has to be to become a breadcrumb (`minimumBreadcrumbLevel`)
 3. Configure the lowest level a message has to be to be sent as Sentry Log (`minimumLevel`).
-<Alert>
+   <Alert>
 
 Setting `minimumEventLevel` or `minimumBreadcrumbLevel` in `log4j2.xml` only affects events logged by way of Log4j2. The settings will have no effect when calling `Sentry.captureMessage` or similar directly.
 
@@ -97,9 +96,11 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
 <Sentry name="SENTRY"
         minimumBreadcrumbLevel="DEBUG"
         minimumEventLevel="WARN"
+        logsEnabled="true"
         minimumLevel="DEBUG"
         />
 ```
+
 ```xml {tabTitle:With DSN}
 <!-- Setting minimumBreadcrumbLevel modifies the default minimum level to add breadcrumbs from INFO to DEBUG  -->
 <!-- Setting minimumEventLevel the default minimum level to capture an event from ERROR to WARN  -->
@@ -107,6 +108,7 @@ Breadcrumbs are kept in memory (by default the last 100 records) and are sent wi
         dsn="___PUBLIC_DSN___"
         minimumBreadcrumbLevel="DEBUG"
         minimumEventLevel="WARN"
+        logsEnabled="true"
         minimumLevel="DEBUG"
         />
 ```
