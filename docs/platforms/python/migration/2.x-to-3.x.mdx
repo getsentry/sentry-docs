@@ -167,6 +167,14 @@ If you only use automatic instrumentation from integrations and configure tracin
 
 Many integrations now emit a smaller, framework-neutral set of span operations. For example, Redis emits `db.query` instead of `db.redis`, middleware spans use `middleware` instead of `middleware.django` or `middleware.starlette`, and task queue integrations (Celery, RQ, ARQ, and others) emit `queue.publish` and `queue.process` instead of framework-specific ops like `queue.task.celery`.
 
+For AWS API calls made with boto3, update filters from `http.client` to `rpc`. SQS and SNS messaging calls use the ops in the table below.
+
+| AWS API call                                                            | Span op         |
+| ----------------------------------------------------------------------- | --------------- |
+| SQS `SendMessage`, `SendMessageBatch` and SNS `Publish`, `PublishBatch` | `queue.publish` |
+| SQS `ReceiveMessage`                                                    | `queue.receive` |
+| SQS `DeleteMessage`, `DeleteMessageBatch`                               | `queue.settle`  |
+
 If you have alerts, dashboards, or queries that filter on specific span ops, check the [detailed migration guide](https://github.com/getsentry/sentry-python/blob/master/MIGRATION_GUIDE.md#span-operation-consolidation) for the complete list of renamed ops.
 
 ### Span Names
