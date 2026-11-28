@@ -1,0 +1,40 @@
+---
+title: Out-of-Process Native Crash Handling
+description: "Learn how to send native crash reports from a separate process in Native AOT applications."
+sidebar_order: 80
+notSupported:
+  - dotnet.android
+  - dotnet.apple
+  - dotnet.aspnet
+  - dotnet.blazor-webassembly
+  - dotnet.maui
+  - dotnet.winforms
+  - dotnet.wpf
+  - dotnet.xamarin
+---
+
+Native AOT applications on Windows, Linux, and macOS use [Sentry Native](/platforms/native/) to capture native crashes. By default, the .NET SDK uses Sentry Native's `inproc` backend, which handles crashes inside the crashed application and sends the crash reports on the next launch of the application.
+
+Alternatively, you can enable the out-of-process [`native` backend](/platforms/native/configuration/backends/native/). Its `sentry-crash` daemon handles crashes outside the crashed application and sends the crash reports at crash time, instead of on the next launch. On Windows, it can also capture [fast-fail crashes](/platforms/native/advanced-usage/windows-error-reporting/#wer-compatibility), which terminate the application immediately and can only be captured from outside the process.
+
+## Configuration
+
+Install the `Sentry.Native` package, with the same version as the `Sentry` package:
+
+```shell {tabTitle:.NET Core CLI}
+dotnet add package Sentry.Native -v {{@inject packages.version('sentry.dotnet') }}
+```
+
+```powershell {tabTitle:Package Manager}
+Install-Package Sentry.Native -Version {{@inject packages.version('sentry.dotnet') }}
+```
+
+```xml {tabTitle:project.csproj}
+<ItemGroup>
+  <PackageReference Include="Sentry.Native" Version="{{@inject packages.version('sentry.dotnet') }}" />
+</ItemGroup>
+```
+
+The build and publish output then include `sentry-crash` (`sentry-crash.exe` on Windows), its `sentry-crash-transport` library, and, on Windows, `sentry-wer.dll`. Deploy them in the same directory as your application.
+
+The daemon sends crash reports through the same <PlatformLink to="/configuration/options/#HttpProxy">`HttpProxy`</PlatformLink> as your application.
