@@ -342,11 +342,7 @@ const handleAIClientRedirect = (
       : 'User-agent';
 
   // Log user agent for debugging (only for non-static assets)
-  if (
-    !url.pathname.startsWith('/_next/') &&
-    !url.pathname.includes('.') &&
-    !url.pathname.startsWith('/api/')
-  ) {
+  if (!url.pathname.startsWith('/_next/') && !url.pathname.includes('.')) {
     Sentry.logger.info(`Middleware request processed: ${url.pathname}`, {
       urlPath: url.pathname,
       acceptHeader: request.headers.get('accept') || '',
@@ -372,10 +368,10 @@ const handleAIClientRedirect = (
     return response;
   }
 
-  // Skip API routes and static assets (should already be filtered by matcher)
-  // Pass through with classification headers
+  // Skip static assets. Pass through with classification headers.
+  // `/api/...` isn't skipped: it's the API reference docs, and the matcher
+  // already keeps the API route handlers out.
   if (
-    url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
     /\.(js|json|png|jpg|jpeg|gif|ico|pdf|css|woff|woff2|ttf|map|xml|txt|zip|svg)$/i.test(
       url.pathname

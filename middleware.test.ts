@@ -356,6 +356,15 @@ describe('content negotiation on page URLs', () => {
     });
   }
 
+  it('serves Markdown to an AI agent on an API reference page', async () => {
+    const {middleware} = await importMiddleware({});
+    const req = new NextRequest(new URL('/api/auth/', 'http://localhost:3000'), {
+      headers: {'user-agent': 'Mozilla/5.0 (compatible; ChatGPT-User/1.0)'},
+    });
+    const res = middleware(req);
+    expect(res.headers.get('x-middleware-rewrite')).toContain('/api/auth.md');
+  });
+
   it('serves Markdown with Vary and canonical headers', async () => {
     const {middleware} = await importMiddleware({});
     const res = middleware(pageRequest({Accept: 'text/markdown, text/html, */*'}));
