@@ -111,6 +111,41 @@ Errors thrown during server rendering and in server functions are reported. If a
 
 With the router wrapped, request spans are named after the route, for example `GET /user/:id`. The browser page load continues the server's trace, so you see the request and the page load in one trace.
 
+### Cloudflare Workers
+
+To run the server on Cloudflare Workers, install `@sentry/cloudflare` and export your options from an `instrument.server.ts` file next to your wrangler config. `sentryCloudflareVitePlugin` wraps the Worker with Sentry and reads the options from that file, so you don't need `start.serverSetup`.
+
+```ts {filename:instrument.server.ts}
+import { defineCloudflareOptions } from "@sentry/solid/solid2/cloudflare";
+
+export default defineCloudflareOptions({
+  dsn: "___PUBLIC_DSN___",
+  // Adjust this value in production, or use tracesSampler for greater control.
+  tracesSampleRate: 1.0,
+});
+```
+
+```ts {filename:vite.config.ts}
+import { cloudflare } from "@cloudflare/vite-plugin";
+import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
+import solid from "@solidjs/vite-plugin";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    cloudflare({ viteEnvironment: { name: "ssr" } }),
+    solid({
+      start: { clientSetup: "./src/instrument.client.ts" },
+      ssr: true,
+      serverFunctions: true,
+    }),
+    sentryCloudflareVitePlugin(),
+  ],
+});
+```
+
+Errors and request spans work as on Node, and the browser page load continues the Worker's trace.
+
 ## Upload Source Maps
 
 Your app is built with Vite, so follow the <PlatformLink to="/sourcemaps/uploading/vite/">Vite source maps guide</PlatformLink> to get readable stack traces.
