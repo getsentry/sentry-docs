@@ -22,7 +22,7 @@ export const AI_AGENT_PATTERN =
  * reports their visits to Profound.
  */
 export const OTHER_AI_BOT_PATTERN =
-  /bytespider|ccbot|applebot-extended|meta-external(?:agent|fetcher)|facebookbot|youbot|diffbot|ai2bot|amazonbot|amazon-user|mistralai-user|deepseek|duckassistbot|google-(?:agent|notebooklm|cloudvertexbot|extended)|openclaw/i;
+  /bytespider|ccbot|applebot-extended|meta-external(?:agent|fetcher)|facebookbot|youbot|diffbot|ai2bot|amazonbot|amzn-user|mistralai-user|deepseek|duckassistbot|google-(?:agent|notebooklm|cloudvertexbot|extended)|openclaw/i;
 
 /**
  * Bots/crawlers to filter out (SEO crawlers, social media, testing tools, monitors).

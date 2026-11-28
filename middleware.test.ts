@@ -507,12 +507,17 @@ describe('reporting AI agent visits to Profound', () => {
       {},
     ],
     ['a data file', CHATGPT_USER, {path: '/_platforms/javascript.json'}],
+    ['robots.txt', CHATGPT_USER, {path: '/robots.txt'}],
     [
       'a preview deployment',
       CHATGPT_USER,
       {env: {VERCEL_ENV: 'preview', PROFOUND_LOG_TOKEN: 'test-token'}},
     ],
-    ['a deployment without a token', CHATGPT_USER, {env: {VERCEL_ENV: 'production'}}],
+    [
+      'a deployment without a token',
+      CHATGPT_USER,
+      {env: {VERCEL_ENV: 'production', PROFOUND_LOG_TOKEN: ''}},
+    ],
   ])('reports nothing for %s', async (_name, userAgent, options) => {
     const {fetchMock} = await visit(userAgent, options);
     expect(fetchMock).not.toHaveBeenCalled();

@@ -3,10 +3,11 @@ import type {NextRequest} from 'next/server';
 // Profound's Custom Log Integration: https://docs.tryprofound.com/agent-analytics/custom
 const PROFOUND_LOGS_URL = 'https://artemis.api.tryprofound.com/v1/logs/custom';
 
-// Files loaded along with a page aren't visits. A direct `.md` URL and `/llms.txt`
-// are how agents read docs, so they stay in.
-const ASSET_PATH =
-  /\.(?:m?js|json|css|map|png|jpe?g|gif|webp|avif|svg|ico|pdf|woff2?|ttf|otf|eot|mp4|webm|zip)$/i;
+// Files loaded along with a page, and crawl housekeeping (robots.txt, XML
+// sitemaps), aren't visits. A direct `.md` URL and `/llms.txt` are how agents
+// read docs, so they stay in.
+const NOT_A_VISIT =
+  /\.(?:m?js|json|xml|css|map|png|jpe?g|gif|webp|avif|svg|ico|pdf|woff2?|ttf|otf|eot|mp4|webm|zip)$|^\/robots\.txt$/i;
 
 const clip = (value: string, max: number) => value.slice(0, max);
 
@@ -47,7 +48,7 @@ export function reportToProfound(
   if (
     !token ||
     process.env.VERCEL_ENV !== 'production' ||
-    ASSET_PATH.test(url.pathname)
+    NOT_A_VISIT.test(url.pathname)
   ) {
     return undefined;
   }

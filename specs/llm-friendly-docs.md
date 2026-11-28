@@ -29,7 +29,7 @@ Markdown files are pre-generated at build time and served from `public/md-export
 
 ### Agent Analytics
 
-In production, the middleware reports every request from an AI agent or AI crawler to [Profound Agent Analytics](https://docs.tryprofound.com/agent-analytics/custom), whether it served Markdown, HTML, a `.md` file or `/llms.txt`. That covers `AI_AGENT_PATTERN` plus `OTHER_AI_BOT_PATTERN`, the AI crawlers docs serves HTML to. Search crawlers, people, in-app browsers and static assets are not reported. Docs sends Profound no Vercel log drain, so `src/lib/profound.ts` is the only source; turning a drain back on would count each visit twice. Requests that `next.config.ts` redirects (a missing trailing slash, `redirects.js`) never reach the middleware and are not reported. Needs `PROFOUND_LOG_TOKEN`.
+In production, the middleware reports every request from an AI agent or AI crawler to [Profound Agent Analytics](https://docs.tryprofound.com/agent-analytics/custom), whether it served Markdown, HTML, a `.md` file or `/llms.txt`. That covers `AI_AGENT_PATTERN` plus `OTHER_AI_BOT_PATTERN`, the AI crawlers docs serves HTML to. Search crawlers, people, in-app browsers, static files, `/robots.txt` and XML sitemaps are not reported. Docs sends Profound no Vercel log drain, so `src/lib/profound.ts` is the only source; turning a drain back on would count each visit twice. Requests that `next.config.ts` redirects (a missing trailing slash, `redirects.js`) never reach the middleware and are not reported. Needs `PROFOUND_LOG_TOKEN`.
 
 ## How Markdown Pages Differ from HTML
 
